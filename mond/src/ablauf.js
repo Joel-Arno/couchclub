@@ -116,7 +116,11 @@ function titleScreen(){
   if (Snd.ac()) Music.play('amb');
 }
 function syncSys(){ ['echt', 'runde'].forEach(k => $('#sys' + (k === 'echt' ? 'Echt' : 'Runde')).setAttribute('aria-checked', String(S.sys === k))); }
-function syncSound(){ $('#btnSound').textContent = 'Ton: ' + (S.sound ? 'an' : 'aus'); $('#btnVoice').textContent = 'Stimme: ' + (S.voice ? 'an' : 'aus'); }
+const hasVoices = () => Object.keys(STIMMEN).length > 0;
+function syncSound(){
+  $('#btnSound').textContent = 'Ton: ' + (S.sound ? 'an' : 'aus');
+  $('#btnVoice').textContent = 'Stimme: ' + (S.voice ? 'an' : 'aus'); $('#btnVoice').hidden = !hasVoices();
+}
 $$('.sys').forEach(b => b.addEventListener('click', () => { Snd.init(); Snd.play('ui'); S.sys = b.dataset.sys; saveSettings(); syncSys(); }));
 $('#btnSound').addEventListener('click', () => {
   Snd.init(); S.sound = !S.sound; saveSettings(); Snd.setOn(S.sound); syncSound(); if (!S.sound) Voice.stop();
@@ -592,7 +596,7 @@ function pauseSheet(){
     <button type="button" class="row" data-a="switch"><span><b>Kampfsystem wechseln</b><small>Beginnt diesen Kampf neu im ${SYS_LONG[other]}</small></span></button>
     ${echt ? `<button type="button" class="row" data-a="ring"><span><b>Zeitring</b><small>Zeigt, wann der nächste Treffer kommt</small></span><span class="val">${S.ring ? 'an' : 'aus'}</span></button>` : ''}
     <button type="button" class="row" data-a="sound"><span><b>Ton</b></span><span class="val">${S.sound ? 'an' : 'aus'}</span></button>
-    <button type="button" class="row" data-a="voice"><span><b>Stimmen</b><small>Erzähler und Figuren sprechen</small></span><span class="val">${S.voice ? 'an' : 'aus'}</span></button>
+    ${hasVoices() ? `<button type="button" class="row" data-a="voice"><span><b>Stimmen</b><small>Erzähler und Figuren sprechen</small></span><span class="val">${S.voice ? 'an' : 'aus'}</span></button>` : ''}
     <button type="button" class="row" data-a="help"><span><b>Steuerung</b><small>Die Regeln noch einmal</small></span></button>
     <button type="button" class="row" data-a="flee"><span><b>Zum Leuchtfeuer fliehen</b><small>Der Kampf endet, deine Glut bleibt bei dir</small></span></button>`, {
     onClose: () => Fight.setPaused(false),
