@@ -157,6 +157,9 @@ def sprechen(stimme, text, sp):
     cfg = SynthesisConfig(length_scale=sp["tempo"])
     if sp.get("sprecher"):
         cfg.speaker_id = stimme.config.speaker_id_map[sp["sprecher"]]
+    elif sp.get("sprecher_id") is not None:
+        # Stimmen mit vielen Sprechern (etwa de_DE-mls-medium) werden über die Nummer gewählt
+        cfg.speaker_id = sp["sprecher_id"]
     teile, rate = [], stimme.config.sample_rate
     pause = np.zeros(int(rate * .28), dtype=np.float32)
     for chunk in stimme.synthesize(text, syn_config=cfg):
