@@ -107,16 +107,6 @@ button:focus-visible { outline: 2px solid var(--ember-2); outline-offset: 3px; }
 .b-ask { margin-block: 0; font: 500 19px/1.4 var(--serif); color: var(--ember-2); }
 .b-text { margin-block: 0; font: 500 18px/1.45 var(--serif); color: var(--silver); }
 
-/* ---------- Leiste über dem Ort ---------- */
-.o-bar {
-  position: absolute; left: 0; right: 0; top: 0; z-index: 3; display: grid; grid-template-columns: 40px 1fr auto 40px; gap: 12px; align-items: center;
-  padding: var(--pad-t) 16px 18px; background: linear-gradient(rgba(10, 13, 18, .75), rgba(10, 13, 18, 0));
-}
-.o-where { margin: 0; min-width: 0; display: grid; font: italic 500 16px/1.2 var(--serif); color: var(--silver); white-space: nowrap; }
-.o-where small { font: 600 10.5px/1.5 var(--sans); font-style: normal; letter-spacing: .06em; color: var(--mist); overflow: hidden; text-overflow: ellipsis; }
-.intro .o-bar { display: none; }
-.st-text p.rede { font-style: italic; color: #E9EEF5; }
-.st-text p.gabe { font: 600 13px/1.5 var(--sans); color: var(--ember-2); letter-spacing: .02em; }
 .choice.fire b { color: var(--ember-2); }
 .choice.fire::before { background: var(--ember); box-shadow: 0 0 10px rgba(227, 154, 85, .7); }
 .choice.fight::before { border-color: var(--blood-2); }
@@ -141,6 +131,13 @@ button:focus-visible { outline: 2px solid var(--ember-2); outline-offset: 3px; }
 .k-map .node.boss.besiegt circle.dot { stroke: rgba(196, 208, 224, .55); }
 .k-map .node.sel circle.dot { stroke: var(--silver); stroke-width: 2.5; }
 .k-map .node text { fill: var(--silver); font: 600 13px var(--serif); letter-spacing: .04em; paint-order: stroke; stroke: rgba(6, 8, 11, .9); stroke-width: 4px; }
+.k-map .node rect.dot { fill: rgba(22, 28, 38, .9); stroke: rgba(196, 208, 224, .42); stroke-width: 1.2; }
+.k-map .node.unbekannt rect.dot { fill: rgba(14, 18, 25, .6); stroke-dasharray: 3 4; stroke: rgba(196, 208, 224, .28); }
+.k-map .node.feuer rect.dot { fill: rgba(58, 36, 20, .85); stroke: rgba(227, 138, 70, .7); }
+.k-map .node.sel rect.dot { stroke: var(--silver); stroke-width: 2.2; }
+.k-map .node.gebiet text { font-size: 12px; }
+.k-map .glutpunkt { fill: var(--ember-2); filter: drop-shadow(0 0 4px rgba(255, 160, 80, .9)); }
+.k-map .hierpunkt { fill: var(--silver); }
 .k-map .node.unbekannt text { fill: var(--mist); font-style: italic; }
 .k-map .here { fill: none; stroke: var(--silver); stroke-width: 1.2; animation: here 1.8s ease-out infinite; transform-box: fill-box; transform-origin: center; }
 .k-map .flame { fill: var(--ember-2); }

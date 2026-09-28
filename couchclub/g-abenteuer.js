@@ -60,16 +60,16 @@
   CC.register({
     id: 'mond',
     name: 'Mondgeläut',
-    tagline: 'Düsteres Abenteuer mit Bossen und Reaktionskampf.',
+    tagline: 'Düsteres Abenteuer: erkunden, klettern, Bosse bezwingen.',
     color: 'teal',
-    minutes: '20–60',
+    minutes: '120–240',
     modes: ['solo'],
-    frame: { src: 'mond.html', g: 'mond', bg: '#0A0D12', save: 'mondgelaeut-v1' },   // save: Spielstand im Profil löschbar
+    frame: { src: 'mond.html', g: 'mond', bg: '#0A0D12', save: 'mondgelaeut-v2', alt: ['mondgelaeut-v1'] },   // save: Spielstand im Profil löschbar, alt: ältere Stände, die mit gelöscht werden
     thumb: mondThumb(),
     rules: [
-      'Die Flut hat dich an einen fremden Strand gespült. Wähle deine Herkunft und finde heraus, warum nur du die Glocke hörst.',
-      'Im Kampf zählt der Moment: ausweichen, blocken oder parieren. Ein Aufblitzen an der Waffe verrät jeden Angriff.',
-      'Akt I mit Leuchtfeuern, Glut, Waffen, Talismanen und vier Bossen. Jeder Spieler hat seinen eigenen Spielstand.',
+      'Die Flut hat dich an einen fremden Strand gespült. Erkunde die Küste, klettere, finde verborgene Wege und finde heraus, warum nur du die Glocke hörst.',
+      'Im Kampf zählt der Moment: ausweichen, blocken oder parieren. Gegner täuschen und zögern. Wer sich von hinten anschleicht, trifft mit einem Hinterhalt schwer.',
+      'Akt I mit 25 Gebieten, Leuchtfeuern, Glut, Waffen, Talismanen und fünf Bossen. Jeder Spieler hat seinen eigenen Spielstand.',
     ],
     statText(x) {
       const parts = [];

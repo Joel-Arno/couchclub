@@ -75,7 +75,7 @@ const REGEL = {
   stRegen: 50, stRegenBlock: 16, stPause: 560,
   konterFenster: 520, konterMul: 1.6,
   heilSchluck: 360, heilWirkt: 660, heilDauer: 950,
-  gapMul: .8
+  gapMul: .7
 };
 
 const Fight = (() => {
@@ -406,11 +406,13 @@ const Fight = (() => {
     }
   }
   // Wer zu oft blind zuschlägt, wird gekontert
+  // Ohne eigenen Konter schlägt jeder normale Gegner nach drei Treffern mit seinem schnellsten Angriff zurück
   function zaehleTreffer(){
-    if (!def.konter || en.st !== 'idle') return;
+    const k = def.konter || (def.boss ? null : { nach: 3 });
+    if (!k || en.st !== 'idle') return;
     if (T - en.trefferT > 1400) en.treffer = 0;
     en.treffer++; en.trefferT = T;
-    if (en.treffer >= def.konter.nach){ en.treffer = 0; en.next = T + 120; en.zwang = def.konter.move; }
+    if (en.treffer >= k.nach){ en.treffer = 0; en.next = T + 120; en.zwang = k.move || schnellster(); }
   }
   function breakPoise(){
     en.pz = 0; en.move = null; tells.length = 0; eprojs.length = 0; E.glow = en.phase > 0 ? .8 : 0; E.trailUntil = 0;
@@ -527,7 +529,7 @@ const Fight = (() => {
     if (m.weg){ E.fade = 1; }
     if (!m.finte && en.kind.some(k => k === 'u')){ E.glow = Math.max(E.glow, .6); Snd.play('danger'); }
   }
-  const tellLead = (k, h) => h && h.mix ? 230 : k === 'u' ? 440 : 300;
+  const tellLead = (k, h) => h && h.mix ? 290 : k === 'u' ? 440 : 300;
   function gap(){
     const g = en.phase > 0 && def.phasen[en.phase - 1].gap ? def.phasen[en.phase - 1].gap : def.gap;
     return rr(g[0], g[1]) * REGEL.gapMul;

@@ -158,7 +158,7 @@ const GEGENSTAENDE = {
    fern: greift aus der zweiten Reihe an, während ein anderer vorn kämpft. */
 const FEINDE = {
   ertrunkener: {
-    name: 'Ertrunkener', set: 'ertrunken', hp: 82, pz: 44, glut: 45, gap: [750, 1350], pzRegen: 10, schaden: 1.3, weiter: .22,
+    name: 'Ertrunkener', set: 'ertrunken', hp: 115, pz: 44, glut: 45, gap: [700, 1250], pzRegen: 10, schaden: 1.4, weiter: 0.3,
     moves: {
       hieb:    { dur: 1450, hits: [{ t: 760, s: 'over', d: 15, k: 'p' }] },
       doppel:  { dur: 1850, hits: [{ t: 660, s: 'side', d: 10, k: 'p' }, { t: 1060, s: 'over', d: 12, k: 'p' }] },
@@ -169,7 +169,7 @@ const FEINDE = {
     p1: [['hieb', 3], ['doppel', 2], ['klammer', 1.2], ['zoegern', 1], ['finte', .6]]
   },
   moorleiche: {
-    name: 'Moorleiche', set: 'ertrunken', look: 'moorleiche', hp: 150, pz: 70, glut: 110, gap: [900, 1500], pzRegen: 12, schaden: 1.35, weiter: .2, blut: 'drop',
+    name: 'Moorleiche', set: 'ertrunken', look: 'moorleiche', hp: 200, pz: 70, glut: 110, gap: [900, 1500], pzRegen: 12, schaden: 1.45, weiter: .2, blut: 'drop',
     moves: {
       wuchten: { dur: 1900, hits: [{ t: 1050, s: 'over', d: 22, k: 'p' }], armor: true },
       doppel:  { dur: 2100, hits: [{ t: 800, s: 'side', d: 14, k: 'p' }, { t: 1250, s: 'side', d: 16, k: 'b' }] },
@@ -179,7 +179,7 @@ const FEINDE = {
     p1: [['wuchten', 3], ['doppel', 2], ['klammer', 1.4], ['spucken', 1.2]]
   },
   fischer: {
-    name: 'Ertrunkener Fischer', set: 'speer', look: 'fischer', hp: 96, pz: 50, glut: 70, gap: [800, 1350], pzRegen: 10, schaden: 1.3, weiter: .28,
+    name: 'Ertrunkener Fischer', set: 'speer', look: 'fischer', hp: 130, pz: 50, glut: 70, gap: [800, 1350], pzRegen: 10, schaden: 1.4, weiter: .28,
     moves: {
       stoss:  { dur: 1300, hits: [{ t: 640, s: 'thrust', d: 15, k: 'p' }] },
       zug:    { dur: 1900, hits: [{ t: 600, s: 'thrust', d: 11, k: 'p' }, { t: 1080, s: 'over', d: 17, k: 'p', mix: ['p', 'b'] }] },
@@ -192,7 +192,7 @@ const FEINDE = {
     fern: { moves: ['wurf'], gap: [2600, 4200] }
   },
   krabbe: {
-    name: 'Salzkrabbe', set: 'krabbe', hp: 60, pz: 34, glut: 35, gap: [600, 1050], pzRegen: 12, blut: 'spark', schaden: 1.25, panzer: .65, weiter: .3,
+    name: 'Salzkrabbe', set: 'krabbe', hp: 110, pz: 34, glut: 35, gap: [450, 850], pzRegen: 12, blut: 'spark', schaden: 1.35, panzer: .65, weiter: 0.45,
     moves: {
       kneif:  { dur: 1000, hits: [{ t: 500, s: 'side', d: 11, k: 'p' }] },
       doppel: { dur: 1350, hits: [{ t: 460, s: 'side', d: 8, k: 'p' }, { t: 760, s: 'over', d: 9, k: 'p' }] },
@@ -201,7 +201,7 @@ const FEINDE = {
     p1: [['kneif', 3], ['doppel', 2], ['sprung', 1.6]]
   },
   knecht: {
-    name: 'Kettenknecht', set: 'kette', hp: 180, pz: 80, glut: 150, gap: [750, 1300], pzRegen: 12, punish: 'schwung', klang: 'kette', blut: 'spark', schaden: 1.35, weiter: .3,
+    name: 'Kettenknecht', set: 'kette', hp: 240, pz: 80, glut: 150, gap: [750, 1300], pzRegen: 12, punish: 'schwung', klang: 'kette', blut: 'spark', schaden: 1.45, weiter: .3,
     konter: { nach: 4, move: 'stoss' },
     moves: {
       schwung: { dur: 1600, hits: [{ t: 820, s: 'side', d: 20, k: 'p' }] },
@@ -214,7 +214,7 @@ const FEINDE = {
     p1: [['schwung', 3], ['wirbel', 2], ['stampf', 1.4], ['wurf', 1.2], ['finte', .6]]
   },
   pfahl: {
-    name: 'Pfahlgänger', set: 'speer', look: 'pfahl', hp: 110, pz: 52, glut: 75, gap: [750, 1300], pzRegen: 10, punish: 'stoss', schaden: 1.3, weiter: .3,
+    name: 'Pfahlgänger', set: 'speer', look: 'pfahl', hp: 150, pz: 52, glut: 75, gap: [750, 1300], pzRegen: 10, punish: 'stoss', schaden: 1.4, weiter: .3,
     moves: {
       stoss:       { dur: 1350, hits: [{ t: 680, s: 'thrust', d: 16, k: 'p' }] },
       doppelstoss: { dur: 1750, hits: [{ t: 600, s: 'thrust', d: 11, k: 'p' }, { t: 980, s: 'thrust', d: 13, k: 'p', mix: ['p', 'u'] }] },
@@ -225,7 +225,7 @@ const FEINDE = {
     p1: [['stoss', 3], ['doppelstoss', 2], ['fegen', 1.3], ['aufspiessen', 1.1], ['finte', .8]]
   },
   salzleiche: {
-    name: 'Salzgeborener', set: 'ertrunken', look: 'salzleiche', hp: 130, pz: 70, glut: 110, gap: [850, 1400], pzRegen: 12, schaden: 1.3, panzer: .5, blut: 'salz', weiter: .2,
+    name: 'Salzgeborener', set: 'ertrunken', look: 'salzleiche', hp: 175, pz: 70, glut: 110, gap: [850, 1400], pzRegen: 12, schaden: 1.4, panzer: .5, blut: 'salz', weiter: .2,
     moves: {
       hieb:     { dur: 1600, hits: [{ t: 850, s: 'over', d: 20, k: 'p' }] },
       splitter: { dur: 1800, hits: [{ t: 1150, s: 'cast', d: 15, k: 'b', flug: 400, proj: 'salz' }] },
@@ -235,7 +235,7 @@ const FEINDE = {
     p1: [['hieb', 3], ['splitter', 1.5], ['kruste', 1.2], ['doppel', 2]]
   },
   kultist: {
-    name: 'Laternenträgerin', set: 'hexe', look: 'kultist', hp: 75, pz: 38, glut: 80, gap: [900, 1500], pzRegen: 10, schaden: 1.25, blut: 'drop',
+    name: 'Laternenträgerin', set: 'hexe', look: 'kultist', hp: 105, pz: 38, glut: 80, gap: [900, 1500], pzRegen: 10, schaden: 1.35, blut: 'drop',
     moves: {
       stab:    { dur: 1400, hits: [{ t: 700, s: 'over', d: 14, k: 'p' }] },
       laterne: { dur: 1700, hits: [{ t: 1100, s: 'cast', d: 18, k: 'b', flug: 460, proj: 'feuer' }] },
@@ -245,7 +245,7 @@ const FEINDE = {
     fern: { moves: ['laterne'], gap: [2400, 3800] }
   },
   jungfer: {
-    name: 'Brautjungfer', set: 'jungfer', hp: 125, pz: 48, glut: 120, gap: [600, 1100], pzRegen: 12, punish: 'schnitt', schaden: 1.3, weiter: .42,
+    name: 'Brautjungfer', set: 'jungfer', hp: 165, pz: 48, glut: 120, gap: [600, 1100], pzRegen: 12, punish: 'schnitt', schaden: 1.4, weiter: .42,
     moves: {
       schnitt:     { dur: 1050, hits: [{ t: 500, s: 'side', d: 13, k: 'p' }] },
       reigen:      { dur: 1700, hits: [{ t: 480, s: 'side', d: 9, k: 'p' }, { t: 740, s: 'over', d: 9, k: 'p' }, { t: 1000, s: 'side', d: 12, k: 'p', mix: ['p', 'b'] }] },
@@ -257,7 +257,7 @@ const FEINDE = {
     p1: [['schnitt', 3], ['reigen', 2], ['schleier', 1.1], ['verzoegert', 1.3], ['verschwinden', 1], ['finte', .7]]
   },
   waechter: {
-    name: 'Glockenwächter', set: 'kette', look: 'waechter', hp: 250, pz: 120, glut: 280, gap: [850, 1400], pzRegen: 14, blut: 'spark', schaden: 1.35, weiter: .25,
+    name: 'Glockenwächter', set: 'kette', look: 'waechter', hp: 320, pz: 120, glut: 280, gap: [850, 1400], pzRegen: 14, blut: 'spark', schaden: 1.45, weiter: .25,
     guard: { block: .88 }, konter: { nach: 3, move: 'schildstoss' },
     moves: {
       kolben:        { dur: 1750, hits: [{ t: 920, s: 'over', d: 26, k: 'p' }] },
@@ -282,7 +282,7 @@ const FEINDE = {
     p1: [['hieb', 3], ['kombo', 2.2], ['sturm', 1.2], ['zoegern', 1.3], ['finte', .9]]
   },
   taucher: {
-    name: 'Jonte', title: 'Der Taucher im Hafenbecken', set: 'kette', look: 'taucher', boss: true, neben: true, hp: 560, pz: 150, glut: 1100, gap: [700, 1200], pzRegen: 14, blut: 'drop', schaden: 1.3, weiter: .3, klang: 'kette',
+    name: 'Jonte', title: 'Der Taucher im Hafenbecken', set: 'kette', look: 'taucher', boss: true, neben: true, hp: 720, pz: 150, glut: 1100, gap: [550, 950], pzRegen: 14, blut: 'drop', schaden: 1.4, weiter: 0.38, klang: 'kette',
     intro: '… Mira? … Nein. Du bist nicht Mira. Du bist aus dem Wasser.',
     moves: {
       anker:   { dur: 1800, hits: [{ t: 950, s: 'over', d: 28, k: 'p' }] },
@@ -297,7 +297,7 @@ const FEINDE = {
   },
   hexe: {
     name: 'Die Salzhexe', title: 'Hüterin der Salzgrube', set: 'hexe', boss: true, neben: true,
-    hp: 640, pz: 140, glut: 1400, gap: [650, 1150], pzRegen: 14, punish: 'stab', blut: 'salz', schaden: 1.35, weiter: .3,
+    hp: 700, pz: 140, glut: 1400, gap: [650, 1150], pzRegen: 14, punish: 'stab', blut: 'salz', schaden: 1.35, weiter: .3,
     intro: 'Noch einer, der das Salz nicht schmecken will. Du wirst es lernen.',
     moves: {
       stab:      { dur: 1500, hits: [{ t: 760, s: 'over', d: 24, k: 'p' }] },
@@ -318,7 +318,7 @@ const FEINDE = {
   },
   spinne: {
     name: 'Die Wrackspinne', title: 'Was im Hafen lauert', set: 'spinne', boss: true, neben: true,
-    hp: 820, pz: 170, glut: 1800, gap: [600, 1100], pzRegen: 16, punish: 'stich', blut: 'spark', schaden: 1.35, panzer: .35, weiter: .35,
+    hp: 1250, pz: 170, glut: 1800, gap: [520, 950], pzRegen: 16, punish: 'stich', blut: 'spark', schaden: 1.45, panzer: .35, weiter: 0.42,
     moves: {
       stich:      { dur: 1350, hits: [{ t: 660, s: 'thrust', d: 24, k: 'p' }] },
       doppelstich:{ dur: 1750, hits: [{ t: 580, s: 'thrust', d: 15, k: 'p' }, { t: 940, s: 'over', d: 18, k: 'p', mix: ['p', 'b'] }] },
@@ -332,7 +332,7 @@ const FEINDE = {
   },
   vogt: {
     name: 'Der Strandvogt', title: 'Sammler der Ertrunkenen', set: 'vogt', boss: true,
-    hp: 820, pz: 190, glut: 2000, gap: [600, 1150], pzRegen: 16, punish: 'laterne', schaden: 1.35, weiter: .3,
+    hp: 950, pz: 190, glut: 2000, gap: [600, 1150], pzRegen: 16, punish: 'laterne', schaden: 1.35, weiter: .3,
     intro: 'Wieder eines. Die Flut spuckt sie aus, und ich sammle sie ein.',
     moves: {
       haken:      { dur: 1850, hits: [{ t: 940, s: 'over', d: 28, k: 'p' }] },
@@ -351,14 +351,14 @@ const FEINDE = {
   },
   isolde: {
     name: 'Isolde', title: 'Die Ertränkte Braut', set: 'isolde', boss: true, haupt: true,
-    hp: 1300, pz: 230, glut: 4200, gap: [650, 1150], pzRegen: 18, punish: 'schleier', klang: 'kette', schaden: 1.4, weiter: .35,
+    hp: 1150, pz: 230, glut: 4200, gap: [650, 1150], pzRegen: 18, punish: 'schleier', klang: 'kette', schaden: 1.3, weiter: .35,
     intro: 'Bist du es? Nach all den Jahren? … Nein. Du riechst nach Salz, nicht nach Rosen.',
     moves: {
       schwung:    { dur: 1800, hits: [{ t: 900, s: 'side', d: 28, k: 'p' }] },
       sturz:      { dur: 2350, hits: [{ t: 1300, s: 'over', d: 36, k: 'b', hold: 320 }], offen: 700 },
-      schleier:   { dur: 1650, hits: [{ t: 540, s: 'thrust', d: 17, k: 'p' }, { t: 880, s: 'thrust', d: 17, k: 'p', mix: ['p', 'b'] }] },
+      schleier:   { dur: 1650, hits: [{ t: 540, s: 'thrust', d: 14, k: 'p' }, { t: 900, s: 'thrust', d: 14, k: 'p', mix: ['p', 'b'] }] },
       traenen:    { dur: 2500, hits: [{ t: 1520, s: 'slam', d: 32, k: 'u', flug: 560, proj: 'welle' }] },
-      walzer:     { dur: 2800, hits: [{ t: 630, s: 'side', d: 15, k: 'p' }, { t: 980, s: 'side', d: 15, k: 'p' }, { t: 1330, s: 'over', d: 19, k: 'p' }, { t: 1930, s: 'side', d: 24, k: 'b', hold: 250, mix: ['b', 'u'] }] },
+      walzer:     { dur: 2800, hits: [{ t: 630, s: 'side', d: 12, k: 'p' }, { t: 1000, s: 'side', d: 12, k: 'p' }, { t: 1370, s: 'over', d: 16, k: 'p' }, { t: 1950, s: 'side', d: 22, k: 'b', hold: 250, mix: ['b', 'u'] }] },
       gelaeut:    { dur: 2700, hits: [{ t: 1230, s: 'slam', d: 30, k: 'u', flug: 420, proj: 'klang' }, { t: 1930, s: 'slam', d: 30, k: 'u', flug: 420, proj: 'klang' }] },
       haende:     { dur: 2400, hits: [{ t: 1230, s: 'grab', d: 40, k: 'u' }] },
       verzoegert: { dur: 2650, hits: [{ t: 1820, s: 'over', d: 36, k: 'p', hold: 900 }] },

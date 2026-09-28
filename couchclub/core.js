@@ -14,7 +14,7 @@
   const SOON = ['Codeknacker', 'Zahlenkette', 'Reaktionsduell', 'Undercover', 'Schiffe versenken', 'Air-Hockey', 'Begriffe erklären', 'Wörter raten', 'Quiz'];
   const KEY = 'couchclub.v1';
   // Spielstände der Solo-Abenteuer: spiele.html (Kerker-Wischer und Lichtläufer) und mond.html (Mondgeläut)
-  const saveKeysOf = (pid) => ['kerker-licht-v2@' + pid, 'mondgelaeut-v1@' + pid];
+  const saveKeysOf = (pid) => ['kerker-licht-v2@' + pid, 'mondgelaeut-v1@' + pid, 'mondgelaeut-v2@' + pid];
 
   /* ---------- Speicher ---------- */
   function defaults() {
@@ -367,7 +367,7 @@
   function wipeProgress(pid, gid) {
     const g = CC.games.find((x) => x.id === gid);
     if (!g?.frame?.save) return;
-    try { localStorage.removeItem(frameSaveKey(g, pid)); } catch (e) { /* nichts gespeichert */ }
+    try { [g.frame.save, ...(g.frame.alt || [])].forEach((k) => localStorage.removeItem(k + '@' + pid)); } catch (e) { /* nichts gespeichert */ }
     if (state.stats[pid]) delete state.stats[pid][gid];
     save();
     render();

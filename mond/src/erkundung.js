@@ -257,7 +257,7 @@ const Erk = (() => {
   function gegner(dt){
     const s = dt / 1000;
     for (const e of ents){
-      if (e.typ === 'boss'){ updateActor(e.actor, dt); e.actor.x = e.x; e.actor.gy = e.y; continue; }
+      if (e.typ === 'boss'){ if (!e.imKampf){ updateActor(e.actor, dt); e.actor.x = e.x; e.actor.gy = e.y; } continue; }
       if (e.typ !== 'feind' || e.zustand === 'tot' || e.imKampf) continue;
       const A = e.actor, dx = S.x - e.x, dy = S.y - e.y, dist = Math.abs(dx);
       e.t += dt;

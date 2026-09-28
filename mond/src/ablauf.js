@@ -87,7 +87,7 @@ function geben(g){
 const SCREENS = ['title', 'prolog', 'welt', 'fight', 'dialog', 'lesen', 'feuer', 'karte', 'ende'];
 let modus = 'titel', pause = false;
 function show(id){ SCREENS.forEach(s => { $('#' + s).hidden = s !== id; }); }
-function pausiere(v){ pause = v; if (v) Eingabe.loslassen(); }
+function pausiere(v){ pause = v; Eingabe.setAktiv(!v); if (v) Eingabe.loslassen(); else Eingabe.leeren(); }
 function blende(fn, ms = 380){
   const f = $('#fade');
   return new Promise(res => {
@@ -133,8 +133,18 @@ function el(tag, cls, html){ const e = document.createElement(tag); if (cls) e.c
 /* ---------- Leinwand und Bildschleife ---------- */
 const cv = $('#stage'), ctx = cv.getContext('2d');
 let wt = 0, last = performance.now();
+// Wenn das Gerät nicht mitkommt, zeichnen wir mit weniger Pixeln
+let sparsam = false, ruckelT = 0, ruckelN = 0;
+function ruckelPruefen(dt){
+  if (sparsam || document.hidden) return;
+  ruckelN++; ruckelT += dt;
+  if (ruckelN >= 120){
+    if (ruckelT / ruckelN > 24 && (window.devicePixelRatio || 1) > 1){ sparsam = true; resize(); }
+    ruckelN = 0; ruckelT = 0;
+  }
+}
 function resize(){
-  const r = Math.min(2, window.devicePixelRatio || 1), b = $('#app').getBoundingClientRect();
+  const r = Math.min(sparsam ? 1 : 2, window.devicePixelRatio || 1), b = $('#app').getBoundingClientRect();
   const w = Math.max(1, Math.round(b.width)), h = Math.max(1, Math.round(b.height));
   cv.width = Math.round(w * r); cv.height = Math.round(h * r);
   ctx.setTransform(r, 0, 0, r, 0, 0);
@@ -143,7 +153,8 @@ function resize(){
   if (modus === 'kampf') kampfKamera();
 }
 function frame(now){
-  const dt = Math.min(50, now - last); last = now; wt += dt;
+  const roh = now - last, dt = Math.min(50, roh); last = now; wt += dt;
+  if (modus === 'welt' || modus === 'kampf') ruckelPruefen(Math.min(roh, 100));
   if (!pause){
     if (modus === 'kampf'){ Fight.update(dt); Erk.update(dt, D, true); }
     else if (modus === 'prolog') Prolog.update(dt);
@@ -509,6 +520,7 @@ function kampf(gruppe, vorteil){
 }
 function kampfStart(gruppe, vorteil, boss){
   kampfGruppe = gruppe; kampfBoss = boss || null;
+  gruppe.forEach(e => { e.imKampf = true; });
   modus = 'kampf'; show('fight');
   const P = heldAufBuehne(), S0 = Erk.S;
   const dir = Math.sign(gruppe[0].x - S0.x) || S0.face;
