@@ -10,6 +10,7 @@ Aufs Handy: Seite öffnen und „Zum Home-Bildschirm“ wählen (iPhone: Teilen-
 
 - `couchclub/`: die App (Profile, Spielauswahl, Spiele, Manifest, Service Worker, Symbole), Details in `couchclub/README.md`
 - `spiel/`: Quellcode von Kerker-Wischer und Lichtläufer, Details in `spiel/README.md`
+- `mond/`: Mondgeläut, das nächste Solo-Abenteuer (in Arbeit, bisher als Kampf-Demo), Details in `mond/README.md`
 - `.github/workflows/pages.yml`: baut bei jeder Änderung auf `main` die App und veröffentlicht sie auf GitHub Pages
 
 Selbst bauen: `python3 couchclub/build.py --out _site`
