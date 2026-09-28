@@ -65,7 +65,7 @@ const GEBIETE = {
     }
   },
   bucht: {
-    name: 'Stille Bucht', region: 'strandung', thema: 'grotte', horizont: 20 * T, staerke: 1.1, musik: 'amb',
+    name: 'Stille Bucht', region: 'strandung', thema: 'grotte', horizont: 20 * T, staerke: 1.1, musik: 'hoehle',
     kartenPos: [6, 7, 2, 1], links: { l: 'wrackfeld:y' },
     beschreibung: 'Eine Grotte hinter dem hohlen Fels. Am Grund glimmt etwas Bläuliches.',
     o: {
@@ -101,7 +101,7 @@ const GEBIETE = {
     }
   },
   leuchtturm_innen: {
-    name: 'Im Leuchtturm', region: 'strandung', thema: 'turm', horizont: 30 * T, staerke: 1.05, musik: 'amb',
+    name: 'Im Leuchtturm', region: 'strandung', thema: 'turm', horizont: 30 * T, staerke: 1.05, musik: 'turm',
     kartenPos: [7, 2, 1, 2], hinten: [[4, 4, 29, 59]],
     beschreibung: 'Fünf Stockwerke, eine Leiter nach der anderen. Oben der Raum mit der Lampe.',
     o: {
@@ -183,7 +183,7 @@ const GEBIETE = {
 
   /* ---------------------------------------------------------------- Die Salzmarsch */
   salzpfad: {
-    name: 'Salzpfad', region: 'marsch', thema: 'marsch', horizont: 18 * T - 10, staerke: 1.2, musik: 'amb',
+    name: 'Salzpfad', region: 'marsch', thema: 'marsch', horizont: 18 * T - 10, staerke: 1.2, musik: 'marsch',
     kartenPos: [0, 4, 4, 1], links: { l: 'nebel:z', r: 'pfahldorf:a' },
     beschreibung: 'Ein Pfad aus weißem Salz durch die Marsch. Unten, hinter dem Steg, geht es ins Schilf.',
     o: {
@@ -209,7 +209,7 @@ const GEBIETE = {
     }
   },
   schilf: {
-    name: 'Schilfmeer', region: 'marsch', thema: 'marsch', horizont: 20 * T - 20, staerke: 1.25, musik: 'amb',
+    name: 'Schilfmeer', region: 'marsch', thema: 'marsch', horizont: 20 * T - 20, staerke: 1.25, musik: 'marsch',
     kartenPos: [2, 6, 3, 1], links: { l: 'salzpfad:y' },
     beschreibung: 'Das Schilf steht höher als du. Es raschelt, obwohl kein Wind geht.',
     o: {
@@ -227,7 +227,7 @@ const GEBIETE = {
     }
   },
   pfahldorf: {
-    name: 'Pfahlwyk', region: 'marsch', thema: 'pfahldorf', horizont: 24 * T - 10, staerke: 1.2, musik: 'amb',
+    name: 'Pfahlwyk', region: 'marsch', thema: 'pfahldorf', horizont: 24 * T - 10, staerke: 1.2, musik: 'marsch',
     kartenPos: [4, 3, 4, 2], links: { l: 'salzpfad:z', r: 'ufer:a' },
     hinten: [[50, 17, 62, 23], [74, 17, 86, 23], [90, 15, 97, 23]],
     beschreibung: 'Ein Dorf auf Pfählen, halb im Wasser. Hinter den Häusern geht es hinab in die Salzgrube.',
@@ -250,7 +250,7 @@ const GEBIETE = {
     }
   },
   heilerhaus: {
-    name: 'Wendas Haus', region: 'marsch', thema: 'haus', horizont: 10 * T, staerke: 1.2, musik: 'amb',
+    name: 'Wendas Haus', region: 'marsch', thema: 'haus', horizont: 10 * T, staerke: 1.2, musik: 'hoehle',
     kartenPos: [6, 1, 1, 1], hinten: [[3, 4, 36, 13]],
     beschreibung: 'Das Haus der Heilerin. Es riecht nach Salz und kalten Kerzen.',
     o: {
@@ -265,7 +265,7 @@ const GEBIETE = {
     }
   },
   salzgrube: {
-    name: 'Salzgrube', region: 'marsch', thema: 'grube', horizont: 40 * T, staerke: 1.3, musik: 'amb', betreten: null,
+    name: 'Salzgrube', region: 'marsch', thema: 'grube', horizont: 40 * T, staerke: 1.3, musik: 'hoehle', betreten: null,
     kartenPos: [8, 3, 2, 4],
     beschreibung: 'Ein Schacht aus weißem Kristall, tief hinab. Ganz unten singt jemand.',
     o: {
@@ -290,7 +290,7 @@ const GEBIETE = {
     }
   },
   ufer: {
-    name: 'Totes Ufer', region: 'marsch', thema: 'marsch', horizont: 20 * T - 10, staerke: 1.25, musik: 'amb',
+    name: 'Totes Ufer', region: 'marsch', thema: 'marsch', horizont: 20 * T - 10, staerke: 1.25, musik: 'marsch',
     kartenPos: [8, 1, 3, 1], links: { l: 'pfahldorf:z', r: 'bruecke:a' },
     hinten: [[100, 12, 112, 19]],
     beschreibung: 'Boote liegen kieloben am Ufer wie Tiere, die sich zum Sterben hingelegt haben.',
@@ -314,7 +314,7 @@ const GEBIETE = {
     }
   },
   bruecke: {
-    name: 'Nebelbrücke', region: 'marsch', thema: 'bruecke', horizont: 14 * T + 40, staerke: 1.3, musik: 'amb',
+    name: 'Nebelbrücke', region: 'marsch', thema: 'bruecke', horizont: 14 * T + 40, staerke: 1.3, musik: 'marsch',
     kartenPos: [11, 0, 4, 2], links: { l: 'ufer:z', r: 'stadttor:a' },
     hinten: [[40, 17, 43, 37], [70, 17, 73, 37], [125, 17, 128, 37], [150, 17, 153, 37]],
     beschreibung: 'Eine alte Brücke nach Velmora. Seit sie eingestürzt ist, führt der Weg unten durchs Flussbett.',
@@ -338,7 +338,7 @@ const GEBIETE = {
 
   /* ---------------------------------------------------------------- Velmora */
   stadttor: {
-    name: 'Stadttor', region: 'velmora', thema: 'velmora', horizont: 20 * T - 10, staerke: 1.35, musik: 'amb',
+    name: 'Stadttor', region: 'velmora', thema: 'velmora', horizont: 20 * T - 10, staerke: 1.35, musik: 'stadt',
     kartenPos: [0, 6, 3, 1], links: { l: 'bruecke:z', r: 'gassen:a' },
     hinten: [[55, 16, 75, 19]],
     beschreibung: 'Das Tor von Velmora steht halb unter Wasser. Oben auf der Mauer sieht man weit.',
@@ -356,7 +356,7 @@ const GEBIETE = {
     }
   },
   gassen: {
-    name: 'Überflutete Gassen', region: 'velmora', thema: 'velmora', horizont: 30 * T - 10, staerke: 1.4, musik: 'amb',
+    name: 'Überflutete Gassen', region: 'velmora', thema: 'velmora', horizont: 30 * T - 10, staerke: 1.4, musik: 'stadt',
     kartenPos: [3, 5, 4, 2], links: { l: 'stadttor:z', r: 'brunnenplatz:a' },
     hinten: [[20, 18, 32, 29], [40, 14, 52, 29], [60, 16, 74, 29], [92, 20, 104, 29], [110, 12, 126, 29], [135, 15, 150, 29], [158, 12, 172, 29]],
     beschreibung: 'Knietiefe Gassen und Dächer, über die man weiterkommt. Ein Haus hat ein blaues Tor.',
@@ -379,7 +379,7 @@ const GEBIETE = {
     }
   },
   blaueshaus: {
-    name: 'Das blaue Haus', region: 'velmora', thema: 'haus', horizont: 10 * T, staerke: 1.4, musik: 'amb',
+    name: 'Das blaue Haus', region: 'velmora', thema: 'haus', horizont: 10 * T, staerke: 1.4, musik: 'hoehle',
     kartenPos: [5, 3, 1, 1], hinten: [[3, 4, 32, 13]],
     beschreibung: 'Zwei Gläser auf dem Tisch, eines umgefallen.',
     o: {
@@ -391,7 +391,7 @@ const GEBIETE = {
     }
   },
   brunnenplatz: {
-    name: 'Brunnenplatz', region: 'velmora', thema: 'velmora', horizont: 22 * T - 10, staerke: 1.4, musik: 'amb',
+    name: 'Brunnenplatz', region: 'velmora', thema: 'velmora', horizont: 22 * T - 10, staerke: 1.4, musik: 'stadt',
     kartenPos: [7, 4, 3, 1], links: { l: 'gassen:z', r: 'hafen:a' },
     hinten: [[60, 4, 72, 15]],
     beschreibung: 'Der Platz mit dem Brunnen, in dem Glut unter dem Wasser glimmt. Oben die Brautkapelle.',
@@ -409,7 +409,7 @@ const GEBIETE = {
     }
   },
   hafen: {
-    name: 'Hafen', region: 'velmora', thema: 'hafen', horizont: 24 * T - 10, staerke: 1.4, musik: 'amb',
+    name: 'Hafen', region: 'velmora', thema: 'hafen', horizont: 24 * T - 10, staerke: 1.4, musik: 'stadt',
     kartenPos: [10, 4, 4, 2], links: { l: 'brunnenplatz:z' },
     beschreibung: 'Schiffe übereinander, Taue wie Netze. Im Bauch eines Schiffes geht es hinab ins Hafenbecken.',
     o: {
@@ -433,7 +433,7 @@ const GEBIETE = {
     }
   },
   hafenbecken: {
-    name: 'Hafenbecken', region: 'velmora', thema: 'becken', horizont: 16 * T, staerke: 1.4, musik: 'amb',
+    name: 'Hafenbecken', region: 'velmora', thema: 'becken', horizont: 16 * T, staerke: 1.4, musik: 'hoehle',
     kartenPos: [11, 7, 2, 1], hinten: [[3, 4, 66, 21]],
     beschreibung: 'Leergelaufen. Unten führen Stufen noch tiefer, ins Wasser.',
     o: {
@@ -447,7 +447,7 @@ const GEBIETE = {
     }
   },
   kapelle: {
-    name: 'Brautkapelle', region: 'velmora', thema: 'kapelle', horizont: 12 * T, staerke: 1.5, musik: 'amb', betreten: 'kapelle_ankunft',
+    name: 'Brautkapelle', region: 'velmora', thema: 'kapelle', horizont: 12 * T, staerke: 1.5, musik: 'hoehle', betreten: 'kapelle_ankunft',
     kartenPos: [7, 1, 3, 2], hinten: [[3, 6, 96, 23]],
     beschreibung: 'Geschmückt für eine Hochzeit, die nie stattfand. Eine Tür führt zur Gruft, eine zum Turm.',
     o: {
@@ -473,7 +473,7 @@ const GEBIETE = {
     }
   },
   gruft: {
-    name: 'Gruft', region: 'velmora', thema: 'gruft', horizont: 10 * T, staerke: 1.5, musik: 'amb',
+    name: 'Gruft', region: 'velmora', thema: 'gruft', horizont: 10 * T, staerke: 1.5, musik: 'hoehle',
     kartenPos: [7, 3, 2, 1], hinten: [[3, 5, 56, 14]],
     beschreibung: 'Unter der Kapelle liegen die, die auf die Hochzeit warteten.',
     o: {
@@ -488,7 +488,7 @@ const GEBIETE = {
     }
   },
   turmtreppe: {
-    name: 'Turmtreppe', region: 'velmora', thema: 'turm', horizont: 40 * T, staerke: 1.5, musik: 'amb', betreten: 'turm_ankunft',
+    name: 'Turmtreppe', region: 'velmora', thema: 'turm', horizont: 40 * T, staerke: 1.5, musik: 'turm', betreten: 'turm_ankunft',
     kartenPos: [10, 1, 1, 3], hinten: [[4, 3, 31, 67]],
     beschreibung: 'Dreihundert Stufen, eine für jedes Jahr. Oben hängt die Glocke.',
     o: {
@@ -509,7 +509,7 @@ const GEBIETE = {
     }
   },
   glockenturm: {
-    name: 'Glockenturm', region: 'velmora', thema: 'turmspitze', horizont: 18 * T + 60, staerke: 1.5, musik: 'amb',
+    name: 'Glockenturm', region: 'velmora', thema: 'turmspitze', horizont: 18 * T + 60, staerke: 1.5, musik: 'turm',
     kartenPos: [9, 0, 3, 1],
     hinten: [[0, 4, 1, 17], [20, 4, 21, 17], [42, 4, 43, 17], [62, 4, 63, 17]],
     beschreibung: 'Oben im Turm, unter der großen Glocke. Weit draußen steigt das Meer.',

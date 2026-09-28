@@ -172,8 +172,9 @@ const Music = (() => {
   // d-Moll, B-Dur, g-Moll, A-Dur
   const CHORDS = [[50, 53, 57], [46, 50, 53], [43, 46, 50], [45, 49, 52]];
 
+  const RUHIG = ['amb', 'marsch', 'stadt', 'hoehle', 'turm'];
   function stepDur(){
-    if (mode === 'amb') return .5;
+    if (RUHIG.includes(mode)) return .5;
     if (mode === 'kampf') return 60 / 86 / 2;
     return 60 / (level ? 94 : 76) / 2;
   }
@@ -195,9 +196,15 @@ const Music = (() => {
     const ac = Snd.ac();
     if (!ac || !m) return;
     bus = ac.createGain(); bus.gain.value = .0001;
-    bus.gain.exponentialRampToValueAtTime(m === 'amb' ? .8 : .7, ac.currentTime + 2.5);
+    bus.gain.exponentialRampToValueAtTime(RUHIG.includes(m) ? .8 : .7, ac.currentTime + 2.5);
     bus.connect(duckNode());
     if (m === 'amb') { sea(.16); drone([38, 45], .045, 380); }
+    // Jede Gegend klingt anders: Marsch mit Wind und Wiegenlied, Stadt mit fernen Glocken,
+    // Höhlen und Häuser ohne Meer, dafür Tropfen, im Turm die große Glocke
+    if (m === 'marsch') { sea(.05); wind(.05); drone([40, 47], .04, 300); }
+    if (m === 'stadt') { sea(.08); wind(.03); drone([36, 43], .045, 320); }
+    if (m === 'hoehle') { drone([33, 40], .05, 220); }
+    if (m === 'turm') { wind(.07); drone([31, 38], .05, 260); }
     if (m === 'kampf') { sea(.08); drone([38, 50], .05, 260); }
     if (m === 'boss') { sea(.06); drone([26, 38], .1, 190); }
     nextT = ac.currentTime + .15; step = 0;
@@ -230,6 +237,14 @@ const Music = (() => {
     s.buffer = Snd.noiseBuf(); s.loop = true; f.type = 'lowpass'; f.frequency.value = 520; f.Q.value = .4;
     g.gain.value = vol * .6; lfo.frequency.value = .085; lg.gain.value = vol * .5;
     lfo.connect(lg); lg.connect(g.gain);
+    s.connect(f); f.connect(g); g.connect(bus);
+    s.start(); lfo.start(); held.push(s, lfo);
+  }
+  function wind(vol){
+    const ac = Snd.ac(), s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    const lfo = ac.createOscillator(), lg = ac.createGain();
+    s.buffer = Snd.noiseBuf(); s.loop = true; f.type = 'bandpass'; f.frequency.value = 700; f.Q.value = .8;
+    g.gain.value = vol * .6; lfo.frequency.value = .05; lg.gain.value = 380; lfo.connect(lg); lg.connect(f.frequency);
     s.connect(f); f.connect(g); g.connect(bus);
     s.start(); lfo.start(); held.push(s, lfo);
   }
@@ -277,6 +292,27 @@ const Music = (() => {
     if (mode === 'amb'){
       if (i % 14 === 0) { Snd.bell(98, .07, 2.4, .7, t); Snd.bell(98, .05, 2, .7, t + .3); }
       if (i % 29 === 11) Snd.bell(hz(pickNote([74, 77, 81, 69])), .018, 3.5, .9, t);
+      return;
+    }
+    if (mode === 'marsch'){
+      if (i % 18 === 0) { Snd.bell(98, .045, 2.2, .7, t); Snd.bell(98, .03, 2, .7, t + .3); }
+      // Wendas Wiegenlied, ganz leise aus der Ferne
+      const w = i % 48; if (w >= 20 && w < 27) Snd.bell(hz([69, 72, 71, 67, 69, 64, 67][w - 20] + 12), .012, 2.6, .95, t);
+      return;
+    }
+    if (mode === 'stadt'){
+      if (i % 14 === 0) { Snd.bell(98, .05, 2.2, .7, t); Snd.bell(98, .035, 2, .7, t + .3); }
+      if (i % 23 === 5) Snd.bell(pickNote([65.4, 73.4, 82.4, 110]), .045, 5, .92, t);
+      return;
+    }
+    if (mode === 'hoehle'){
+      if (i % 16 === 0) { Snd.bell(98, .04, 2, .6, t); Snd.bell(98, .028, 1.8, .6, t + .3); }
+      if (rnd() < .09) Snd.tone('sine', 1600 + rnd() * 1600, t + rnd() * .4, .001, .09, .018, .7, 900);
+      return;
+    }
+    if (mode === 'turm'){
+      if (i % 24 === 0) Snd.bell(73.4, .09, 7, .9, t);
+      if (i % 24 === 12) { Snd.bell(98, .04, 2, .7, t); Snd.bell(98, .028, 1.8, .7, t + .3); }
       return;
     }
     if (mode === 'kampf'){

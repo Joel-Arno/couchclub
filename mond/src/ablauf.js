@@ -645,7 +645,7 @@ async function sterben(text, wo){
       const e = Erk.ents().find(x => x.typ === 'feuer' && x.def.id === D.feuer);
       const P = Stage.P, S2 = SETS[P.set];
       P.poseFn = null; P.pose = mkPose({}, S2.lie); playAnim(P, [[0, S2.lie], [900, S2.lie], [1700, S2.kneel, EASE.io]], true);
-      Music.play('amb');
+      Music.play(GEBIETE[f[0]].musik || 'amb');
       if (e) rasten(e, 'tod', extra); else betrete(f[0], { x: f[1], y: f[2] });
     } else {
       betrete(START.gebiet, START.anker);

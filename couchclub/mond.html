@@ -723,8 +723,9 @@ const Music = (() => {
   // d-Moll, B-Dur, g-Moll, A-Dur
   const CHORDS = [[50, 53, 57], [46, 50, 53], [43, 46, 50], [45, 49, 52]];
 
+  const RUHIG = ['amb', 'marsch', 'stadt', 'hoehle', 'turm'];
   function stepDur(){
-    if (mode === 'amb') return .5;
+    if (RUHIG.includes(mode)) return .5;
     if (mode === 'kampf') return 60 / 86 / 2;
     return 60 / (level ? 94 : 76) / 2;
   }
@@ -746,9 +747,15 @@ const Music = (() => {
     const ac = Snd.ac();
     if (!ac || !m) return;
     bus = ac.createGain(); bus.gain.value = .0001;
-    bus.gain.exponentialRampToValueAtTime(m === 'amb' ? .8 : .7, ac.currentTime + 2.5);
+    bus.gain.exponentialRampToValueAtTime(RUHIG.includes(m) ? .8 : .7, ac.currentTime + 2.5);
     bus.connect(duckNode());
     if (m === 'amb') { sea(.16); drone([38, 45], .045, 380); }
+    // Jede Gegend klingt anders: Marsch mit Wind und Wiegenlied, Stadt mit fernen Glocken,
+    // Höhlen und Häuser ohne Meer, dafür Tropfen, im Turm die große Glocke
+    if (m === 'marsch') { sea(.05); wind(.05); drone([40, 47], .04, 300); }
+    if (m === 'stadt') { sea(.08); wind(.03); drone([36, 43], .045, 320); }
+    if (m === 'hoehle') { drone([33, 40], .05, 220); }
+    if (m === 'turm') { wind(.07); drone([31, 38], .05, 260); }
     if (m === 'kampf') { sea(.08); drone([38, 50], .05, 260); }
     if (m === 'boss') { sea(.06); drone([26, 38], .1, 190); }
     nextT = ac.currentTime + .15; step = 0;
@@ -781,6 +788,14 @@ const Music = (() => {
     s.buffer = Snd.noiseBuf(); s.loop = true; f.type = 'lowpass'; f.frequency.value = 520; f.Q.value = .4;
     g.gain.value = vol * .6; lfo.frequency.value = .085; lg.gain.value = vol * .5;
     lfo.connect(lg); lg.connect(g.gain);
+    s.connect(f); f.connect(g); g.connect(bus);
+    s.start(); lfo.start(); held.push(s, lfo);
+  }
+  function wind(vol){
+    const ac = Snd.ac(), s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    const lfo = ac.createOscillator(), lg = ac.createGain();
+    s.buffer = Snd.noiseBuf(); s.loop = true; f.type = 'bandpass'; f.frequency.value = 700; f.Q.value = .8;
+    g.gain.value = vol * .6; lfo.frequency.value = .05; lg.gain.value = 380; lfo.connect(lg); lg.connect(f.frequency);
     s.connect(f); f.connect(g); g.connect(bus);
     s.start(); lfo.start(); held.push(s, lfo);
   }
@@ -828,6 +843,27 @@ const Music = (() => {
     if (mode === 'amb'){
       if (i % 14 === 0) { Snd.bell(98, .07, 2.4, .7, t); Snd.bell(98, .05, 2, .7, t + .3); }
       if (i % 29 === 11) Snd.bell(hz(pickNote([74, 77, 81, 69])), .018, 3.5, .9, t);
+      return;
+    }
+    if (mode === 'marsch'){
+      if (i % 18 === 0) { Snd.bell(98, .045, 2.2, .7, t); Snd.bell(98, .03, 2, .7, t + .3); }
+      // Wendas Wiegenlied, ganz leise aus der Ferne
+      const w = i % 48; if (w >= 20 && w < 27) Snd.bell(hz([69, 72, 71, 67, 69, 64, 67][w - 20] + 12), .012, 2.6, .95, t);
+      return;
+    }
+    if (mode === 'stadt'){
+      if (i % 14 === 0) { Snd.bell(98, .05, 2.2, .7, t); Snd.bell(98, .035, 2, .7, t + .3); }
+      if (i % 23 === 5) Snd.bell(pickNote([65.4, 73.4, 82.4, 110]), .045, 5, .92, t);
+      return;
+    }
+    if (mode === 'hoehle'){
+      if (i % 16 === 0) { Snd.bell(98, .04, 2, .6, t); Snd.bell(98, .028, 1.8, .6, t + .3); }
+      if (rnd() < .09) Snd.tone('sine', 1600 + rnd() * 1600, t + rnd() * .4, .001, .09, .018, .7, 900);
+      return;
+    }
+    if (mode === 'turm'){
+      if (i % 24 === 0) Snd.bell(73.4, .09, 7, .9, t);
+      if (i % 24 === 12) { Snd.bell(98, .04, 2, .7, t); Snd.bell(98, .028, 1.8, .7, t + .3); }
       return;
     }
     if (mode === 'kampf'){
@@ -5023,7 +5059,7 @@ const GEBIETE = {
     }
   },
   bucht: {
-    name: 'Stille Bucht', region: 'strandung', thema: 'grotte', horizont: 20 * T, staerke: 1.1, musik: 'amb',
+    name: 'Stille Bucht', region: 'strandung', thema: 'grotte', horizont: 20 * T, staerke: 1.1, musik: 'hoehle',
     kartenPos: [6, 7, 2, 1], links: { l: 'wrackfeld:y' },
     beschreibung: 'Eine Grotte hinter dem hohlen Fels. Am Grund glimmt etwas Bläuliches.',
     o: {
@@ -5059,7 +5095,7 @@ const GEBIETE = {
     }
   },
   leuchtturm_innen: {
-    name: 'Im Leuchtturm', region: 'strandung', thema: 'turm', horizont: 30 * T, staerke: 1.05, musik: 'amb',
+    name: 'Im Leuchtturm', region: 'strandung', thema: 'turm', horizont: 30 * T, staerke: 1.05, musik: 'turm',
     kartenPos: [7, 2, 1, 2], hinten: [[4, 4, 29, 59]],
     beschreibung: 'Fünf Stockwerke, eine Leiter nach der anderen. Oben der Raum mit der Lampe.',
     o: {
@@ -5141,7 +5177,7 @@ const GEBIETE = {
 
   /* ---------------------------------------------------------------- Die Salzmarsch */
   salzpfad: {
-    name: 'Salzpfad', region: 'marsch', thema: 'marsch', horizont: 18 * T - 10, staerke: 1.2, musik: 'amb',
+    name: 'Salzpfad', region: 'marsch', thema: 'marsch', horizont: 18 * T - 10, staerke: 1.2, musik: 'marsch',
     kartenPos: [0, 4, 4, 1], links: { l: 'nebel:z', r: 'pfahldorf:a' },
     beschreibung: 'Ein Pfad aus weißem Salz durch die Marsch. Unten, hinter dem Steg, geht es ins Schilf.',
     o: {
@@ -5167,7 +5203,7 @@ const GEBIETE = {
     }
   },
   schilf: {
-    name: 'Schilfmeer', region: 'marsch', thema: 'marsch', horizont: 20 * T - 20, staerke: 1.25, musik: 'amb',
+    name: 'Schilfmeer', region: 'marsch', thema: 'marsch', horizont: 20 * T - 20, staerke: 1.25, musik: 'marsch',
     kartenPos: [2, 6, 3, 1], links: { l: 'salzpfad:y' },
     beschreibung: 'Das Schilf steht höher als du. Es raschelt, obwohl kein Wind geht.',
     o: {
@@ -5185,7 +5221,7 @@ const GEBIETE = {
     }
   },
   pfahldorf: {
-    name: 'Pfahlwyk', region: 'marsch', thema: 'pfahldorf', horizont: 24 * T - 10, staerke: 1.2, musik: 'amb',
+    name: 'Pfahlwyk', region: 'marsch', thema: 'pfahldorf', horizont: 24 * T - 10, staerke: 1.2, musik: 'marsch',
     kartenPos: [4, 3, 4, 2], links: { l: 'salzpfad:z', r: 'ufer:a' },
     hinten: [[50, 17, 62, 23], [74, 17, 86, 23], [90, 15, 97, 23]],
     beschreibung: 'Ein Dorf auf Pfählen, halb im Wasser. Hinter den Häusern geht es hinab in die Salzgrube.',
@@ -5208,7 +5244,7 @@ const GEBIETE = {
     }
   },
   heilerhaus: {
-    name: 'Wendas Haus', region: 'marsch', thema: 'haus', horizont: 10 * T, staerke: 1.2, musik: 'amb',
+    name: 'Wendas Haus', region: 'marsch', thema: 'haus', horizont: 10 * T, staerke: 1.2, musik: 'hoehle',
     kartenPos: [6, 1, 1, 1], hinten: [[3, 4, 36, 13]],
     beschreibung: 'Das Haus der Heilerin. Es riecht nach Salz und kalten Kerzen.',
     o: {
@@ -5223,7 +5259,7 @@ const GEBIETE = {
     }
   },
   salzgrube: {
-    name: 'Salzgrube', region: 'marsch', thema: 'grube', horizont: 40 * T, staerke: 1.3, musik: 'amb', betreten: null,
+    name: 'Salzgrube', region: 'marsch', thema: 'grube', horizont: 40 * T, staerke: 1.3, musik: 'hoehle', betreten: null,
     kartenPos: [8, 3, 2, 4],
     beschreibung: 'Ein Schacht aus weißem Kristall, tief hinab. Ganz unten singt jemand.',
     o: {
@@ -5248,7 +5284,7 @@ const GEBIETE = {
     }
   },
   ufer: {
-    name: 'Totes Ufer', region: 'marsch', thema: 'marsch', horizont: 20 * T - 10, staerke: 1.25, musik: 'amb',
+    name: 'Totes Ufer', region: 'marsch', thema: 'marsch', horizont: 20 * T - 10, staerke: 1.25, musik: 'marsch',
     kartenPos: [8, 1, 3, 1], links: { l: 'pfahldorf:z', r: 'bruecke:a' },
     hinten: [[100, 12, 112, 19]],
     beschreibung: 'Boote liegen kieloben am Ufer wie Tiere, die sich zum Sterben hingelegt haben.',
@@ -5272,7 +5308,7 @@ const GEBIETE = {
     }
   },
   bruecke: {
-    name: 'Nebelbrücke', region: 'marsch', thema: 'bruecke', horizont: 14 * T + 40, staerke: 1.3, musik: 'amb',
+    name: 'Nebelbrücke', region: 'marsch', thema: 'bruecke', horizont: 14 * T + 40, staerke: 1.3, musik: 'marsch',
     kartenPos: [11, 0, 4, 2], links: { l: 'ufer:z', r: 'stadttor:a' },
     hinten: [[40, 17, 43, 37], [70, 17, 73, 37], [125, 17, 128, 37], [150, 17, 153, 37]],
     beschreibung: 'Eine alte Brücke nach Velmora. Seit sie eingestürzt ist, führt der Weg unten durchs Flussbett.',
@@ -5296,7 +5332,7 @@ const GEBIETE = {
 
   /* ---------------------------------------------------------------- Velmora */
   stadttor: {
-    name: 'Stadttor', region: 'velmora', thema: 'velmora', horizont: 20 * T - 10, staerke: 1.35, musik: 'amb',
+    name: 'Stadttor', region: 'velmora', thema: 'velmora', horizont: 20 * T - 10, staerke: 1.35, musik: 'stadt',
     kartenPos: [0, 6, 3, 1], links: { l: 'bruecke:z', r: 'gassen:a' },
     hinten: [[55, 16, 75, 19]],
     beschreibung: 'Das Tor von Velmora steht halb unter Wasser. Oben auf der Mauer sieht man weit.',
@@ -5314,7 +5350,7 @@ const GEBIETE = {
     }
   },
   gassen: {
-    name: 'Überflutete Gassen', region: 'velmora', thema: 'velmora', horizont: 30 * T - 10, staerke: 1.4, musik: 'amb',
+    name: 'Überflutete Gassen', region: 'velmora', thema: 'velmora', horizont: 30 * T - 10, staerke: 1.4, musik: 'stadt',
     kartenPos: [3, 5, 4, 2], links: { l: 'stadttor:z', r: 'brunnenplatz:a' },
     hinten: [[20, 18, 32, 29], [40, 14, 52, 29], [60, 16, 74, 29], [92, 20, 104, 29], [110, 12, 126, 29], [135, 15, 150, 29], [158, 12, 172, 29]],
     beschreibung: 'Knietiefe Gassen und Dächer, über die man weiterkommt. Ein Haus hat ein blaues Tor.',
@@ -5337,7 +5373,7 @@ const GEBIETE = {
     }
   },
   blaueshaus: {
-    name: 'Das blaue Haus', region: 'velmora', thema: 'haus', horizont: 10 * T, staerke: 1.4, musik: 'amb',
+    name: 'Das blaue Haus', region: 'velmora', thema: 'haus', horizont: 10 * T, staerke: 1.4, musik: 'hoehle',
     kartenPos: [5, 3, 1, 1], hinten: [[3, 4, 32, 13]],
     beschreibung: 'Zwei Gläser auf dem Tisch, eines umgefallen.',
     o: {
@@ -5349,7 +5385,7 @@ const GEBIETE = {
     }
   },
   brunnenplatz: {
-    name: 'Brunnenplatz', region: 'velmora', thema: 'velmora', horizont: 22 * T - 10, staerke: 1.4, musik: 'amb',
+    name: 'Brunnenplatz', region: 'velmora', thema: 'velmora', horizont: 22 * T - 10, staerke: 1.4, musik: 'stadt',
     kartenPos: [7, 4, 3, 1], links: { l: 'gassen:z', r: 'hafen:a' },
     hinten: [[60, 4, 72, 15]],
     beschreibung: 'Der Platz mit dem Brunnen, in dem Glut unter dem Wasser glimmt. Oben die Brautkapelle.',
@@ -5367,7 +5403,7 @@ const GEBIETE = {
     }
   },
   hafen: {
-    name: 'Hafen', region: 'velmora', thema: 'hafen', horizont: 24 * T - 10, staerke: 1.4, musik: 'amb',
+    name: 'Hafen', region: 'velmora', thema: 'hafen', horizont: 24 * T - 10, staerke: 1.4, musik: 'stadt',
     kartenPos: [10, 4, 4, 2], links: { l: 'brunnenplatz:z' },
     beschreibung: 'Schiffe übereinander, Taue wie Netze. Im Bauch eines Schiffes geht es hinab ins Hafenbecken.',
     o: {
@@ -5391,7 +5427,7 @@ const GEBIETE = {
     }
   },
   hafenbecken: {
-    name: 'Hafenbecken', region: 'velmora', thema: 'becken', horizont: 16 * T, staerke: 1.4, musik: 'amb',
+    name: 'Hafenbecken', region: 'velmora', thema: 'becken', horizont: 16 * T, staerke: 1.4, musik: 'hoehle',
     kartenPos: [11, 7, 2, 1], hinten: [[3, 4, 66, 21]],
     beschreibung: 'Leergelaufen. Unten führen Stufen noch tiefer, ins Wasser.',
     o: {
@@ -5405,7 +5441,7 @@ const GEBIETE = {
     }
   },
   kapelle: {
-    name: 'Brautkapelle', region: 'velmora', thema: 'kapelle', horizont: 12 * T, staerke: 1.5, musik: 'amb', betreten: 'kapelle_ankunft',
+    name: 'Brautkapelle', region: 'velmora', thema: 'kapelle', horizont: 12 * T, staerke: 1.5, musik: 'hoehle', betreten: 'kapelle_ankunft',
     kartenPos: [7, 1, 3, 2], hinten: [[3, 6, 96, 23]],
     beschreibung: 'Geschmückt für eine Hochzeit, die nie stattfand. Eine Tür führt zur Gruft, eine zum Turm.',
     o: {
@@ -5431,7 +5467,7 @@ const GEBIETE = {
     }
   },
   gruft: {
-    name: 'Gruft', region: 'velmora', thema: 'gruft', horizont: 10 * T, staerke: 1.5, musik: 'amb',
+    name: 'Gruft', region: 'velmora', thema: 'gruft', horizont: 10 * T, staerke: 1.5, musik: 'hoehle',
     kartenPos: [7, 3, 2, 1], hinten: [[3, 5, 56, 14]],
     beschreibung: 'Unter der Kapelle liegen die, die auf die Hochzeit warteten.',
     o: {
@@ -5446,7 +5482,7 @@ const GEBIETE = {
     }
   },
   turmtreppe: {
-    name: 'Turmtreppe', region: 'velmora', thema: 'turm', horizont: 40 * T, staerke: 1.5, musik: 'amb', betreten: 'turm_ankunft',
+    name: 'Turmtreppe', region: 'velmora', thema: 'turm', horizont: 40 * T, staerke: 1.5, musik: 'turm', betreten: 'turm_ankunft',
     kartenPos: [10, 1, 1, 3], hinten: [[4, 3, 31, 67]],
     beschreibung: 'Dreihundert Stufen, eine für jedes Jahr. Oben hängt die Glocke.',
     o: {
@@ -5467,7 +5503,7 @@ const GEBIETE = {
     }
   },
   glockenturm: {
-    name: 'Glockenturm', region: 'velmora', thema: 'turmspitze', horizont: 18 * T + 60, staerke: 1.5, musik: 'amb',
+    name: 'Glockenturm', region: 'velmora', thema: 'turmspitze', horizont: 18 * T + 60, staerke: 1.5, musik: 'turm',
     kartenPos: [9, 0, 3, 1],
     hinten: [[0, 4, 1, 17], [20, 4, 21, 17], [42, 4, 43, 17], [62, 4, 63, 17]],
     beschreibung: 'Oben im Turm, unter der großen Glocke. Weit draußen steigt das Meer.',
@@ -6736,7 +6772,7 @@ const Erk = (() => {
         if (D.genommen[key(e.id)]){ if (e.typ === 'gegenstand') return false; e.leer = true; }
         return true;
       case 'schrift': return true;
-      case 'tuer': e.offen = !d.zu || !!D.offen[key(e.id)]; return true;
+      case 'tuer': e.offen = (!d.zu && !d.einweg && !d.riegel) || !!D.offen[key(e.id)]; return true;
       case 'hebel': e.an = !!D.offen[key(e.id)]; return true;
       case 'ereignis': if (d.einmal !== false && D.ereignisse[key(e.id)]) return false; return true;
       case 'licht': e.licht = { x: e.x, y: e.y - (d.hoehe || 2) * T, r: d.r || 140, col: d.farbe || 'rgba(255,190,120,.8)', a: d.a || .3, flacker: d.flacker !== false }; return true;
@@ -6807,9 +6843,13 @@ const Erk = (() => {
     }
     // Leiter
     if (!S.leiter && Math.abs(iy) > .5 && S.rolle <= 0){
-      const obenDrauf = iy > 0 && S.boden && leiterAn(S.x, S.y + 2);
-      if (leiterAn(S.x, S.y - 30) || obenDrauf){
-        S.leiter = true; S.vx = 0; S.x = (tileAt(S.x) + .5) * T; if (obenDrauf) S.y += 3;
+      // Etwas Spielraum: man muss nicht genau vor der Leiter stehen
+      for (const dx of [0, -10, 10]){
+        const lx = S.x + dx, obenDrauf = iy > 0 && S.boden && leiterAn(lx, S.y + 2);
+        if ((iy < 0 && leiterAn(lx, S.y - 30)) || obenDrauf){
+          S.leiter = true; S.vx = 0; S.x = (tileAt(lx) + .5) * T; if (obenDrauf) S.y += 3;
+          break;
+        }
       }
     }
     if (S.leiter){
@@ -6819,7 +6859,7 @@ const Erk = (() => {
       if (!leiterAn(S.x, S.y - 4) && !leiterAn(S.x, S.y - 40)){ S.leiter = false; }
       if (iy < 0 && !leiterAn(S.x, S.y - 8)){
         // oben angekommen: auf die Oberkante steigen
-        S.y = tileAt(S.y - 1 + T) * T; S.leiter = false; S.boden = true;
+        S.y = tileAt(S.y) * T; S.vy = 0; S.leiter = false; S.boden = true;
       }
       if (iy > 0 && (istFest(G, tileAt(S.x), tileAt(S.y + 1)))){ S.y = tileAt(S.y + 1) * T; S.leiter = false; }
       if (S.puffer > 0){ S.leiter = false; S.puffer = 0; S.vy = -PHYS.sprung * .6; S.vx = (ix || S.face) * PHYS.lauf * .6; }
@@ -6982,7 +7022,7 @@ const Erk = (() => {
   }
   // Kampf beginnt: der Auslöser vorn, der Rest seiner Gruppe in der Nähe dahinter
   function kampfBeginn(e, vorteil){
-    const gruppe = ents.filter(o => o.typ === 'feind' && o.zustand !== 'tot' && (o === e || (o.gruppe === e.gruppe && Math.abs(o.x - S.x) < T * 18)));
+    const gruppe = ents.filter(o => o.typ === 'feind' && o.zustand !== 'tot' && (o === e || (o.gruppe === e.gruppe && Math.abs(o.x - S.x) < T * (FEINDE[o.key].fern ? 26 : 18))));
     gruppe.sort((a, b) => (a === e ? -1 : b === e ? 1 : Math.abs(a.x - S.x) - Math.abs(b.x - S.x)));
     S.vx = 0; S.rolle = 0; S.aktionT = 0;
     aus = true;
@@ -8448,7 +8488,7 @@ async function sterben(text, wo){
       const e = Erk.ents().find(x => x.typ === 'feuer' && x.def.id === D.feuer);
       const P = Stage.P, S2 = SETS[P.set];
       P.poseFn = null; P.pose = mkPose({}, S2.lie); playAnim(P, [[0, S2.lie], [900, S2.lie], [1700, S2.kneel, EASE.io]], true);
-      Music.play('amb');
+      Music.play(GEBIETE[f[0]].musik || 'amb');
       if (e) rasten(e, 'tod', extra); else betrete(f[0], { x: f[1], y: f[2] });
     } else {
       betrete(START.gebiet, START.anker);

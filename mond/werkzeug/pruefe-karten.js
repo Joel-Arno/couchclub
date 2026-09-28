@@ -103,6 +103,19 @@ function sim(G, x, y, plan){
   return S.boden ? { x: S.x, y: S.y } : null;
 }
 const leiterAn = (G, x, y) => kachel(G, tileAt(x), tileAt(y)) === K.leiter;
+// Klettern wie in erkundung.js: richtung -1 hinauf, 1 hinunter
+function klettern(G, x0, y0, richtung){
+  const S = { x: (tileAt(x0) + .5) * T, y: y0 };
+  if (richtung < 0 && !leiterAn(G, S.x, S.y - 30)) return null;
+  if (richtung > 0){ if (!leiterAn(G, S.x, S.y + 2)) return null; S.y += 3; }
+  for (let t = 0; t < 30000; t += 16){
+    S.y += richtung * PHYS.kletter * .016;
+    if (!leiterAn(G, S.x, S.y - 4) && !leiterAn(G, S.x, S.y - 40)) return { x: S.x, y: S.y, luft: true };
+    if (richtung < 0 && !leiterAn(G, S.x, S.y - 8)){ S.y = tileAt(S.y) * T; return { x: S.x, y: S.y }; }
+    if (richtung > 0 && istFest(G, tileAt(S.x), tileAt(S.y + 1))){ S.y = tileAt(S.y + 1) * T; return { x: S.x, y: S.y }; }
+  }
+  return null;
+}
 
 /* ---------- Standplätze und Kanten eines Gebiets ---------- */
 function standplatz(G, tx, ty){
@@ -146,8 +159,12 @@ function kanten(id){
       let a = ry; while (kachel(G, tx, a - 1) === K.leiter) a--;
       let b = ry; while (kachel(G, tx, b + 1) === K.leiter) b++;
       top = a; bot = b + 1;
-      ziele.add(tx + ',' + top);
-      if (istFest(G, tx, bot)) ziele.add(tx + ',' + bot);
+      // Hinauf und hinunter klettern wie im Spiel, dann stehen bleiben (fällt man wieder herunter?)
+      for (const r of [klettern(G, x, y, -1), klettern(G, x, y, 1)]){
+        if (!r) continue;
+        const s2 = sim(G, r.x, r.y, { ix: () => 0, halt: () => false, dauer: 400 });
+        if (s2 && !s2.tod && !s2.rand) ziele.add(snap(s2.x, s2.y));
+      }
       for (let yy = a + 1; yy <= b + 1; yy++) for (const d of [-1, 1]){
         const r = sim(G, x, yy * T, { sprung: false, inLuft: true, vx0: d * PHYS.lauf * .6, vy0: -PHYS.sprung * .6, ix: () => d, halt: () => true });
         if (r && !r.tod && !r.rand) ziele.add(snap(r.x, r.y));

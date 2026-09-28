@@ -86,7 +86,7 @@ const Erk = (() => {
         if (D.genommen[key(e.id)]){ if (e.typ === 'gegenstand') return false; e.leer = true; }
         return true;
       case 'schrift': return true;
-      case 'tuer': e.offen = !d.zu || !!D.offen[key(e.id)]; return true;
+      case 'tuer': e.offen = (!d.zu && !d.einweg && !d.riegel) || !!D.offen[key(e.id)]; return true;
       case 'hebel': e.an = !!D.offen[key(e.id)]; return true;
       case 'ereignis': if (d.einmal !== false && D.ereignisse[key(e.id)]) return false; return true;
       case 'licht': e.licht = { x: e.x, y: e.y - (d.hoehe || 2) * T, r: d.r || 140, col: d.farbe || 'rgba(255,190,120,.8)', a: d.a || .3, flacker: d.flacker !== false }; return true;
@@ -157,9 +157,13 @@ const Erk = (() => {
     }
     // Leiter
     if (!S.leiter && Math.abs(iy) > .5 && S.rolle <= 0){
-      const obenDrauf = iy > 0 && S.boden && leiterAn(S.x, S.y + 2);
-      if (leiterAn(S.x, S.y - 30) || obenDrauf){
-        S.leiter = true; S.vx = 0; S.x = (tileAt(S.x) + .5) * T; if (obenDrauf) S.y += 3;
+      // Etwas Spielraum: man muss nicht genau vor der Leiter stehen
+      for (const dx of [0, -10, 10]){
+        const lx = S.x + dx, obenDrauf = iy > 0 && S.boden && leiterAn(lx, S.y + 2);
+        if ((iy < 0 && leiterAn(lx, S.y - 30)) || obenDrauf){
+          S.leiter = true; S.vx = 0; S.x = (tileAt(lx) + .5) * T; if (obenDrauf) S.y += 3;
+          break;
+        }
       }
     }
     if (S.leiter){
@@ -169,7 +173,7 @@ const Erk = (() => {
       if (!leiterAn(S.x, S.y - 4) && !leiterAn(S.x, S.y - 40)){ S.leiter = false; }
       if (iy < 0 && !leiterAn(S.x, S.y - 8)){
         // oben angekommen: auf die Oberkante steigen
-        S.y = tileAt(S.y - 1 + T) * T; S.leiter = false; S.boden = true;
+        S.y = tileAt(S.y) * T; S.vy = 0; S.leiter = false; S.boden = true;
       }
       if (iy > 0 && (istFest(G, tileAt(S.x), tileAt(S.y + 1)))){ S.y = tileAt(S.y + 1) * T; S.leiter = false; }
       if (S.puffer > 0){ S.leiter = false; S.puffer = 0; S.vy = -PHYS.sprung * .6; S.vx = (ix || S.face) * PHYS.lauf * .6; }
@@ -332,7 +336,7 @@ const Erk = (() => {
   }
   // Kampf beginnt: der Auslöser vorn, der Rest seiner Gruppe in der Nähe dahinter
   function kampfBeginn(e, vorteil){
-    const gruppe = ents.filter(o => o.typ === 'feind' && o.zustand !== 'tot' && (o === e || (o.gruppe === e.gruppe && Math.abs(o.x - S.x) < T * 18)));
+    const gruppe = ents.filter(o => o.typ === 'feind' && o.zustand !== 'tot' && (o === e || (o.gruppe === e.gruppe && Math.abs(o.x - S.x) < T * (FEINDE[o.key].fern ? 26 : 18))));
     gruppe.sort((a, b) => (a === e ? -1 : b === e ? 1 : Math.abs(a.x - S.x) - Math.abs(b.x - S.x)));
     S.vx = 0; S.rolle = 0; S.aktionT = 0;
     aus = true;
