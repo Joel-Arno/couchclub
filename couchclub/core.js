@@ -324,7 +324,7 @@
     const p = id && playerById(id);
     const used = state.players.map((x) => x.color);
     editor = p
-      ? { id: p.id, name: p.name, color: p.color, confirm: false, back: sheetKind === 'setup' ? setup : null }
+      ? { id: p.id, name: p.name, color: p.color, confirm: false, wipe: null, wiped: null, back: sheetKind === 'setup' ? setup : null }
       : { id: null, name: '', color: COLORS.find((c) => !used.includes(c)) || COLORS[state.players.length % COLORS.length], confirm: false, back: sheetKind === 'setup' ? setup : null };
     renderEditor();
     sheetKind = 'editor';
@@ -340,11 +340,37 @@
       </div>
       <div class="field"><label class="label" for="player-name">Name</label><input class="form-input" id="player-name" maxlength="14" autocomplete="off" placeholder="z. B. Lena" value="${esc(e.name)}"></div>
       <div class="field"><span class="label">Farbe</span><div class="swatches">${COLORS.map((c) => `<button class="swatch" data-color="${c}" aria-pressed="${c === e.color}" style="--pc:var(--p-${c})" aria-label="Farbe ${COLOR_NAMES[c]}"></button>`).join('')}</div></div>
+      ${e.id ? progressRows(e) : ''}
       <div class="sheet-actions">
         ${e.id && state.players.length > 1 ? `<button class="btn ${e.confirm ? 'danger' : 'ghost'}" data-action="delete-player">${e.confirm ? 'Wirklich löschen?' : 'Löschen'}</button>` : ''}
         <button class="btn primary" data-action="save-player">${e.id ? 'Speichern' : 'Aufnehmen'}</button>
       </div>`;
     panel.setAttribute('aria-labelledby', 'sheet-title');
+  }
+  /* Spielstände der Solo-Abenteuer, die sich pro Spieler neu beginnen lassen (frame.save) */
+  const frameSaveKey = (g, pid) => g.frame.save + '@' + pid;
+  function hasProgress(g, pid) {
+    if (state.stats[pid]?.[g.id]?.sum?.runs) return true;
+    try { return localStorage.getItem(frameSaveKey(g, pid)) !== null; } catch (e) { return false; }
+  }
+  function progressRows(e) {
+    const games = CC.games.filter((g) => g.frame?.save);
+    if (!games.length) return '';
+    return `<div class="field"><span class="label">Spielstände</span><div class="rows">${games.map((g) => {
+      const has = hasProgress(g, e.id), sure = e.wipe === g.id, x = state.stats[e.id]?.[g.id]?.sum;
+      const text = e.wiped === g.id ? 'Gelöscht. Beim nächsten Start beginnt das Abenteuer von vorn.'
+        : has ? `${x?.runs ? g.statText(x) : 'Spielstand vorhanden'}. Löschen lässt sich nicht rückgängig machen.` : 'Noch nicht gespielt.';
+      return `<div class="row"><span class="row-text"><b>${g.name}</b><small>${esc(text)}</small></span>
+        ${has ? `<button class="btn small ${sure ? 'danger' : 'ghost'}" data-wipe="${g.id}">${sure ? 'Wirklich löschen?' : 'Neu beginnen'}</button>` : ''}</div>`;
+    }).join('')}</div></div>`;
+  }
+  function wipeProgress(pid, gid) {
+    const g = CC.games.find((x) => x.id === gid);
+    if (!g?.frame?.save) return;
+    try { localStorage.removeItem(frameSaveKey(g, pid)); } catch (e) { /* nichts gespeichert */ }
+    if (state.stats[pid]) delete state.stats[pid][gid];
+    save();
+    render();
   }
   function saveEditor() {
     const name = ($('#player-name')?.value || '').trim().slice(0, 14);
@@ -668,7 +694,15 @@
     if (d.edit) { openEditor(d.edit); return; }
     if (d.color && editor) {
       editor.name = $('#player-name')?.value ?? editor.name;
-      editor.color = d.color; editor.confirm = false; renderEditor(); return;
+      editor.color = d.color; editor.confirm = false; editor.wipe = null; renderEditor(); return;
+    }
+    if (d.wipe && editor) {
+      // Erst fragen, beim zweiten Tippen löschen. Der eingetippte Name bleibt erhalten.
+      editor.name = $('#player-name')?.value ?? editor.name;
+      editor.confirm = false;
+      if (editor.wipe !== d.wipe) { editor.wipe = d.wipe; editor.wiped = null; renderEditor(); return; }
+      wipeProgress(editor.id, d.wipe);
+      editor.wipe = null; editor.wiped = d.wipe; sfx('tap'); renderEditor(); return;
     }
     switch (d.action) {
       case 'add-player': openEditor(null); break;

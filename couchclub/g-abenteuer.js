@@ -64,7 +64,7 @@
     color: 'teal',
     minutes: '20–60',
     modes: ['solo'],
-    frame: { src: 'mond.html', g: 'mond', bg: '#0A0D12' },
+    frame: { src: 'mond.html', g: 'mond', bg: '#0A0D12', save: 'mondgelaeut-v1' },   // save: Spielstand im Profil löschbar
     thumb: mondThumb(),
     rules: [
       'Die Flut hat dich an einen fremden Strand gespült. Wähle deine Herkunft und finde heraus, warum nur du die Glocke hörst.',
