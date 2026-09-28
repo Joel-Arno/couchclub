@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Kerker &amp; Licht</title>
+<meta name="description" content="Zwei Offline-Handyspiele: Kerker-Wischer, ein Roguelike auf neun Feldern, und Lichtläufer, ein Arcade-Spiel für einen Finger.">
+<meta name="theme-color" content="#EDE6D6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Kerker &amp; Licht">
+<!--@PWA-->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<!--@/PWA-->
+<style>/*@FONTS@*/</style>
+<style>/*@CSS@*/</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="rough" x="-10%" y="-10%" width="120%" height="120%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<div class="app" id="app">
+
+  <!-- ===================== STARTSEITE ===================== -->
+  <section class="screen hub" id="hub">
+    <header class="hub-head">
+      <p class="eyebrow">Offline-Handyspiel</p>
+      <h1>Kerker <span class="amp">&amp;</span> Licht</h1>
+      <p class="lede">Zwei Spiele für unterwegs. Kein Internet, keine Werbung, nur du und dein nächster Rekord.</p>
+    </header>
+
+    <div class="style-row">
+      <span class="lbl">Stil</span>
+      <div class="seg" role="radiogroup" aria-label="Grafikstil">
+        <button type="button" role="radio" id="styleWarm" data-style-btn="warm" aria-checked="true">Warm &amp; flach</button>
+        <button type="button" role="radio" id="stylePapier" data-style-btn="papier" aria-checked="false">Papier</button>
+      </div>
+    </div>
+
+    <div class="games">
+      <article class="game-card feature">
+        <div class="gc-art"><div class="mini-board" id="miniBoard"></div></div>
+        <div class="gc-body">
+          <p class="gc-tag">Roguelike · 6 Helden · 6 Welten</p>
+          <h2>Kerker-Wischer</h2>
+          <p class="desc">Wähle deinen Weg durch fünf Welten voller Räume. Plane jeden Zug, sammle Relikte und Talente und stell dich dem Drachen. Und dahinter?</p>
+          <p class="gc-stats" id="kHubStats"></p>
+          <div class="gc-actions">
+            <button type="button" class="btn" id="goKerker">Spielen</button>
+            <span class="daily-chip" id="kDailyChip" hidden>Tagesgruft offen</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="game-card">
+        <div class="gc-art dark"><canvas id="lichtPreview" aria-label="Vorschau Lichtläufer"></canvas></div>
+        <div class="gc-body">
+          <p class="gc-tag">Arcade · Zonen · Missionen</p>
+          <h2>Lichtläufer</h2>
+          <p class="desc">Lenke ein Licht durch Laserfelder und Rotoren. Funkenketten laden die Überladung.</p>
+          <p class="gc-stats" id="lHubStats"></p>
+          <div class="gc-actions">
+            <button type="button" class="btn" id="goLicht">Spielen</button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <footer class="hub-foot">
+      <div class="chips">
+        <button type="button" class="chip" id="btnAch">Erfolge</button>
+        <button type="button" class="chip" id="btnStats">Statistik</button>
+        <button type="button" class="chip" id="btnSettings">Einstellungen</button>
+        <button type="button" class="chip accent" id="btnInstall" hidden>Als App installieren</button>
+      </div>
+      <p class="fineprint">Läuft ohne Internet. Spielstände bleiben nur auf diesem Gerät.</p>
+    </footer>
+  </section>
+
+  <!-- ===================== KERKER: MENÜ ===================== -->
+  <section class="screen kmenu" id="kmenu" hidden>
+    <div class="topbar">
+      <button type="button" class="icon-btn" data-go="hub" aria-label="Zurück zur Startseite">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="tb-title">Kerker-Wischer<small id="kmSub">Schatz 0 Gold</small></div>
+      <button type="button" class="icon-btn" id="kmHelp" aria-label="So geht’s">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 9.2a2.9 2.9 0 1 1 4.1 2.6c-.8.4-1.3 1-1.3 1.9v.6M12 17.6v.2" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="scroll">
+      <button type="button" class="resume" id="kResume" hidden></button>
+
+      <h3 class="sec">Held</h3>
+      <div class="heroes" id="kHeroes" role="radiogroup" aria-label="Held wählen"></div>
+      <div class="hero-info" id="kHeroInfo"></div>
+
+      <h3 class="sec">Modus</h3>
+      <div class="modes" id="kModes"></div>
+
+      <div class="tools">
+        <button type="button" class="btn sec small" id="kmUpgrades">Upgrades</button>
+        <button type="button" class="btn sec small" id="kmCodex">Kompendium</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== KERKER: KARTE ===================== -->
+  <section class="screen kmap" id="kmap" hidden>
+    <div class="topbar">
+      <button type="button" class="icon-btn" id="kmapPause" aria-label="Menü">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>
+      </button>
+      <div class="tb-title"><span id="kmapTitle">Welt 1</span><small id="kmapSub">Wähle deinen Weg</small></div>
+      <div class="tb-mode" id="kmapMode">Abenteuer</div>
+    </div>
+    <div class="map-hud" id="kmapHud"></div>
+    <div class="map-scroll" id="kmapScroll"><div class="map" id="kmapInner"></div></div>
+    <canvas class="fx-canvas" id="kmapFx" aria-hidden="true"></canvas>
+    <div class="banner" id="kmapBanner" hidden></div>
+  </section>
+
+  <!-- ===================== KERKER: SPIEL ===================== -->
+  <section class="screen kerker" id="kerker" hidden>
+    <div class="topbar">
+      <button type="button" class="icon-btn" id="kPause" aria-label="Pause">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>
+      </button>
+      <div class="tb-title"><span id="kRoomName">Kampf</span><small id="kSub">Welt 1</small></div>
+      <div class="tb-mode" id="kModeTag">Abenteuer</div>
+    </div>
+
+    <div class="hud">
+      <div class="hud-box" id="kHpBox">
+        <span class="lbl">Leben</span>
+        <span class="val"><span class="hi-heart" data-icon="heart"></span><b id="kHp">10/10</b></span>
+        <span class="bar"><i id="kHpBar"></i></span>
+      </div>
+      <div class="hud-box" id="kWpnBox">
+        <span class="lbl" id="kWpnLbl">Waffe</span>
+        <span class="val"><span class="hi-sword" id="kWpnIc"></span><b id="kWpn">–</b></span>
+      </div>
+      <div class="hud-box" id="kGoldBox">
+        <span class="lbl">Gold</span>
+        <span class="val"><span class="hi-coin" data-icon="coin"></span><b id="kGold">0</b></span>
+      </div>
+      <div class="hud-box" id="kLvlBox">
+        <span class="lbl">Stufe</span>
+        <span class="val"><span class="hi-star" data-icon="star"></span><b id="kLvl">1</b></span>
+        <span class="bar xp"><i id="kXpBar"></i></span>
+      </div>
+    </div>
+
+    <div class="goalrow">
+      <div class="goal" id="kGoal"></div>
+      <div class="nextq" id="kNext" aria-label="Als Nächstes"></div>
+    </div>
+
+    <div class="board-wrap" id="kBoardWrap">
+      <div class="board" id="board" aria-label="Spielfeld"></div>
+    </div>
+
+    <div class="kbar">
+      <button type="button" class="ability" id="kAbility"></button>
+      <div class="items" id="kItems" aria-label="Tasche"></div>
+      <button type="button" class="relic-btn" id="kRelics" aria-label="Relikte ansehen"></button>
+    </div>
+    <p class="log" id="kLog" aria-live="polite"></p>
+
+    <button type="button" class="tipnote" id="kTip" hidden></button>
+    <div class="cardinfo" id="kInfo" hidden></div>
+    <div class="banner" id="kBanner" hidden></div>
+    <canvas class="fx-canvas" id="kFx" aria-hidden="true"></canvas>
+  </section>
+
+  <!-- ===================== LICHT: MENÜ ===================== -->
+  <section class="screen lmenu" id="lmenu" hidden>
+    <div class="topbar">
+      <button type="button" class="icon-btn" data-go="hub" aria-label="Zurück zur Startseite">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="tb-title">Lichtläufer<small id="lmSub">Rang 1</small></div>
+      <button type="button" class="icon-btn" id="lmHelp" aria-label="So geht’s">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 9.2a2.9 2.9 0 1 1 4.1 2.6c-.8.4-1.3 1-1.3 1.9v.6M12 17.6v.2" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="scroll">
+      <div class="lm-stage"><canvas id="lmCanvas" aria-hidden="true"></canvas></div>
+      <div class="stats" id="lmStats"></div>
+      <button type="button" class="btn big" id="lmStart">Los geht’s</button>
+      <div class="missions" id="lmMissions"></div>
+      <div class="tools">
+        <button type="button" class="btn sec small" id="lmUpgrades">Upgrades</button>
+        <button type="button" class="btn sec small" id="lmSkins">Skins</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== LICHT: SPIEL ===================== -->
+  <section class="screen licht" id="licht" hidden>
+    <canvas id="lichtCanvas" aria-label="Spielfeld Lichtläufer"></canvas>
+    <div class="r-hud">
+      <button type="button" class="icon-btn" id="lPause" aria-label="Pause">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+      </button>
+      <div class="r-score">
+        <b id="rScore">0</b>
+        <span class="r-mult" id="rMult"></span>
+        <span class="r-powers" id="rPowers"></span>
+      </div>
+      <div class="r-side" id="rShields" aria-label="Schilde"></div>
+    </div>
+    <div class="r-zone" id="rZone"></div>
+    <div class="r-fever" id="rFever"><i></i><span>Überladung</span></div>
+  </section>
+
+  <div class="sheet-back" id="sheetBack" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+  <div class="toast" id="toast" role="status" hidden></div>
+</div>
+
+<script>/*@JS@*/</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<title>Couchclub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Rethink+Sans:wght@400..700&display=swap">
+<link rel="stylesheet" href="styles.css">
+
+<div id="app">
+  <header class="top">
+    <button class="wordmark" data-tab="games" aria-label="Couchclub – zur Spielauswahl">
+      <svg class="mark" viewBox="0 0 40 28" aria-hidden="true">
+        <rect x="4" y="2" width="32" height="14" rx="5" fill="var(--ink)"/>
+        <rect x="0" y="9" width="10" height="15" rx="4" fill="var(--ink)"/>
+        <rect x="30" y="9" width="10" height="15" rx="4" fill="var(--ink)"/>
+        <rect x="8.5" y="12" width="11" height="10" rx="3" fill="var(--p-coral)"/>
+        <rect x="20.5" y="12" width="11" height="10" rx="3" fill="var(--p-blue)"/>
+        <rect x="3" y="23" width="3" height="5" rx="1" fill="var(--ink)"/>
+        <rect x="34" y="23" width="3" height="5" rx="1" fill="var(--ink)"/>
+      </svg>
+      <span>Couchclub</span>
+    </button>
+  </header>
+
+  <main id="view" tabindex="-1"></main>
+
+  <nav class="tabs" aria-label="Bereiche">
+    <button class="tab" data-tab="games">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2.5"/><rect x="13" y="3" width="8" height="8" rx="2.5"/><rect x="3" y="13" width="8" height="8" rx="2.5"/><rect x="13" y="13" width="8" height="8" rx="2.5"/></svg>
+      <span>Spiele</span>
+    </button>
+    <button class="tab" data-tab="players">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.7.1 4.5 1.8 5 4.4"/></svg>
+      <span>Spieler</span>
+    </button>
+    <button class="tab" data-tab="settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>
+      <span>Einstellungen</span>
+    </button>
+  </nav>
+</div>
+
+<section id="play" class="play" hidden aria-live="polite">
+  <div class="play-top">
+    <button class="icon-btn" data-action="leave" aria-label="Zurück zur Spielauswahl">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="play-title"><span id="play-name"></span><small id="play-mode"></small></div>
+    <button class="icon-btn" data-action="restart" aria-label="Runde neu starten">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 4v4.5h4.5"/></svg>
+    </button>
+  </div>
+  <div id="scorebar" class="scorebar"></div>
+  <div id="stage" class="stage"></div>
+  <p id="status" class="status"></p>
+  <div id="result" class="result" hidden></div>
+</section>
+
+<section id="frame" class="frame" hidden></section>
+
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-backdrop" data-action="close-sheet"></div>
+  <div id="sheet-panel" class="sheet-panel" role="dialog" aria-modal="true"></div>
+</div>
+
+<canvas id="confetti" class="confetti" hidden></canvas>
+
+<script src="core.js" charset="utf-8"></script>
+<script src="g-connect4.js" charset="utf-8"></script>
+<script src="g-ultimate.js" charset="utf-8"></script>
+<script src="g-boxes.js" charset="utf-8"></script>
+<script src="g-memory.js" charset="utf-8"></script>
+<script src="g-abenteuer.js" charset="utf-8"></script>
+<script>CC.boot();</script>
