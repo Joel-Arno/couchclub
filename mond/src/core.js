@@ -23,7 +23,7 @@ const DEBUG = /(^|#)test$/.test(location.hash);
 /* ---------- Einstellungen (nur auf diesem Gerät) ---------- */
 const SET_KEY = 'mondgelaeut-demo-v1';
 const S = (() => {
-  const d = { sound: true, ring: true, vib: true, sys: 'echt' };
+  const d = { sound: true, voice: true, ring: true, vib: true, sys: 'echt' };
   try { Object.assign(d, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch (e) {}
   return d;
 })();
@@ -137,7 +137,7 @@ const Snd = (() => {
    MUSIK: Strand, Kampf und Bosskampf, ebenfalls erzeugt
    ===================================================================== */
 const Music = (() => {
-  let mode = null, bus = null, timer = null, nextT = 0, step = 0, held = [], level = 0;
+  let mode = null, bus = null, timer = null, nextT = 0, step = 0, held = [], level = 0, duckG = null, ducked = false;
   const hz = n => 440 * Math.pow(2, (n - 69) / 12);
   // d-Moll, B-Dur, g-Moll, A-Dur
   const CHORDS = [[50, 53, 57], [46, 50, 53], [43, 46, 50], [45, 49, 52]];
@@ -166,13 +166,28 @@ const Music = (() => {
     if (!ac || !m) return;
     bus = ac.createGain(); bus.gain.value = .0001;
     bus.gain.exponentialRampToValueAtTime(m === 'amb' ? .8 : .7, ac.currentTime + 2.5);
-    bus.connect(Snd.master());
-    const s = ac.createGain(); s.gain.value = .35; bus.connect(s); s.connect(Snd.send());
+    bus.connect(duckNode());
     if (m === 'amb') { sea(.16); drone([38, 45], .045, 380); }
     if (m === 'kampf') { sea(.08); drone([38, 50], .05, 260); }
     if (m === 'boss') { sea(.06); drone([26, 38], .1, 190); }
     nextT = ac.currentTime + .15; step = 0;
     timer = setInterval(tick, 80); tick();
+  }
+  // Leiser, solange jemand spricht. Eigener Knoten, damit Ein- und Ausblenden der Musik unberührt bleiben.
+  function duckNode(){
+    if (!duckG){
+      const ac = Snd.ac();
+      duckG = ac.createGain(); duckG.gain.value = ducked ? .28 : 1; duckG.connect(Snd.master());
+      const s = ac.createGain(); s.gain.value = .35; duckG.connect(s); s.connect(Snd.send());
+    }
+    return duckG;
+  }
+  function duck(on){
+    ducked = on;
+    const ac = Snd.ac(); if (!ac) return;
+    const g = duckNode().gain;
+    g.cancelScheduledValues(ac.currentTime);
+    g.setTargetAtTime(on ? .28 : 1, ac.currentTime, on ? .12 : .7);
   }
   function setLevel(l){
     level = l;
@@ -252,5 +267,5 @@ const Music = (() => {
     }
   }
   const pickNote = a => a[Math.floor(rnd() * a.length)];
-  return { play, stop, setLevel, mode: () => mode };
+  return { play, stop, setLevel, duck, mode: () => mode };
 })();

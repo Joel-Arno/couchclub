@@ -305,7 +305,7 @@ button:focus-visible { outline: 2px solid var(--ember-2); outline-offset: 3px; }
       <button type="button" class="btn primary" id="btnStart">Erwachen</button>
       <button type="button" class="btn ghost" id="btnBoss">Direkt zum Boss</button>
     </div>
-    <p class="t-foot"><button type="button" class="link" id="btnSound">Ton: an</button><span>Mit Kopfhörern am schönsten</span></p>
+    <p class="t-foot"><button type="button" class="link" id="btnSound">Ton: an</button><button type="button" class="link" id="btnVoice">Stimme: an</button><span>Mit Kopfhörern am schönsten</span></p>
   </section>
 
   <!-- ===================== GESCHICHTE ===================== -->
@@ -407,6 +407,7 @@ button:focus-visible { outline: 2px solid var(--ember-2); outline-offset: 3px; }
 </div>
 <script>(function(){
 'use strict';
+const STIMMEN = {};
 /* =====================================================================
    MONDGELÄUT – GRUNDLAGEN
    ===================================================================== */
@@ -432,7 +433,7 @@ const DEBUG = /(^|#)test$/.test(location.hash);
 /* ---------- Einstellungen (nur auf diesem Gerät) ---------- */
 const SET_KEY = 'mondgelaeut-demo-v1';
 const S = (() => {
-  const d = { sound: true, ring: true, vib: true, sys: 'echt' };
+  const d = { sound: true, voice: true, ring: true, vib: true, sys: 'echt' };
   try { Object.assign(d, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch (e) {}
   return d;
 })();
@@ -546,7 +547,7 @@ const Snd = (() => {
    MUSIK: Strand, Kampf und Bosskampf, ebenfalls erzeugt
    ===================================================================== */
 const Music = (() => {
-  let mode = null, bus = null, timer = null, nextT = 0, step = 0, held = [], level = 0;
+  let mode = null, bus = null, timer = null, nextT = 0, step = 0, held = [], level = 0, duckG = null, ducked = false;
   const hz = n => 440 * Math.pow(2, (n - 69) / 12);
   // d-Moll, B-Dur, g-Moll, A-Dur
   const CHORDS = [[50, 53, 57], [46, 50, 53], [43, 46, 50], [45, 49, 52]];
@@ -575,13 +576,28 @@ const Music = (() => {
     if (!ac || !m) return;
     bus = ac.createGain(); bus.gain.value = .0001;
     bus.gain.exponentialRampToValueAtTime(m === 'amb' ? .8 : .7, ac.currentTime + 2.5);
-    bus.connect(Snd.master());
-    const s = ac.createGain(); s.gain.value = .35; bus.connect(s); s.connect(Snd.send());
+    bus.connect(duckNode());
     if (m === 'amb') { sea(.16); drone([38, 45], .045, 380); }
     if (m === 'kampf') { sea(.08); drone([38, 50], .05, 260); }
     if (m === 'boss') { sea(.06); drone([26, 38], .1, 190); }
     nextT = ac.currentTime + .15; step = 0;
     timer = setInterval(tick, 80); tick();
+  }
+  // Leiser, solange jemand spricht. Eigener Knoten, damit Ein- und Ausblenden der Musik unberührt bleiben.
+  function duckNode(){
+    if (!duckG){
+      const ac = Snd.ac();
+      duckG = ac.createGain(); duckG.gain.value = ducked ? .28 : 1; duckG.connect(Snd.master());
+      const s = ac.createGain(); s.gain.value = .35; duckG.connect(s); s.connect(Snd.send());
+    }
+    return duckG;
+  }
+  function duck(on){
+    ducked = on;
+    const ac = Snd.ac(); if (!ac) return;
+    const g = duckNode().gain;
+    g.cancelScheduledValues(ac.currentTime);
+    g.setTargetAtTime(on ? .28 : 1, ac.currentTime, on ? .12 : .7);
   }
   function setLevel(l){
     level = l;
@@ -661,7 +677,7 @@ const Music = (() => {
     }
   }
   const pickNote = a => a[Math.floor(rnd() * a.length)];
-  return { play, stop, setLevel, mode: () => mode };
+  return { play, stop, setLevel, duck, mode: () => mode };
 })();
 
 /* =====================================================================
@@ -1555,6 +1571,7 @@ const HERK = {
   kron: {
     name: 'Kronwächter', item: 'Ein Langschwert und ein zerbeulter Schild',
     blurb: 'Hält viel aus. Der Schild fängt fast jeden Schlag ab.', weapon: 'Langschwert und Schild',
+    rise: 'Du stehst auf. Das Schwert liegt dir in der Hand, der Schild an deinem Arm, als wäre es nie anders gewesen.',
     hp: 125, st: 100, fp: 40,
     light: [
       { pose: 'l1', d: 11, pz: 10, st: 16, hit: 190, dur: 440 },
@@ -1568,6 +1585,7 @@ const HERK = {
   harp: {
     name: 'Harpunierin', item: 'Eine Harpune mit Widerhaken',
     blurb: 'Schnell und beweglich. Ihr Wurf unterbricht Angriffe.', weapon: 'Harpune',
+    rise: 'Du stehst auf. Die Harpune liegt dir in der Hand, als wäre es nie anders gewesen.',
     hp: 105, st: 125, fp: 42,
     light: [
       { pose: 'l1', d: 9, pz: 8, st: 13, hit: 150, dur: 370 },
@@ -1581,6 +1599,7 @@ const HERK = {
   moench: {
     name: 'Glockenmönch', item: 'Ein Hammer, an dem eine Glocke hängt',
     blurb: 'Langsam und wuchtig. Sein Geläut verletzt und heilt.', weapon: 'Glockenhammer',
+    rise: 'Du stehst auf. Der Hammer liegt dir schwer in der Hand. Die kleine Glocke daran schweigt, als wartete sie.',
     hp: 115, st: 95, fp: 75,
     light: [
       { pose: 'l1', d: 14, pz: 14, st: 19, hit: 250, dur: 560 },
@@ -1722,6 +1741,98 @@ const FEUER = {
   mole: { name: 'Leuchtfeuer an der Mole', welt: 'mole', weiter: { t: 'Zum Ende der Mole gehen', go: 'nebel' },
     erst: 'Die Schale ist voller Asche. Du hältst die Hand darüber, und die Asche beginnt zu glühen.' }
 };
+
+// Feste Sätze, die an mehreren Stellen vorkommen
+const SAETZE = {
+  'feuer.tod': 'Du erwachst am Leuchtfeuer. Die Flut hat dich ein weiteres Mal ausgespuckt.',
+  'feuer.rast': 'Die Flamme brennt ruhig. Du rastest. Deine Wunden schließen sich, und die Phiolen füllen sich mit Mondtau.'
+};
+
+/* ---------- Stimmen ----------
+   Freie deutsche Piper-Stimmen, erzeugt mit mond/stimme.py.
+   tempo: Sprechdauer beim Erzeugen (größer ist langsamer)
+   hoehe: Abspielrate im Spiel (kleiner klingt tiefer und langsamer)
+   hall:  Anteil im Hall, laut: Lautstärke */
+const SPRECHER = {
+  erzaehler: { name: 'Erzähler', stimme: 'de_DE-thorsten-high', tempo: 1.08, hoehe: .96, hall: .2, laut: 1 },
+  vogt:      { name: 'Der Strandvogt', stimme: 'de_DE-thorsten_emotional-medium', sprecher: 'disgusted', tempo: 1.12, hoehe: .8, hall: .5, laut: 1.1 }
+};
+// Alle Sprechzeilen, abgeleitet aus den Texten des Spiels
+function stimmZeilen(){
+  const z = [];
+  for (const k in SZENEN) SZENEN[k].text.forEach((t, i) => z.push({ id: k + '.' + i, wer: 'erzaehler', text: t }));
+  for (const k in HERK) z.push({ id: 'herk.' + k, wer: 'erzaehler', text: HERK[k].rise });
+  for (const k in FEUER) z.push({ id: 'feuer.' + k, wer: 'erzaehler', text: FEUER[k].erst });
+  for (const k in SAETZE) z.push({ id: k, wer: 'erzaehler', text: SAETZE[k] });
+  for (const k in FEINDE){
+    const d = FEINDE[k], wer = SPRECHER[k] ? k : 'erzaehler';
+    if (d.intro) z.push({ id: k + '.intro', wer, text: d.intro });
+    if (d.line2) z.push({ id: k + '.line2', wer, text: d.line2 });
+  }
+  return z;
+}
+
+/* =====================================================================
+   STIMME: eingebettete Sprachaufnahmen abspielen
+   Jede Figur hat eigene Tonhöhe und eigenen Hall (SPRECHER in daten.js).
+   Während jemand spricht, wird die Musik leiser.
+   ===================================================================== */
+const Voice = (() => {
+  const cache = {};
+  let cur = null, done = null, tok = 0;
+
+  const has = id => typeof STIMMEN !== 'undefined' && !!STIMMEN[id];
+  const ok = id => S.voice && S.sound && has(id) && !!Snd.ac();
+  const whoOf = id => { const p = id.split('.')[0]; return SPRECHER[p] ? p : 'erzaehler'; };
+
+  function decode(id){
+    if (cache[id]) return cache[id];
+    const bin = atob(STIMMEN[id]), u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    cache[id] = new Promise((res, rej) => {
+      try {
+        // Ältere Safari-Versionen kennen nur die Rückruf-Form
+        const p = Snd.ac().decodeAudioData(u.buffer, res, rej);
+        if (p && p.then) p.then(res, rej);
+      } catch (e) { rej(e); }
+    });
+    cache[id].catch(() => { delete cache[id]; });
+    return cache[id];
+  }
+  function finish(v){ const f = done; done = null; if (f) f(v); }
+  function stop(){
+    tok++;
+    if (cur){ try { cur.onended = null; cur.stop(); } catch (e) {} cur = null; }
+    Music.duck(false);
+    finish(false);
+  }
+  // Spielt eine Zeile ab. Das Versprechen erfüllt sich, wenn sie zu Ende ist oder abgebrochen wird.
+  function say(id){
+    stop();
+    if (!ok(id)) return Promise.resolve(false);
+    const my = tok;
+    return new Promise(res => {
+      done = res;
+      decode(id).then(buf => {
+        if (my !== tok) return;
+        const sp = SPRECHER[whoOf(id)], ac = Snd.ac();
+        const src = ac.createBufferSource(), g = ac.createGain();
+        src.buffer = buf; src.playbackRate.value = sp.hoehe; g.gain.value = sp.laut;
+        src.connect(g); Snd.out(g, sp.hall);
+        src.onended = () => { if (cur !== src) return; cur = null; Music.duck(false); finish(true); };
+        cur = src; Music.duck(true); src.start();
+      }, () => { if (my === tok) finish(false); });
+    });
+  }
+  // Vorab entpacken, damit die erste Zeile einer Szene ohne Verzögerung kommt
+  function warm(ids){ if (!Snd.ac()) return; ids.forEach(id => { if (has(id)) decode(id).catch(() => {}); }); }
+  // Dauer in Sekunden, wie sie im Spiel klingt (für Untertitel)
+  async function length(id){
+    if (!ok(id)) return 0;
+    try { const b = await decode(id); return b.duration / SPRECHER[whoOf(id)].hoehe; } catch (e) { return 0; }
+  }
+  return { say, stop, warm, has, ok, length, speaking: () => !!cur };
+})();
 
 /* =====================================================================
    BÜHNE: die beiden Figuren und ihre Plätze
@@ -2021,7 +2132,7 @@ const Fight = (() => {
       World.burst(E.x, E.gy, 'drop', 40); World.ring(E.x, E.gy - E.H * .3, 20, E.H * 1.6, 'rgba(190,240,236,.8)', 900, 3);
       Music.setLevel(1); Snd.play('wave');
     }, 1600);
-    hook.line(def.line2, 5200);
+    hook.line(def.line2, 5200, key + '.line2');
     if (mode === 'runde'){
       tb.lock = true; tb.broken = false; tb.intent = null; hook.turn();
       setTimeout(() => { if (!on || ended) return; tb.lock = false; tb.turn--; tbNext(); }, 2900);
@@ -2519,18 +2630,21 @@ async function wake(on){
 
 /* ---------- Titel ---------- */
 function titleScreen(){
-  Fight.stop(); wake(false);
+  Fight.stop(); wake(false); Voice.stop();
   show('title'); World.set('strand'); World.reset();
   Stage.showE = false; Stage.showP = false;
   syncSys(); syncSound();
   if (Snd.ac()) Music.play('amb');
 }
 function syncSys(){ ['echt', 'runde'].forEach(k => $('#sys' + (k === 'echt' ? 'Echt' : 'Runde')).setAttribute('aria-checked', String(S.sys === k))); }
-function syncSound(){ $('#btnSound').textContent = 'Ton: ' + (S.sound ? 'an' : 'aus'); }
+function syncSound(){ $('#btnSound').textContent = 'Ton: ' + (S.sound ? 'an' : 'aus'); $('#btnVoice').textContent = 'Stimme: ' + (S.voice ? 'an' : 'aus'); }
 $$('.sys').forEach(b => b.addEventListener('click', () => { Snd.init(); Snd.play('ui'); S.sys = b.dataset.sys; saveSettings(); syncSys(); }));
 $('#btnSound').addEventListener('click', () => {
-  Snd.init(); S.sound = !S.sound; saveSettings(); Snd.setOn(S.sound); syncSound();
+  Snd.init(); S.sound = !S.sound; saveSettings(); Snd.setOn(S.sound); syncSound(); if (!S.sound) Voice.stop();
   if (S.sound && !Music.mode()) Music.play('amb');
+});
+$('#btnVoice').addEventListener('click', () => {
+  Snd.init(); S.voice = !S.voice; saveSettings(); syncSound(); if (!S.voice) Voice.stop();
 });
 $('#btnStart').addEventListener('click', () => {
   Snd.init(); Snd.play('choice');
@@ -2580,18 +2694,22 @@ function scene(key){
   const box = $('#stText'), ch = $('#stChoices');
   box.innerHTML = ''; ch.innerHTML = '';
   const paras = sc.text.map(t => { const p = el('p'); p.textContent = t; box.appendChild(p); return p; });
+  Voice.warm(sc.text.map((t, j) => key + '.' + j));
   let i = 0, done = false;
+  // Mit Stimme erscheint der nächste Absatz, wenn der vorige gesprochen ist
   const reveal = () => {
     if (tok !== sceneTok || done) return;
     if (i < paras.length){
+      const id = key + '.' + i;
       paras[i].classList.add('in'); onPara(key, i); i++;
-      sceneT = setTimeout(reveal, 1500);
+      if (Voice.ok(id)) Voice.say(id).then(() => { if (tok === sceneTok && !done) sceneT = setTimeout(reveal, 450); });
+      else sceneT = setTimeout(reveal, 1500);
     } else { done = true; choices(key, sc); }
   };
   clearTimeout(sceneT); sceneT = setTimeout(reveal, 450);
   $('#stPanel').onpointerdown = () => {
     if (done || tok !== sceneTok) return;
-    clearTimeout(sceneT);
+    clearTimeout(sceneT); Voice.stop();
     while (i < paras.length){ paras[i].classList.add('in'); onPara(key, i); i++; }
     done = true; choices(key, sc);
   };
@@ -2618,7 +2736,7 @@ function choices(key, sc){
   });
 }
 function choose(w){
-  Snd.play('choice');
+  Snd.play('choice'); Voice.stop();
   if (w.herk){
     G.herk = w.herk;
     const old = Stage.P, P = Stage.hero(w.herk);
@@ -2626,10 +2744,12 @@ function choose(w){
     playAnim(P, [[0, SETS[P.set].kneel], [300, SETS[P.set].kneel], [1100, SETS[P.set].idle, EASE.io]]);
     Snd.play('rise');
     $('#stChoices').innerHTML = '';
-    const p = el('p', 'in'); p.textContent = `Du stehst auf. ${HERK[w.herk].weapon} liegt dir in der Hand, als wäre es nie anders gewesen.`;
+    const p = el('p', 'in'); p.textContent = HERK[w.herk].rise;
     $('#stText').appendChild(p);
-    const tok = sceneTok;
-    setTimeout(() => { if (tok === sceneTok) scene('wrack'); }, 2200);
+    const tok = sceneTok, t0 = performance.now();
+    Voice.say('herk.' + w.herk).then(() => {
+      setTimeout(() => { if (tok === sceneTok) scene('wrack'); }, Math.max(500, 2400 - (performance.now() - t0)));
+    });
     return;
   }
   if (w.go === 'herkunft'){
@@ -2660,17 +2780,18 @@ function bonfire(key, how = 'visit', lost = null){
   // Rasten füllt alles auf
   G.hp = null; G.fp = null; G.flasks = G.flasksMax;
   const lines = [];
+  let voice = '';
   if (how === 'death'){
-    lines.push('Du erwachst am Leuchtfeuer. Die Flut hat dich ein weiteres Mal ausgespuckt.');
+    lines.push(SAETZE['feuer.tod']); voice = 'feuer.tod';
     if (lost) lines.push(`Die Glut, die noch am Boden lag (${fmt(lost.n)}), ist erloschen.`);
     if (G.drop) lines.push(`Deine Glut (${fmt(G.drop.n)}) liegt noch dort, wo du gefallen bist. Hol sie dir zurück, bevor du noch einmal stirbst.`);
   } else if (first){
-    lines.push(F.erst);
+    lines.push(F.erst); voice = 'feuer.' + key;
     lines.push({ note: 'Am Leuchtfeuer rastest du: Leben, Fokus und Phiolen füllen sich wieder. Dafür stehen auch die Toten wieder auf.' });
     Snd.play('fire');
     banner('Leuchtfeuer entfacht', 'fire', '', 2400);
   } else {
-    lines.push('Die Flamme brennt ruhig. Du rastest. Deine Wunden schließen sich, und die Phiolen füllen sich mit Mondtau.');
+    lines.push(SAETZE['feuer.rast']); voice = 'feuer.rast';
   }
   $('#fPlace').textContent = F.name;
   const box = $('#fText'); box.innerHTML = '';
@@ -2679,6 +2800,8 @@ function bonfire(key, how = 'visit', lost = null){
     box.appendChild(p); setTimeout(() => p.classList.add('in'), 200 + i * 500);
   });
   renderFire();
+  Voice.stop();
+  if (voice) setTimeout(() => { if (cur === 'fire' && G.feuer === key) Voice.say(voice); }, how === 'death' ? 1400 : 600);
 }
 function renderFire(){
   const F = FEUER[G.feuer], h = HERK[G.herk];
@@ -2759,7 +2882,7 @@ let fightKey = '';
 function fight(key){
   const mode = S.sys;
   const go = () => {
-    fightKey = key;
+    fightKey = key; Voice.stop();
     clearTimeout(sceneT); sceneTok++;
     show('fight'); setupHud(key, mode);
     World.set(key === 'vogt' ? 'arena' : key === 'knecht' ? 'tor' : 'strand'); World.reset();
@@ -2770,7 +2893,8 @@ function fight(key){
     wake(true);
     if (FEINDE[key].boss){
       Fight.en().next = 3600;
-      banner(FEINDE[key].name, 'boss', FEINDE[key].title, 2200).then(() => { if (fightKey === key && Fight.on()) Fight.hook.line(FEINDE[key].intro, 4200); });
+      Voice.warm([key + '.intro', key + '.line2']);
+      banner(FEINDE[key].name, 'boss', FEINDE[key].title, 2200).then(() => { if (fightKey === key && Fight.on()) Fight.hook.line(FEINDE[key].intro, 4200, key + '.intro'); });
     }
     if (G.drop && G.drop.at === key) toast(`Deine Glut liegt hier: ${fmt(G.drop.n)}`, 2600);
   };
@@ -2896,9 +3020,12 @@ Fight.hook.toast = what => {
   if (what === 'flask' && hudEl.cb) { nope(hudEl.cb.flask); toast('Keine Phiole mehr', 1000); }
 };
 let lineT = 0;
-Fight.hook.line = (text, ms) => {
+Fight.hook.line = async (text, ms, id) => {
   const l = $('#fLine'); l.textContent = '„' + text + '“'; l.hidden = false;
   requestAnimationFrame(() => l.classList.add('in'));
+  clearTimeout(lineT);
+  // Mit Stimme bleibt der Untertitel so lange stehen, wie gesprochen wird
+  if (id && Voice.ok(id)){ Voice.say(id); ms = Math.max(ms, (await Voice.length(id)) * 1000 + 700); }
   clearTimeout(lineT); lineT = setTimeout(() => { l.classList.remove('in'); setTimeout(() => { l.hidden = true; }, 900); }, ms);
 };
 function hud(dt){
@@ -2986,6 +3113,7 @@ function pauseSheet(){
     <button type="button" class="row" data-a="switch"><span><b>Kampfsystem wechseln</b><small>Beginnt diesen Kampf neu im ${SYS_LONG[other]}</small></span></button>
     ${echt ? `<button type="button" class="row" data-a="ring"><span><b>Zeitring</b><small>Zeigt, wann der nächste Treffer kommt</small></span><span class="val">${S.ring ? 'an' : 'aus'}</span></button>` : ''}
     <button type="button" class="row" data-a="sound"><span><b>Ton</b></span><span class="val">${S.sound ? 'an' : 'aus'}</span></button>
+    <button type="button" class="row" data-a="voice"><span><b>Stimmen</b><small>Erzähler und Figuren sprechen</small></span><span class="val">${S.voice ? 'an' : 'aus'}</span></button>
     <button type="button" class="row" data-a="help"><span><b>Steuerung</b><small>Die Regeln noch einmal</small></span></button>
     <button type="button" class="row" data-a="flee"><span><b>Zum Leuchtfeuer fliehen</b><small>Der Kampf endet, deine Glut bleibt bei dir</small></span></button>`, {
     onClose: () => Fight.setPaused(false),
@@ -2993,6 +3121,7 @@ function pauseSheet(){
       if (a === 'resume') return closeSheet();
       if (a === 'ring'){ S.ring = !S.ring; saveSettings(); b.querySelector('.val').textContent = S.ring ? 'an' : 'aus'; return; }
       if (a === 'sound'){ S.sound = !S.sound; saveSettings(); Snd.setOn(S.sound); b.querySelector('.val').textContent = S.sound ? 'an' : 'aus'; if (S.sound) Music.play(FEINDE[fightKey].boss ? 'boss' : 'kampf'); return; }
+      if (a === 'voice'){ S.voice = !S.voice; saveSettings(); b.querySelector('.val').textContent = S.voice ? 'an' : 'aus'; if (!S.voice) Voice.stop(); return; }
       if (a === 'help'){ closeSheet(false); tutorial(Fight.mode(), () => Fight.setPaused(false)); return; }
       if (a === 'switch'){ closeSheet(false); Fight.stop(); S.sys = other; saveSettings(); fight(fightKey); return; }
       if (a === 'flee'){ closeSheet(false); Fight.stop(); G.farm = false; bonfire(G.feuer, 'visit'); }
@@ -3002,7 +3131,7 @@ function pauseSheet(){
 
 /* ---------- Bilanz ---------- */
 function bilanz(){
-  Fight.stop(); wake(false);
+  Fight.stop(); wake(false); Voice.stop();
   show('bilanz'); World.set('ende'); Stage.showE = false; Music.play('amb');
   const min = Math.max(1, Math.round((Date.now() - G.t0) / 60000));
   const used = Object.keys(G.sys).map(k => SYS_NAME[k]).join(' und ') || SYS_NAME[S.sys];
@@ -3031,7 +3160,7 @@ function init(){
   if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
   titleScreen();
   requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
-  if (DEBUG) window.__mg = { G, S, Fight, Stage, World, scene, fight, bonfire, bilanz, titleScreen, draw, drawActor, makeActor, SETS, LOOK, mkPose, skeleton };
+  if (DEBUG) window.__mg = { G, S, Fight, Stage, World, Voice, scene, fight, bonfire, bilanz, titleScreen, draw, drawActor, makeActor, SETS, LOOK, mkPose, skeleton };
 }
 if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(init);
 else init();

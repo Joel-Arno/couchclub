@@ -4,11 +4,13 @@
     python3 mond/build.py                    -> mond/index.html (läuft direkt im Browser, auch offline)
     python3 mond/build.py --artifact PFAD    -> zusätzlich eine Variante ohne HTML-Grundgerüst
 
-Die Schriften aus src/fonts werden als Base64 eingebettet, damit das Spiel
-ohne Internet läuft. Keine Abhängigkeiten außer Python 3.
+Die Schriften aus src/fonts und die Sprachaufnahmen aus src/stimme werden als
+Base64 eingebettet, damit das Spiel ohne Internet läuft. Keine Abhängigkeiten
+außer Python 3. Die Aufnahmen selbst erzeugt stimme.py.
 """
 import argparse
 import base64
+import json
 import pathlib
 import re
 
@@ -21,7 +23,7 @@ FONTS = [
     ("IBM Plex Sans", "plexsans-400.woff2", "normal", "400"),
     ("IBM Plex Sans", "plexsans-600.woff2", "normal", "600 700"),
 ]
-JS = ["core.js", "figuren.js", "welt.js", "daten.js", "kampf.js", "ablauf.js"]
+JS = ["core.js", "figuren.js", "welt.js", "daten.js", "stimme.js", "kampf.js", "ablauf.js"]
 
 
 def font_css():
@@ -35,10 +37,22 @@ def font_css():
     return "\n".join(rules)
 
 
+def voices_js():
+    """Sprachaufnahmen aus src/stimme (erzeugt mit stimme.py) als Base64 einbetten."""
+    idx_path = SRC / "stimme" / "index.json"
+    idx = json.loads(idx_path.read_text(encoding="utf-8")) if idx_path.exists() else {}
+    data = {}
+    for vid in sorted(idx):
+        f = SRC / "stimme" / f"{vid}.mp3"
+        if f.exists():
+            data[vid] = base64.b64encode(f.read_bytes()).decode()
+    return "const STIMMEN = " + json.dumps(data, separators=(",", ":")) + ";\n"
+
+
 def build(skeleton=True):
     shell = (SRC / "shell.html").read_text(encoding="utf-8")
     css = (SRC / "style.css").read_text(encoding="utf-8")
-    js = "\n".join((SRC / f).read_text(encoding="utf-8") for f in JS)
+    js = voices_js() + "\n".join((SRC / f).read_text(encoding="utf-8") for f in JS)
     html = (
         shell.replace("/*@FONTS@*/", font_css())
         .replace("/*@CSS@*/", css)

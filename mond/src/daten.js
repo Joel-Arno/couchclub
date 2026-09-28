@@ -7,6 +7,7 @@ const HERK = {
   kron: {
     name: 'Kronwächter', item: 'Ein Langschwert und ein zerbeulter Schild',
     blurb: 'Hält viel aus. Der Schild fängt fast jeden Schlag ab.', weapon: 'Langschwert und Schild',
+    rise: 'Du stehst auf. Das Schwert liegt dir in der Hand, der Schild an deinem Arm, als wäre es nie anders gewesen.',
     hp: 125, st: 100, fp: 40,
     light: [
       { pose: 'l1', d: 11, pz: 10, st: 16, hit: 190, dur: 440 },
@@ -20,6 +21,7 @@ const HERK = {
   harp: {
     name: 'Harpunierin', item: 'Eine Harpune mit Widerhaken',
     blurb: 'Schnell und beweglich. Ihr Wurf unterbricht Angriffe.', weapon: 'Harpune',
+    rise: 'Du stehst auf. Die Harpune liegt dir in der Hand, als wäre es nie anders gewesen.',
     hp: 105, st: 125, fp: 42,
     light: [
       { pose: 'l1', d: 9, pz: 8, st: 13, hit: 150, dur: 370 },
@@ -33,6 +35,7 @@ const HERK = {
   moench: {
     name: 'Glockenmönch', item: 'Ein Hammer, an dem eine Glocke hängt',
     blurb: 'Langsam und wuchtig. Sein Geläut verletzt und heilt.', weapon: 'Glockenhammer',
+    rise: 'Du stehst auf. Der Hammer liegt dir schwer in der Hand. Die kleine Glocke daran schweigt, als wartete sie.',
     hp: 115, st: 95, fp: 75,
     light: [
       { pose: 'l1', d: 14, pz: 14, st: 19, hit: 250, dur: 560 },
@@ -174,3 +177,33 @@ const FEUER = {
   mole: { name: 'Leuchtfeuer an der Mole', welt: 'mole', weiter: { t: 'Zum Ende der Mole gehen', go: 'nebel' },
     erst: 'Die Schale ist voller Asche. Du hältst die Hand darüber, und die Asche beginnt zu glühen.' }
 };
+
+// Feste Sätze, die an mehreren Stellen vorkommen
+const SAETZE = {
+  'feuer.tod': 'Du erwachst am Leuchtfeuer. Die Flut hat dich ein weiteres Mal ausgespuckt.',
+  'feuer.rast': 'Die Flamme brennt ruhig. Du rastest. Deine Wunden schließen sich, und die Phiolen füllen sich mit Mondtau.'
+};
+
+/* ---------- Stimmen ----------
+   Freie deutsche Piper-Stimmen, erzeugt mit mond/stimme.py.
+   tempo: Sprechdauer beim Erzeugen (größer ist langsamer)
+   hoehe: Abspielrate im Spiel (kleiner klingt tiefer und langsamer)
+   hall:  Anteil im Hall, laut: Lautstärke */
+const SPRECHER = {
+  erzaehler: { name: 'Erzähler', stimme: 'de_DE-thorsten-high', tempo: 1.08, hoehe: .96, hall: .2, laut: 1 },
+  vogt:      { name: 'Der Strandvogt', stimme: 'de_DE-thorsten_emotional-medium', sprecher: 'disgusted', tempo: 1.12, hoehe: .8, hall: .5, laut: 1.1 }
+};
+// Alle Sprechzeilen, abgeleitet aus den Texten des Spiels
+function stimmZeilen(){
+  const z = [];
+  for (const k in SZENEN) SZENEN[k].text.forEach((t, i) => z.push({ id: k + '.' + i, wer: 'erzaehler', text: t }));
+  for (const k in HERK) z.push({ id: 'herk.' + k, wer: 'erzaehler', text: HERK[k].rise });
+  for (const k in FEUER) z.push({ id: 'feuer.' + k, wer: 'erzaehler', text: FEUER[k].erst });
+  for (const k in SAETZE) z.push({ id: k, wer: 'erzaehler', text: SAETZE[k] });
+  for (const k in FEINDE){
+    const d = FEINDE[k], wer = SPRECHER[k] ? k : 'erzaehler';
+    if (d.intro) z.push({ id: k + '.intro', wer, text: d.intro });
+    if (d.line2) z.push({ id: k + '.line2', wer, text: d.line2 });
+  }
+  return z;
+}

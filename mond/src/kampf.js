@@ -296,7 +296,7 @@ const Fight = (() => {
       World.burst(E.x, E.gy, 'drop', 40); World.ring(E.x, E.gy - E.H * .3, 20, E.H * 1.6, 'rgba(190,240,236,.8)', 900, 3);
       Music.setLevel(1); Snd.play('wave');
     }, 1600);
-    hook.line(def.line2, 5200);
+    hook.line(def.line2, 5200, key + '.line2');
     if (mode === 'runde'){
       tb.lock = true; tb.broken = false; tb.intent = null; hook.turn();
       setTimeout(() => { if (!on || ended) return; tb.lock = false; tb.turn--; tbNext(); }, 2900);
