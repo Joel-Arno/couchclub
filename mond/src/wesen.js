@@ -10,7 +10,15 @@ Object.assign(LOOK, {
   isolde:   { schleier: 1.6, kleid: true, eyes: '#9fe3e8', weapon: 'kettenglocke', limb: .95, bulk: 1.0, scale: 1.45 },
   enna:     { hood: true, kleid: true, lantern: true, lanternCol: '#ffd29a', weapon: null, limb: .9, bulk: .9 },
   mira:     { hair: true, scarf: true, weapon: null, limb: .92, bulk: .95 },
+  greta:    { hair: true, scarf: true, kleid: true, weapon: null, limb: .86, bulk: .92, scale: .96 },
+  oswin:    { hood: true, rags: true, cape: .7, weapon: null, limb: .88, bulk: .84, scale: .98 },
   kalden:   { hut: 'ritterhelm', cape: 1.1, weapon: 'schwert', off: 'schild', bulk: 1.15 },
+  fischer:  { hut: 'suedwester', rags: true, eyes: '#8fe0d6', weapon: 'haken', twoHand: -.25, limb: .95, bulk: .95 },
+  moorleiche: { hair: true, rags: true, eyes: '#b8e08f', weapon: 'kolben', limb: 1.12, bulk: 1.3, scale: 1.14 },
+  salzleiche: { hair: true, rags: true, salz: true, eyes: '#e8f4ff', weapon: 'kolben', limb: 1.05, bulk: 1.15, scale: 1.05 },
+  kultist:  { hood: true, coat: true, lantern: true, lanternCol: '#ffb070', eyes: '#ffd08a', weapon: 'stab', twoHand: -.18, limb: .9, bulk: .9 },
+  ritter:   { hut: 'ritterhelm', cape: 1.15, eyes: '#8fe0d6', weapon: 'schwert', off: 'schild', bulk: 1.18, limb: 1.05, scale: 1.1 },
+  taucher:  { hut: 'taucherhelm', visor: '#9fe8e0', weapon: 'anker', chains: true, limb: 1.25, bulk: 1.45, scale: 1.3 },
   krabbe:   { kind: 'krabbe', scale: .72, eyes: '#ffd9a0' },
   spinne:   { kind: 'spinne', scale: 1.3, breit: true, eyes: '#ffcf8a' }
 });
@@ -74,6 +82,21 @@ Object.assign(LOOK, {
     W_grab: mkPose({ lean: -.1, a1: 2.3, a2: .4, b1: 2.3, b2: .4, wb: 3.3 }, i),
     S_grab: mkPose({ lean: .6, x: .38, a1: 1.6, a2: .1, b1: 1.6, b2: .1, wb: 1.4, f1: .7, f2: -.4, k1: -.7 }, i),
     recover: mkPose({ lean: .3, a1: .8, a2: .4, w: .2, wb: .6 }, i)
+  });
+})();
+// Ertrunkener Ritter: Schwert und Schild wie die Kronwacht, aber als Gegner
+(() => {
+  const i = mkPose({ lean: .12, head: -.05, a1: .55, a2: 1.0, w: .4, b1: 1.0, b2: .6, f1: .35, f2: -.45, k1: -.35, k2: -.2 });
+  SETS.ritter = Object.assign(commonPoses(i), {
+    W_over: mkPose({ lean: -.05, a1: 2.6, a2: .5, w: 1.0, b1: .9, b2: .5 }, i),
+    S_over: mkPose({ lean: .4, x: .12, a1: 1.35, a2: .05, w: .2, b1: .6, f1: .6, f2: -.55, k1: -.48 }, i),
+    W_side: mkPose({ lean: .15, a1: .9, a2: 1.8, w: 2.1, b1: 1.1 }, i),
+    S_side: mkPose({ lean: .3, x: .1, a1: 1.6, a2: .1, w: .1, b1: .7, f1: .55, f2: -.5, k1: -.45 }, i),
+    W_thrust: mkPose({ lean: .0, x: -.05, a1: .3, a2: 1.6, w: -.1, b1: 1.2 }, i),
+    S_thrust: mkPose({ lean: .38, x: .2, a1: 1.55, a2: 0, w: 0, b1: .8, f1: .65, f2: -.5, k1: -.55 }, i),
+    W_lunge: mkPose({ lean: .5, x: -.1, a1: .5, a2: 1.4, w: .2, b1: 1.1, f1: .6, f2: -1.1, k1: -.6, k2: -.7 }, i),
+    S_lunge: mkPose({ lean: .6, x: .8, a1: 1.5, a2: .1, w: .1, b1: .8, f1: .85, f2: -.4, k1: -.9, k2: -.1 }, i),
+    recover: mkPose({ lean: .3, a1: .8, a2: .6, w: .3, b1: 1.0 }, i)
   });
 })();
 // Figuren im Gespräch: ruhig stehend

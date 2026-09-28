@@ -36,9 +36,9 @@ const reduceMotion = !!(window.matchMedia && matchMedia('(prefers-reduced-motion
 const DEBUG = /(^|#|&)test$/.test(location.hash);
 
 /* ---------- Einstellungen (nur auf diesem Gerät) ---------- */
-const SET_KEY = 'mondgelaeut-einstellungen-v1';
+const SET_KEY = 'mondgelaeut-einstellungen-v2';
 const S = (() => {
-  const d = { sound: true, voice: true, ring: true, vib: true, tut: false };
+  const d = { sound: true, voice: true, ring: false, vib: true, tut: false };
   try { Object.assign(d, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch (e) {}
   // Im Couchclub gelten Ton und Vibration von dort
   if (EMB){ d.sound = EMB.sound; d.vib = EMB.vibe; }
@@ -143,7 +143,18 @@ const Snd = (() => {
     heart(){ const t = now(); bell(98, .11, 2.4, .6, t); bell(98, .075, 2, .6, t + .3); },
     fire(){ const t = now(); noise(t, 1.4, 'bandpass', 420, .8, .16, .3, 900, .35); bell(392, .1, 3, .7, t + .15); },
     rise(){ const t = now(); noise(t, 1.4, 'lowpass', 200, .7, .12, .4, 700, .6); },
-    lure(){ tone('sine', 196, now(), .3, 1.4, .05, .7, 147); }
+    lure(){ tone('sine', 196, now(), .3, 1.4, .05, .7, 147); },
+    // Erkunden
+    schritt(){ const t = now(); noise(t, .045, 'lowpass', 700 + rnd() * 500, .8, .045, .02); },
+    platsch(){ const t = now(); noise(t, .14, 'bandpass', 900 + rnd() * 500, 1.2, .06, .08, 2200); },
+    sprung(){ const t = now(); noise(t, .09, 'bandpass', 480, 1, .05, .02, 900); },
+    landen(){ const t = now(); tone('sine', 95, t, .002, .12, .12, 0, 50); noise(t, .1, 'lowpass', 700, .7, .1, .04); },
+    bemerkt(){ const t = now(); tone('triangle', 880, t, .002, .09, .05, .2); tone('triangle', 1175, t + .08, .002, .14, .05, .3); tone('sawtooth', 110, t, .02, .3, .04, .2, 80); },
+    tuer(){ const t = now(); tone('sawtooth', 120, t, .08, .45, .025, .2, 84); noise(t + .1, .35, 'bandpass', 380, 3, .06, .3); tone('sine', 70, t + .45, .002, .2, .12, .2, 45); },
+    hebel(){ const t = now(); tone('square', 190, t, .002, .06, .05, .1, 120); noise(t, .12, 'bandpass', 1500, 4, .12, .15); tone('sine', 85, t + .05, .002, .18, .12, .1, 50); },
+    gitter(){ const t = now(); for (let i = 0; i < 14; i++) tone('square', 1300 + rnd() * 900, t + i * .07, .001, .03, .02, .15); noise(t, 1.2, 'lowpass', 220, .8, .2, .3, 120, .2); },
+    bruch(){ const t = now(); noise(t, 1.1, 'lowpass', 900, .7, .4, .3, 140, .01); tone('sine', 62, t, .005, .7, .35, .2, 32); for (let i = 0; i < 6; i++) noise(t + .1 + rnd() * .6, .05, 'bandpass', 1400 + rnd() * 1500, 2, .07, .1); },
+    thunder(){ const t = now(); noise(t, 3.2, 'lowpass', 160, .7, .38, .5, 60, .08); noise(t, .25, 'lowpass', 1200, .7, .18, .3, 300, .01); }
   };
   function play(name, ...args){
     if (!ac || !S.sound || !P[name]) return;

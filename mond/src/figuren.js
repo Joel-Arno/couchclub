@@ -104,6 +104,8 @@ const SETS = {};
     S_side: mkPose({ lean: .5, x: .16, a1: 1.7, a2: .1, w: .1, b1: -.3, f1: .6, f2: -.5, k1: -.45 }, i),
     W_grab: mkPose({ lean: -.05, head: -.2, a1: 1.9, a2: .4, w: 1.0, b1: 1.9, b2: .4, f1: .55, f2: -1.0, k1: -.5, k2: -.6 }, i),
     S_grab: mkPose({ lean: .75, x: .52, y: -.04, a1: 1.6, a2: .1, w: .3, b1: 1.5, b2: .1, f1: .9, f2: -.4, k1: -.8, k2: -.1 }, i),
+    W_cast: mkPose({ lean: -.15, head: -.45, a1: .9, a2: .8, w: .5, b1: .6, b2: .6 }, i),
+    S_cast: mkPose({ lean: .65, head: .25, x: .08, a1: .5, a2: .5, w: .6, b1: .3, b2: .4, f1: .5, f2: -.5, k1: -.4 }, i),
     recover: mkPose({ lean: .55, a1: .6, a2: .3, w: .3, x: .06 }, i)
   });
 })();
@@ -175,9 +177,38 @@ function updateActor(a, dt){
     target = sampleTrack(a.anim, a.animT);
     if (a.animT >= a.anim[a.anim.length - 1][0] && !a.hold) a.anim = null;
   }
-  if (!target) target = actorIdle(a);
-  a.pose = mixPose(a.pose, target, 1 - Math.exp(-dt * .032));
+  if (!target) target = a.poseFn ? a.poseFn(a) : actorIdle(a);
+  a.pose = mixPose(a.pose, target, 1 - Math.exp(-dt * (a.mix || .032)));
   if (a.shake > 0) a.shake = Math.max(0, a.shake - dt);
+}
+
+/* ---------- Bewegung in der Welt: Laufen, Springen, Klettern, Rollen ----------
+   a.bew = { m: Art, ph: Phase des Schritts, st: Stärke 0 bis 1, k: Fortschritt } */
+function bewegungsPose(a){
+  const S = SETS[a.set], i = S.idle, b = a.bew || { m: 'stand' };
+  if (a.look && a.look.kind) return i;
+  const s = b.st == null ? 1 : b.st, ph = b.ph || 0, sn = Math.sin(ph), cs = Math.cos(ph);
+  switch (b.m){
+    case 'lauf': return mkPose({
+      lean: i.lean + .1 * s, head: i.head - .04 * s,
+      f1: .06 + .6 * sn * s, f2: -.14 - .95 * s * Math.max(0, -Math.sin(ph - .5)),
+      k1: .06 - .6 * sn * s, k2: -.14 - .95 * s * Math.max(0, Math.sin(ph - .5)),
+      a1: i.a1 + .1 * sn * s, b1: i.b1 - .5 * sn * s, b2: i.b2 + .15 * s, cape: .05 * s
+    }, i);
+    case 'sprung': return mkPose({ lean: i.lean - .02, head: i.head + .05, f1: .95, f2: -1.35, k1: .15, k2: -1.05, b1: 1.2, b2: .5, a1: i.a1 + .25, cape: -.05 }, i);
+    case 'fall': return mkPose({ lean: i.lean - .08, head: i.head - .1, f1: .35, f2: -.45, k1: -.25, k2: -.55, b1: 1.9, b2: .3, a1: i.a1 + .4, cape: .15 }, i);
+    case 'landen': return mkPose({ lean: i.lean + .32, head: i.head + .2, f1: .75, f2: -1.35, k1: -.35, k2: -1.0, b1: .6, b2: .6 }, i);
+    case 'klettern': return mkPose({
+      lean: 0, head: -.25, x: 0,
+      a1: 2.7 + .35 * sn, a2: .5, b1: 2.7 - .35 * sn, b2: .5, w: 0,
+      f1: .55 + .35 * sn, f2: -1.25, k1: .55 - .35 * sn, k2: -1.25, cape: -.08
+    }, i);
+    case 'rolle': return mkPose({ rot: -b.k * TAU, y: -.18 * Math.sin(b.k * Math.PI), lean: .9, head: .4, a1: 1.4, a2: 1.4, b1: 1.2, b2: 1.4, f1: 1.5, f2: -2.3, k1: 1.3, k2: -2.2, cape: .1 }, i);
+    case 'hocke': return mkPose({ lean: .5, head: .25, a1: .9, a2: .6, b1: 1.2, b2: .4, f1: 1.25, f2: -2.2, k1: .1, k2: -2.0 }, i);
+    case 'ziehen': return mkPose({ lean: -.15, head: -.1, a1: 1.1, a2: .3, b1: 1.2, b2: .3, f1: .5, f2: -.4, k1: -.45, k2: -.2, x: -.05 }, i);
+    case 'schwimm': return mkPose({ lean: .6, head: -.5, a1: 1.6 + .6 * sn, a2: .3, b1: 1.6 - .6 * sn, b2: .3, f1: .5 + .3 * cs, f2: -.3, k1: .5 - .3 * cs, k2: -.3 }, i);
+    default: return actorIdle(a);
+  }
 }
 
 /* ---------- Skelett ---------- */
@@ -225,14 +256,15 @@ function weaponTip(a){
   if (KETTE[a.look.weapon]) tip = flailBall(a, sk, H);
   return toWorld(a, tip);
 }
-const WLEN = { schwert: .47, harpune: .64, hammer: .48, entermesser: .33, flegel: .5, haken: .66, pfahlspeer: .6, nadel: .42, kolben: .4, stab: .62, glockenstab: .5, kettenglocke: .55 };
+const WLEN = { schwert: .47, harpune: .64, hammer: .48, entermesser: .33, flegel: .5, haken: .66, pfahlspeer: .6, nadel: .42, kolben: .4, stab: .62, glockenstab: .5, kettenglocke: .55, anker: .6 };
 // Waffen mit Kette: Länge der Kette und Größe des Endes (Anteile von H)
-const KETTE = { flegel: { len: .3, r: .05 }, kettenglocke: { len: .36, r: .11 } };
+const KETTE = { flegel: { len: .3, r: .05 }, kettenglocke: { len: .36, r: .11 }, anker: { len: .34, r: .1 } };
 function chestPt(a){ const sk = a.sk; if (!sk) return [a.x, a.gy - a.H * .6]; if (sk.chest) return toWorld(a, sk.chest); return toWorld(a, [lerp(sk.hip[0], sk.sho[0], .65), lerp(sk.hip[1], sk.sho[1], .65)]); }
 function headPt(a){ const sk = a.sk; if (!sk) return [a.x, a.gy - a.H]; return toWorld(a, sk.head); }
 
 /* ---------- Zeichnen ---------- */
-const INK = '#040507', INK2 = '#0d1117', RIM = 'rgba(176,196,214,.5)';
+const INK = '#040507', INK2 = '#0d1117';
+let RIM = 'rgba(176,196,214,.5)';   // Lichtkante der Figuren, je nach Gebiet
 function seg(ctx, p, q, w){ ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke(); }
 
 function drawActor(ctx, a, alpha = 1){
@@ -350,6 +382,10 @@ function head(ctx, a, sk, H, c){
     ctx.fillRect(-r * 1.12, -r * .1, r * 2.24, r * 1.2);
     const fl = Math.sin(a.t * .004) * r * .15;
     ctx.beginPath(); ctx.moveTo(-r * .1, -r * 1.1); ctx.quadraticCurveTo(-r * 1.4, -r * 1.9 + fl, -r * 2.3, -r * .6 + fl); ctx.quadraticCurveTo(-r * 1.1, -r * 1.1, -r * .1, -r * .7); ctx.fill();
+  }
+  if (L.hut === 'taucherhelm'){
+    ctx.beginPath(); ctx.arc(0, -r * .1, r * 1.45, 0, TAU); ctx.fill();
+    ctx.fillRect(-r * 1.2, r * .8, r * 2.4, r * .6);
   }
   if (L.krone){
     for (let i = 0; i < 5; i++){
@@ -532,6 +568,21 @@ function weapon(ctx, a, sk, H, c){
     ctx.lineTo(bs * 1.05, bs * 1.05); ctx.quadraticCurveTo(bs * .55, bs * .8, bs * .45, -bs * .25); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.arc(0, bs * 1.15, bs * .18, 0, TAU); ctx.fill();
     ctx.restore();
+  } else if (kind === 'anker'){
+    seg(ctx, P(-.04), P(.12), H * .03);
+    const end = P(.12), ball = flailBall(a, sk, H);
+    const mid = [(end[0] + ball[0]) / 2, (end[1] + ball[1]) / 2 + H * .05 * (1 - Math.min(1, a.pose.ext))];
+    ctx.lineWidth = H * .012; ctx.setLineDash([H * .014, H * .009]);
+    ctx.beginPath(); ctx.moveTo(end[0], end[1]); ctx.quadraticCurveTo(mid[0], mid[1], ball[0], ball[1]); ctx.stroke();
+    ctx.setLineDash([]);
+    const an = Math.atan2(ball[1] - end[1], ball[0] - end[0]) - Math.PI / 2, s2 = H * .1;
+    ctx.save(); ctx.translate(ball[0], ball[1]); ctx.rotate(an);
+    ctx.lineWidth = H * .022;
+    ctx.beginPath(); ctx.moveTo(0, -s2 * .3); ctx.lineTo(0, s2 * 1.1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-s2 * .45, -s2 * .05); ctx.lineTo(s2 * .45, -s2 * .05); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, s2 * .55, s2 * .7, .15 * Math.PI, .85 * Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-s2 * .72, s2 * .75); ctx.lineTo(-s2 * .85, s2 * .45); ctx.moveTo(s2 * .72, s2 * .75); ctx.lineTo(s2 * .85, s2 * .45); ctx.stroke();
+    ctx.restore();
   } else if (kind === 'haken'){
     seg(ctx, P(-.34), P(.62), H * .02);
     poly([P(.6, -.012), P(.7, 0), P(.6, .012)]);
@@ -554,12 +605,22 @@ function paintGlow(ctx, a, sk, H){
     dot(e[0], e[1], r * (.75 + a.glow * .5), L.eyes, .6 + a.glow * .25);
     dot(e[0], e[1], r * .22, '#ffffff', .9);
   }
-  if (L.visor){
+  if (L.visor && L.hut === 'taucherhelm'){
+    // rundes Fenster im Taucherhelm
+    const c = [sk.head[0] + Math.sin(sk.hd + 1.4) * r * .7, sk.head[1] - Math.cos(sk.hd + 1.4) * r * .7];
+    ctx.globalAlpha = .8 * a.alpha; ctx.strokeStyle = L.visor; ctx.lineWidth = r * .15;
+    ctx.beginPath(); ctx.arc(c[0], c[1], r * .55, 0, TAU); ctx.stroke();
+    dot(c[0], c[1], r * 1.6, L.visor, .3 + a.glow * .2);
+  } else if (L.visor){
     ctx.save(); ctx.translate(sk.head[0], sk.head[1]); ctx.rotate(sk.hd);
     ctx.globalAlpha = .9 * a.alpha; ctx.strokeStyle = L.visor; ctx.lineWidth = r * .22;
     ctx.beginPath(); ctx.moveTo(r * .1, -r * .15); ctx.lineTo(r * 1.2, -r * .15); ctx.stroke();
     ctx.restore();
     dot(sk.head[0] + r * .8, sk.head[1] - r * .1, r * 1.3, L.visor, .35);
+  }
+  if (L.salz){
+    // Salzkruste auf Schultern und Rücken
+    for (let i = 0; i < 7; i++){ const u = .3 + i * .1, c = [lerp(sk.hip[0], sk.sho[0], u) - .03 * H, lerp(sk.hip[1], sk.sho[1], u) + (i % 2 ? -.02 : .02) * H]; dot(c[0], c[1], H * .025, '#e8f2fa', .45); }
   }
   if (L.krone){
     ctx.save(); ctx.translate(sk.head[0], sk.head[1]); ctx.rotate(sk.hd);
