@@ -41,12 +41,15 @@ def voices_js():
     """Sprachaufnahmen aus src/stimme (erzeugt mit stimme.py) als Base64 einbetten."""
     idx_path = SRC / "stimme" / "index.json"
     idx = json.loads(idx_path.read_text(encoding="utf-8")) if idx_path.exists() else {}
-    data = {}
+    data, ende = {}, {}
     for vid in sorted(idx):
         f = SRC / "stimme" / f"{vid}.mp3"
         if f.exists():
             data[vid] = base64.b64encode(f.read_bytes()).decode()
-    return "const STIMMEN = " + json.dumps(data, separators=(",", ":")) + ";\n"
+            if idx[vid].get("ende"):
+                ende[vid] = idx[vid]["ende"]
+    return ("const STIMMEN = " + json.dumps(data, separators=(",", ":")) + ";\n"
+            + "const STIMMEN_ENDE = " + json.dumps(ende, separators=(",", ":")) + ";\n")
 
 
 def build(skeleton=True):

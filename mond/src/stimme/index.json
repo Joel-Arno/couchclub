@@ -1,137 +1,164 @@
 {
  "ende.0": {
-  "dauer": 4.93,
-  "key": "93497300928b17bb",
+  "dauer": 5.35,
+  "ende": 5.01,
+  "key": "7b288028b1e0643a",
   "wer": "erzaehler"
  },
  "ende.1": {
-  "dauer": 8.36,
-  "key": "7103f207e6f5035c",
+  "dauer": 9.5,
+  "ende": 8.98,
+  "key": "a139d2d2411ad660",
   "wer": "erzaehler"
  },
  "ende.2": {
-  "dauer": 2.99,
-  "key": "1d30d8d5c4d6dfbb",
+  "dauer": 3.35,
+  "ende": 3.05,
+  "key": "241868e43f75aedf",
   "wer": "erzaehler"
  },
  "erwachen.0": {
-  "dauer": 2.99,
-  "key": "2f6143647c8b8a5b",
+  "dauer": 3.73,
+  "ende": 3.14,
+  "key": "5861f98fce0f37ed",
   "wer": "erzaehler"
  },
  "erwachen.1": {
-  "dauer": 7.17,
-  "key": "4d6a40f964cc75fd",
+  "dauer": 7.89,
+  "ende": 7.32,
+  "key": "ca008af765cc9e0d",
   "wer": "erzaehler"
  },
  "erwachen.2": {
-  "dauer": 4.78,
-  "key": "e618ec6b5a8a94dc",
+  "dauer": 5.32,
+  "ende": 4.93,
+  "key": "2fae2158eb7d92ef",
   "wer": "erzaehler"
  },
  "feuer.mole": {
-  "dauer": 5.6,
-  "key": "139ff5d816e91be8",
+  "dauer": 6.37,
+  "ende": 5.48,
+  "key": "22b3032fb23c0a1a",
   "wer": "erzaehler"
  },
  "feuer.rast": {
-  "dauer": 6.81,
-  "key": "fc47dba9ecc0127d",
+  "dauer": 7.43,
+  "ende": 7.06,
+  "key": "8a2b26b8c4d6dcaf",
   "wer": "erzaehler"
  },
  "feuer.strand": {
-  "dauer": 7.97,
-  "key": "d7c73a4269ce857c",
+  "dauer": 8.53,
+  "ende": 8.11,
+  "key": "6f9da55676c5849f",
   "wer": "erzaehler"
  },
  "feuer.tod": {
-  "dauer": 4.6,
-  "key": "af021afdde87f24c",
+  "dauer": 5.21,
+  "ende": 4.88,
+  "key": "1c30be018eb98917",
   "wer": "erzaehler"
  },
  "herk.harp": {
-  "dauer": 5.04,
-  "key": "136cc79ffe8aff54",
+  "dauer": 5.92,
+  "ende": 5.47,
+  "key": "52c57a87bdbd7bf1",
   "wer": "erzaehler"
  },
  "herk.kron": {
-  "dauer": 6.49,
-  "key": "e9553cb4f1bf607b",
+  "dauer": 7.11,
+  "ende": 6.69,
+  "key": "237a79a1ed95bfa3",
   "wer": "erzaehler"
  },
  "herk.moench": {
-  "dauer": 6.54,
-  "key": "843369078f363f5d",
+  "dauer": 7.19,
+  "ende": 6.84,
+  "key": "b0a4ce982c8a9f06",
   "wer": "erzaehler"
  },
  "herkunft.0": {
-  "dauer": 6.83,
-  "key": "df644aab1b547484",
+  "dauer": 8.04,
+  "ende": 7.53,
+  "key": "c423f112871c31ba",
   "wer": "erzaehler"
  },
  "nachtor.0": {
-  "dauer": 7.38,
-  "key": "152806d4e73ff26b",
+  "dauer": 8.43,
+  "ende": 7.7,
+  "key": "6e25bbc1e4109269",
   "wer": "erzaehler"
  },
  "nachtor.1": {
-  "dauer": 6.01,
-  "key": "0cbbe70857fc3f11",
+  "dauer": 6.72,
+  "ende": 6.12,
+  "key": "16aa0c95a4e0481b",
   "wer": "erzaehler"
  },
  "nachwrack.0": {
-  "dauer": 7.39,
-  "key": "03a824092f4f58c5",
+  "dauer": 7.99,
+  "ende": 7.28,
+  "key": "58923e186e3c05b6",
   "wer": "erzaehler"
  },
  "nachwrack.1": {
-  "dauer": 3.67,
-  "key": "bae82fed81952196",
+  "dauer": 4.39,
+  "ende": 3.99,
+  "key": "2d02e68a360a2862",
   "wer": "erzaehler"
  },
  "nachwrack.2": {
-  "dauer": 3.13,
-  "key": "5c5e6d36610f058f",
+  "dauer": 4.43,
+  "ende": 3.71,
+  "key": "34fb60c318c902e2",
   "wer": "erzaehler"
  },
  "nebel.0": {
-  "dauer": 2.93,
-  "key": "669356fc17e6c69f",
+  "dauer": 3.96,
+  "ende": 3.35,
+  "key": "8ef1a455cfc1e99d",
   "wer": "erzaehler"
  },
  "nebel.1": {
-  "dauer": 6.47,
-  "key": "76d0abe08c1977fd",
+  "dauer": 6.44,
+  "ende": 5.98,
+  "key": "1ab3501e30291a89",
   "wer": "erzaehler"
  },
  "tor.0": {
-  "dauer": 3.69,
-  "key": "f3542d8f92a704a2",
+  "dauer": 4.51,
+  "ende": 4.1,
+  "key": "ab13af8263e7d90e",
   "wer": "erzaehler"
  },
  "tor.1": {
-  "dauer": 8.76,
-  "key": "eede91a77d4796a8",
+  "dauer": 9.73,
+  "ende": 9.2,
+  "key": "3e0e32ba7cdebe7b",
   "wer": "erzaehler"
  },
  "vogt.intro": {
-  "dauer": 5.53,
-  "key": "f615c30786047952",
+  "dauer": 8.33,
+  "ende": 7.17,
+  "key": "bce7474f88fef739",
   "wer": "vogt"
  },
  "vogt.line2": {
-  "dauer": 6.42,
-  "key": "9213d81196b129df",
+  "dauer": 8.88,
+  "ende": 8.02,
+  "key": "0856362c59ab0cf2",
   "wer": "vogt"
  },
  "wrack.0": {
-  "dauer": 6.28,
-  "key": "94e30522d42d0122",
+  "dauer": 6.95,
+  "ende": 6.41,
+  "key": "54f53d4770d6b28f",
   "wer": "erzaehler"
  },
  "wrack.1": {
-  "dauer": 3.29,
-  "key": "588ad56dbe3fe7fc",
+  "dauer": 4.01,
+  "ende": 3.62,
+  "key": "da94c91fcbe31da4",
   "wer": "erzaehler"
  }
 }

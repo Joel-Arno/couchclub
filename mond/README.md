@@ -46,7 +46,7 @@ python3 mond/build.py
 
 Die Stimmen (`.onnx` und `.onnx.json`) gibt es unter https://huggingface.co/rhasspy/piper-voices im Ordner `de/de_DE`. Das Skript spricht nur Zeilen neu, deren Text oder Stimme sich geändert hat, und legt sie als MP3 in `src/stimme/` ab. Fehlen Aufnahmen, läuft das Spiel einfach ohne Stimme. Im Spiel lassen sich die Stimmen im Titel und im Pausenmenü abschalten.
 
-Besetzung bisher: der Erzähler mit `de_DE-thorsten-high`, der Strandvogt mit `de_DE-thorsten_emotional-medium` (Tonfall „disgusted“, im Spiel langsamer, tiefer und mit viel Hall).
+Besetzung bisher: der Erzähler mit `de_DE-thorsten-high`, der Strandvogt mit `de_DE-thorsten_emotional-medium` (Tonfall „disgusted“, langsamer, tiefer und mit viel Hall). Alle Effekte (Tiefe, Flüsterschicht, Chorus, rauer Klang, weniger Höhen, Hall) rechnet `stimme.py` fest in die Aufnahme, eingestellt pro Figur in `SPRECHER`. Das Spiel spielt die Aufnahmen nur noch ab.
 
 Mit `python3 mond/stimme.py --pruefen` schreibt die Spracherkennung Whisper (`pip install faster-whisper`) jede Aufnahme so ab, wie sie im Spiel klingt, und vergleicht mit dem Text. Wörter, die immer wieder falsch ankommen, bekommen in `stimme.py` unter `AUSSPRACHE` eine Lautschrift, zum Beispiel „Strand-Fohkt“ für Strandvogt. Der Text im Spiel bleibt dabei unverändert.
 

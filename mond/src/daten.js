@@ -185,13 +185,16 @@ const SAETZE = {
 };
 
 /* ---------- Stimmen ----------
-   Freie deutsche Piper-Stimmen, erzeugt mit mond/stimme.py.
-   tempo: Sprechdauer beim Erzeugen (größer ist langsamer)
-   hoehe: Abspielrate im Spiel (kleiner klingt tiefer und langsamer)
-   hall:  Anteil im Hall, laut: Lautstärke */
+   Freie deutsche Piper-Stimmen, erzeugt mit mond/stimme.py. Alle Effekte werden
+   dort fest in die Aufnahme gerechnet, das Spiel spielt sie nur noch ab.
+   stimme/sprecher: Piper-Stimme und bei mehreren Tonfällen der gewählte
+   tempo:     Sprechdauer beim Erzeugen (größer ist langsamer)
+   tiefe:     unter 1 klingt tiefer und langsamer
+   fluestern, chorus, rau, dunkel, hall: Effekte, 0 bis 1 (Beschreibung in stimme.py)
+   laut:      Lautstärke im Spiel */
 const SPRECHER = {
-  erzaehler: { name: 'Erzähler', stimme: 'de_DE-thorsten-high', tempo: 1.08, hoehe: .96, hall: .2, laut: 1 },
-  vogt:      { name: 'Der Strandvogt', stimme: 'de_DE-thorsten_emotional-medium', sprecher: 'disgusted', tempo: 1.12, hoehe: .8, hall: .5, laut: 1.1 }
+  erzaehler: { name: 'Erzähler', stimme: 'de_DE-thorsten-high', tempo: 1.08, tiefe: .96, hall: .2, laut: 1 },
+  vogt:      { name: 'Der Strandvogt', stimme: 'de_DE-thorsten_emotional-medium', sprecher: 'disgusted', tempo: 1.12, tiefe: .8, hall: .5, laut: 1.1 }
 };
 // Alle Sprechzeilen, abgeleitet aus den Texten des Spiels
 function stimmZeilen(){
