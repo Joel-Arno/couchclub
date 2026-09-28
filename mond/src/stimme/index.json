@@ -1,0 +1,137 @@
+{
+ "ende.0": {
+  "dauer": 4.93,
+  "key": "93497300928b17bb",
+  "wer": "erzaehler"
+ },
+ "ende.1": {
+  "dauer": 8.36,
+  "key": "7103f207e6f5035c",
+  "wer": "erzaehler"
+ },
+ "ende.2": {
+  "dauer": 2.99,
+  "key": "1d30d8d5c4d6dfbb",
+  "wer": "erzaehler"
+ },
+ "erwachen.0": {
+  "dauer": 2.99,
+  "key": "2f6143647c8b8a5b",
+  "wer": "erzaehler"
+ },
+ "erwachen.1": {
+  "dauer": 7.17,
+  "key": "4d6a40f964cc75fd",
+  "wer": "erzaehler"
+ },
+ "erwachen.2": {
+  "dauer": 4.78,
+  "key": "e618ec6b5a8a94dc",
+  "wer": "erzaehler"
+ },
+ "feuer.mole": {
+  "dauer": 5.6,
+  "key": "139ff5d816e91be8",
+  "wer": "erzaehler"
+ },
+ "feuer.rast": {
+  "dauer": 6.81,
+  "key": "fc47dba9ecc0127d",
+  "wer": "erzaehler"
+ },
+ "feuer.strand": {
+  "dauer": 7.97,
+  "key": "d7c73a4269ce857c",
+  "wer": "erzaehler"
+ },
+ "feuer.tod": {
+  "dauer": 4.6,
+  "key": "af021afdde87f24c",
+  "wer": "erzaehler"
+ },
+ "herk.harp": {
+  "dauer": 5.04,
+  "key": "136cc79ffe8aff54",
+  "wer": "erzaehler"
+ },
+ "herk.kron": {
+  "dauer": 6.49,
+  "key": "e9553cb4f1bf607b",
+  "wer": "erzaehler"
+ },
+ "herk.moench": {
+  "dauer": 6.54,
+  "key": "843369078f363f5d",
+  "wer": "erzaehler"
+ },
+ "herkunft.0": {
+  "dauer": 6.83,
+  "key": "df644aab1b547484",
+  "wer": "erzaehler"
+ },
+ "nachtor.0": {
+  "dauer": 7.38,
+  "key": "152806d4e73ff26b",
+  "wer": "erzaehler"
+ },
+ "nachtor.1": {
+  "dauer": 6.01,
+  "key": "0cbbe70857fc3f11",
+  "wer": "erzaehler"
+ },
+ "nachwrack.0": {
+  "dauer": 7.39,
+  "key": "03a824092f4f58c5",
+  "wer": "erzaehler"
+ },
+ "nachwrack.1": {
+  "dauer": 3.67,
+  "key": "bae82fed81952196",
+  "wer": "erzaehler"
+ },
+ "nachwrack.2": {
+  "dauer": 3.13,
+  "key": "5c5e6d36610f058f",
+  "wer": "erzaehler"
+ },
+ "nebel.0": {
+  "dauer": 2.93,
+  "key": "669356fc17e6c69f",
+  "wer": "erzaehler"
+ },
+ "nebel.1": {
+  "dauer": 6.47,
+  "key": "76d0abe08c1977fd",
+  "wer": "erzaehler"
+ },
+ "tor.0": {
+  "dauer": 3.69,
+  "key": "f3542d8f92a704a2",
+  "wer": "erzaehler"
+ },
+ "tor.1": {
+  "dauer": 8.76,
+  "key": "eede91a77d4796a8",
+  "wer": "erzaehler"
+ },
+ "vogt.intro": {
+  "dauer": 5.53,
+  "key": "f615c30786047952",
+  "wer": "vogt"
+ },
+ "vogt.line2": {
+  "dauer": 6.42,
+  "key": "9213d81196b129df",
+  "wer": "vogt"
+ },
+ "wrack.0": {
+  "dauer": 6.28,
+  "key": "94e30522d42d0122",
+  "wer": "erzaehler"
+ },
+ "wrack.1": {
+  "dauer": 3.29,
+  "key": "588ad56dbe3fe7fc",
+  "wer": "erzaehler"
+ }
+}

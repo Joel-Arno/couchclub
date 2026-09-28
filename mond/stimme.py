@@ -4,6 +4,7 @@
     python3 mond/stimme.py --modelle ORDNER            alle geänderten Zeilen neu sprechen
     python3 mond/stimme.py --modelle ORDNER --alle     alles neu sprechen
     python3 mond/stimme.py --liste                     nur die Sprechzeilen anzeigen
+    python3 mond/stimme.py --pruefen [ID ...]          Aufnahmen mit Spracherkennung gegenlesen
 
 Welche Zeilen es gibt und wer sie spricht, steht in src/daten.js (stimmZeilen und
 SPRECHER). Das Skript liest das über Node aus, damit Text und Stimme nie auseinanderlaufen.
@@ -14,11 +15,17 @@ Voraussetzungen, nur zum Erzeugen (das Spiel selbst braucht nichts davon):
     von https://huggingface.co/rhasspy/piper-voices (Ordner de/de_DE)
 
 Ergebnis: src/stimme/<id>.mp3 und src/stimme/index.json. build.py bettet sie ins Spiel ein.
+
+--pruefen lässt Whisper (pip install faster-whisper) jede Aufnahme so abschreiben, wie sie
+im Spiel klingt, und vergleicht mit dem Text. Wörter, die dabei immer wieder falsch ankommen,
+bekommen einen Eintrag in AUSSPRACHE. Seltene Wörter wie Phiolen kennt Whisper oft nicht,
+dort lohnt ein Blick auf die Umschrift statt auf die Punktzahl.
 """
 import argparse
 import hashlib
 import json
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -26,6 +33,15 @@ HERE = pathlib.Path(__file__).resolve().parent
 SRC = HERE / "src"
 OUT = SRC / "stimme"
 KBPS = 48
+
+# Aussprachehilfen: nur für die Stimme, der Text im Spiel bleibt unverändert.
+# Gefunden, indem die Aufnahmen mit einer Spracherkennung gegengelesen wurden.
+AUSSPRACHE = {
+    "Strandvogt": "Strand-Fohkt",
+    "Mondtau": "Mond-Tau",
+    "Laterne": "La-Terne",
+    "Mole": "Mohle",
+}
 
 
 def zeilen():
@@ -36,10 +52,16 @@ def zeilen():
     return data["z"], data["s"]
 
 
+def gesprochen(text):
+    for wort, laut in AUSSPRACHE.items():
+        text = re.sub(rf"\b{wort}\b", laut, text)
+    return text
+
+
 def schluessel(zeile, sprecher):
-    # Ändert sich Text oder Stimme, wird die Zeile neu gesprochen. Abspielrate und Hall wirken erst im Spiel.
+    # Ändert sich Text, Aussprache oder Stimme, wird die Zeile neu gesprochen. Abspielrate und Hall wirken erst im Spiel.
     sp = sprecher[zeile["wer"]]
-    roh = json.dumps([zeile["text"], sp["stimme"], sp.get("sprecher"), sp["tempo"]], ensure_ascii=False)
+    roh = json.dumps([gesprochen(zeile["text"]), sp["stimme"], sp.get("sprecher"), sp["tempo"]], ensure_ascii=False)
     return hashlib.sha1(roh.encode()).hexdigest()[:16]
 
 
@@ -72,11 +94,37 @@ def mp3(pcm, rate):
     return enc.encode(pcm) + enc.flush()
 
 
+def pruefen(z, sprecher, ids):
+    import difflib
+    import numpy as np
+    from faster_whisper import WhisperModel, decode_audio
+
+    modell = WhisperModel("small", device="cpu", compute_type="int8")
+    norm = lambda t: re.sub(r"[^a-zäöüß ]", "", t.lower().replace("-", " ")).split()
+    auffaellig = []
+    for l in z:
+        if ids and l["id"] not in ids:
+            continue
+        a = decode_audio(str(OUT / f"{l['id']}.mp3"), sampling_rate=16000)
+        r = sprecher[l["wer"]]["hoehe"]
+        if r != 1:
+            # So langsam und tief wie im Spiel
+            a = np.interp(np.linspace(0, len(a) - 1, int(len(a) / r)), np.arange(len(a)), a).astype(np.float32)
+        segs, _ = modell.transcribe(a, language="de", beam_size=5)
+        hyp = " ".join(s.text.strip() for s in segs)
+        q = difflib.SequenceMatcher(None, norm(l["text"]), norm(hyp)).ratio()
+        if q < .9:
+            auffaellig.append(l["id"])
+        print(f"{'OK' if q >= .9 else '??'} {q:.2f} {l['id']:<14} {hyp}")
+    print("Auffällig:", ", ".join(auffaellig) or "keine")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--modelle", help="Ordner mit den Piper-Stimmen (.onnx und .onnx.json)")
     ap.add_argument("--alle", action="store_true", help="auch unveränderte Zeilen neu sprechen")
     ap.add_argument("--liste", action="store_true", help="nur die Zeilen anzeigen")
+    ap.add_argument("--pruefen", nargs="*", metavar="ID", help="Aufnahmen mit Spracherkennung gegenlesen")
     args = ap.parse_args()
 
     z, sprecher = zeilen()
@@ -84,6 +132,8 @@ def main():
         for l in z:
             print(f"{l['id']:<14} {l['wer']:<10} {l['text']}")
         return
+    if args.pruefen is not None:
+        return pruefen(z, sprecher, set(args.pruefen))
     if not args.modelle:
         sys.exit("Bitte --modelle ORDNER angeben (siehe Hilfe oben in der Datei).")
 
@@ -101,7 +151,7 @@ def main():
             continue
         if sp["stimme"] not in geladen:
             geladen[sp["stimme"]] = PiperVoice.load(str(pathlib.Path(args.modelle) / f"{sp['stimme']}.onnx"))
-        pcm, rate, dauer = sprechen(geladen[sp["stimme"]], l["text"], sp)
+        pcm, rate, dauer = sprechen(geladen[sp["stimme"]], gesprochen(l["text"]), sp)
         ziel.write_bytes(mp3(pcm, rate))
         idx[l["id"]] = {"key": key, "wer": l["wer"], "dauer": round(dauer, 2)}
         neu += 1
