@@ -74,7 +74,7 @@
     statText(x) {
       const parts = [];
       if (x.akt) parts.push('Akt I geschafft');
-      parts.push(`Stufe ${num(x.lvl || 1)}`, `${num(x.bosse || 0)} von 4 Bossen`);
+      parts.push(`Stufe ${num(x.lvl || 1)}`, `${num(x.bosse || 0)} von 5 Bossen`);
       if (x.min) parts.push(dauer(x.min));
       return parts.join(' · ');
     },
