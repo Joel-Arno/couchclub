@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mondgeläut Stimmproben</title>
+<style>
+:root { color-scheme: dark; }
+body { margin: 0; padding: 32px 16px 56px; background: #0A0D12; color: #D8DEE8; font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+main { max-width: 640px; margin: 0 auto; display: grid; gap: 28px; }
+h1, h2 { font-family: Garamond, 'Times New Roman', serif; margin: 0; letter-spacing: .05em; }
+h1 { font-size: 36px; } h2 { font-size: 26px; }
+p { margin: 0; }
+.note, .desc { color: #8F9AAB; font-size: 14px; }
+blockquote { margin: 0; color: #8F9AAB; font: italic 17px/1.45 Garamond, serif; border-left: 1px solid rgba(196,208,224,.2); padding-left: 12px; }
+section { display: grid; gap: 10px; }
+.card { display: grid; gap: 6px; padding: 12px 14px; background: #11161D; border: 1px solid rgba(196,208,224,.16); }
+.lbl { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.lbl b { color: #F4C08A; font: 600 20px Garamond, serif; }
+.lbl span { font: 600 17px Garamond, serif; }
+.hint { font-style: normal; font-size: 11px; color: #E0A39B; }
+audio { width: 100%; }
+</style>
+</head>
+<body>
+<main>
+<header style="display:grid;gap:8px"><h1>Mondgeläut Stimmproben</h1>
+<p class="note">Freie deutsche Piper-Stimmen mit Effekten, erzeugt mit mond/stimme.py. Die Einstellungen jeder Probe stehen in proben.json und lassen sich direkt als Eintrag in SPRECHER (src/daten.js) übernehmen.</p></header>
+<section><h2>Erzähler</h2><blockquote>„Das Meer hat dich ausgespuckt, zwischen die Rippen eines Schiffes, dessen Namen du nicht kennst. Irgendwo läutet eine Glocke. Leise und gleichmäßig, wie ein Herzschlag.“</blockquote>
+<article class="card"><p class="lbl"><b>A</b><span>Bisher</span></p>
+<p class="desc">Die aktuelle Stimme zum Vergleich.</p><audio controls preload="none" src="erzaehler-A-bisher.mp3"></audio></article><article class="card"><p class="lbl"><b>B</b><span>Alt und dunkel</span></p>
+<p class="desc">Gleiche Stimme, deutlich tiefer und langsamer, weniger Höhen, mehr Raum.</p><audio controls preload="none" src="erzaehler-B-alt-und-dunkel.mp3"></audio></article><article class="card"><p class="lbl"><b>C</b><span>Geisterhaft</span></p>
+<p class="desc">Tief, mit einer geflüsterten Schicht darunter und leichtem Doppelklang. Wie eine Stimme aus dem Wasser.</p><audio controls preload="none" src="erzaehler-C-geisterhaft.mp3"></audio></article><article class="card"><p class="lbl"><b>D</b><span>Flüsternd</span><em class="hint">etwas schwerer zu verstehen</em></p>
+<p class="desc">Ganz geflüstert, nah und unheimlich.</p><audio controls preload="none" src="erzaehler-D-fluesternd.mp3"></audio></article><article class="card"><p class="lbl"><b>E</b><span>Andere Männerstimme</span></p>
+<p class="desc">Eine andere, ältere Stimme (Karlsson), tiefer gelegt.</p><audio controls preload="none" src="erzaehler-E-andere-maennerstimme.mp3"></audio></article><article class="card"><p class="lbl"><b>F</b><span>Erzählerin</span><em class="hint">etwas schwerer zu verstehen</em></p>
+<p class="desc">Eine Frauenstimme (Kerstin) mit leichter Flüsterschicht und Hall.</p><audio controls preload="none" src="erzaehler-F-erzaehlerin.mp3"></audio></article><article class="card"><p class="lbl"><b>G</b><span>Pavoque</span></p>
+<p class="desc">Eine weitere Einzelstimme, eher klar und sachlich, tiefer gelegt.</p><audio controls preload="none" src="erzaehler-G-pavoque.mp3"></audio></article><article class="card"><p class="lbl"><b>H</b><span>Müder Erzähler</span></p>
+<p class="desc">Die bisherige Stimme im Tonfall „müde“: schwerer, langsamer, wie am Ende einer langen Nacht.</p><audio controls preload="none" src="erzaehler-H-mueder-erzaehler.mp3"></audio></article><article class="card"><p class="lbl"><b>I</b><span>Ruhiger Erzähler</span></p>
+<p class="desc">Die bisherige Stimme im neutralen Tonfall, tiefer und mit Raum.</p><audio controls preload="none" src="erzaehler-I-ruhiger-erzaehler.mp3"></audio></article><article class="card"><p class="lbl"><b>J</b><span>Pavoque, geisterhaft</span></p>
+<p class="desc">Pavoque, tiefer, mit Flüsterschicht und Doppelklang.</p><audio controls preload="none" src="erzaehler-J-pavoque-geisterhaft.mp3"></audio></article><article class="card"><p class="lbl"><b>K</b><span>Müder Erzähler, geisterhaft</span><em class="hint">etwas schwerer zu verstehen</em></p>
+<p class="desc">Die müde Stimme mit Flüsterschicht, wie ein Geist, der zu lange gewartet hat.</p><audio controls preload="none" src="erzaehler-K-mueder-erzaehler-geisterhaft.mp3"></audio></article><article class="card"><p class="lbl"><b>L</b><span>Karlsson, alt und dunkel</span><em class="hint">etwas schwerer zu verstehen</em></p>
+<p class="desc">Karlsson, deutlich tiefer und langsamer, weniger Höhen, mehr Raum.</p><audio controls preload="none" src="erzaehler-L-karlsson-alt-und-dunkel.mp3"></audio></article><article class="card"><p class="lbl"><b>M</b><span>Pavoque, alt und dunkel</span></p>
+<p class="desc">Pavoque, deutlich tiefer und langsamer, weniger Höhen, mehr Raum.</p><audio controls preload="none" src="erzaehler-M-pavoque-alt-und-dunkel.mp3"></audio></article><article class="card"><p class="lbl"><b>N</b><span>Verbitterter Erzähler</span></p>
+<p class="desc">Die bisherige Stimme im verächtlichen Tonfall, tief und ruhig, mit Raum.</p><audio controls preload="none" src="erzaehler-N-verbitterter-erzaehler.mp3"></audio></article></section>
+<section><h2>Der Strandvogt</h2><blockquote>„Wieder eines. Die Flut spuckt sie aus, und ich sammle sie ein. Du hörst sie also auch, die Glocke. Dann bist du kein gewöhnliches Strandgut.“</blockquote>
+<article class="card"><p class="lbl"><b>A</b><span>Bisher</span></p>
+<p class="desc">Die aktuelle Stimme zum Vergleich.</p><audio controls preload="none" src="strandvogt-A-bisher.mp3"></audio></article><article class="card"><p class="lbl"><b>B</b><span>Ungeheuer</span><em class="hint">etwas schwerer zu verstehen</em></p>
+<p class="desc">Wütend, sehr tief, kratzig und mehrstimmig.</p><audio controls preload="none" src="strandvogt-B-ungeheuer.mp3"></audio></article><article class="card"><p class="lbl"><b>C</b><span>Flüsternder Sammler</span></p>
+<p class="desc">Tief geflüstert mit Doppelklang, als spräche er direkt neben dir.</p><audio controls preload="none" src="strandvogt-C-fluesternder-sammler.mp3"></audio></article><article class="card"><p class="lbl"><b>D</b><span>Alter Seemann</span></p>
+<p class="desc">Andere Stimme (Karlsson), rau und tief, mit viel Raum.</p><audio controls preload="none" src="strandvogt-D-alter-seemann.mp3"></audio></article><article class="card"><p class="lbl"><b>E</b><span>Pavoque</span></p>
+<p class="desc">Tief gelegt, leicht rau, mit viel Raum.</p><audio controls preload="none" src="strandvogt-E-pavoque.mp3"></audio></article><article class="card"><p class="lbl"><b>F</b><span>Pavoque, Ungeheuer</span></p>
+<p class="desc">Pavoque sehr tief, leicht rau und mehrstimmig.</p><audio controls preload="none" src="strandvogt-F-pavoque-ungeheuer.mp3"></audio></article><article class="card"><p class="lbl"><b>G</b><span>Müder Sammler</span></p>
+<p class="desc">Die müde Stimme, sehr tief und schleppend, mit Flüsterschicht.</p><audio controls preload="none" src="strandvogt-G-mueder-sammler.mp3"></audio></article><article class="card"><p class="lbl"><b>H</b><span>Karlsson, Ungeheuer</span></p>
+<p class="desc">Karlsson sehr tief, rau und mehrstimmig.</p><audio controls preload="none" src="strandvogt-H-karlsson-ungeheuer.mp3"></audio></article></section>
+</main>
+</body>
+</html>

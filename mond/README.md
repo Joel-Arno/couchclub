@@ -41,10 +41,14 @@ Erzähler und Figuren sprechen mit freien deutschen Piper-Stimmen. Welche Zeilen
 ```
 pip install piper-tts lameenc
 python3 mond/stimme.py --modelle ORDNER_MIT_STIMMEN
-python3 mond/build.py
+python3 mond/build.py --stimmen
 ```
 
-Die Stimmen (`.onnx` und `.onnx.json`) gibt es unter https://huggingface.co/rhasspy/piper-voices im Ordner `de/de_DE`. Das Skript spricht nur Zeilen neu, deren Text oder Stimme sich geändert hat, und legt sie als MP3 in `src/stimme/` ab. Fehlen Aufnahmen, läuft das Spiel einfach ohne Stimme. Im Spiel lassen sich die Stimmen im Titel und im Pausenmenü abschalten.
+Die Stimmen (`.onnx` und `.onnx.json`) gibt es unter https://huggingface.co/rhasspy/piper-voices im Ordner `de/de_DE`. Das Skript spricht nur Zeilen neu, deren Text oder Stimme sich geändert hat, und legt sie als MP3 in `src/stimme/` ab.
+
+**Im Moment ist das Spiel ohne Stimmen gebaut**, bis die passende Stimme ausgewählt ist. Die Aufnahmen bleiben in `src/stimme/`. Mit `python3 mond/build.py --stimmen` kommen sie ins Spiel, dann lassen sie sich im Titel und im Pausenmenü abschalten. Ohne Aufnahmen blendet das Spiel den Schalter aus.
+
+In `stimmproben/` liegen 22 mögliche Stimmen für Erzähler und Strandvogt zum Anhören, mit genauen Einstellungen zum Übernehmen (siehe `stimmproben/README.md`).
 
 Besetzung bisher: der Erzähler mit `de_DE-thorsten-high`, der Strandvogt mit `de_DE-thorsten_emotional-medium` (Tonfall „disgusted“, langsamer, tiefer und mit viel Hall). Alle Effekte (Tiefe, Flüsterschicht, Chorus, rauer Klang, weniger Höhen, Hall) rechnet `stimme.py` fest in die Aufnahme, eingestellt pro Figur in `SPRECHER`. Das Spiel spielt die Aufnahmen nur noch ab.
 

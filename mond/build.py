@@ -3,6 +3,7 @@
 
     python3 mond/build.py                    -> mond/index.html (läuft direkt im Browser, auch offline)
     python3 mond/build.py --artifact PFAD    -> zusätzlich eine Variante ohne HTML-Grundgerüst
+    python3 mond/build.py --stimmen          -> mit Sprachaufnahmen aus src/stimme (sonst ohne Stimme)
 
 Die Schriften aus src/fonts und die Sprachaufnahmen aus src/stimme werden als
 Base64 eingebettet, damit das Spiel ohne Internet läuft. Keine Abhängigkeiten
@@ -37,10 +38,10 @@ def font_css():
     return "\n".join(rules)
 
 
-def voices_js():
-    """Sprachaufnahmen aus src/stimme (erzeugt mit stimme.py) als Base64 einbetten."""
+def voices_js(stimmen):
+    """Sprachaufnahmen aus src/stimme (erzeugt mit stimme.py) als Base64 einbetten, nur mit --stimmen."""
     idx_path = SRC / "stimme" / "index.json"
-    idx = json.loads(idx_path.read_text(encoding="utf-8")) if idx_path.exists() else {}
+    idx = json.loads(idx_path.read_text(encoding="utf-8")) if stimmen and idx_path.exists() else {}
     data, ende = {}, {}
     for vid in sorted(idx):
         f = SRC / "stimme" / f"{vid}.mp3"
@@ -52,10 +53,10 @@ def voices_js():
             + "const STIMMEN_ENDE = " + json.dumps(ende, separators=(",", ":")) + ";\n")
 
 
-def build(skeleton=True):
+def build(skeleton=True, stimmen=False):
     shell = (SRC / "shell.html").read_text(encoding="utf-8")
     css = (SRC / "style.css").read_text(encoding="utf-8")
-    js = voices_js() + "\n".join((SRC / f).read_text(encoding="utf-8") for f in JS)
+    js = voices_js(stimmen) + "\n".join((SRC / f).read_text(encoding="utf-8") for f in JS)
     html = (
         shell.replace("/*@FONTS@*/", font_css())
         .replace("/*@CSS@*/", css)
@@ -73,13 +74,14 @@ def build(skeleton=True):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--artifact", help="Pfad für die Variante ohne HTML-Grundgerüst")
+    ap.add_argument("--stimmen", action="store_true", help="Sprachaufnahmen einbetten")
     args = ap.parse_args()
     out = HERE / "index.html"
-    out.write_text(build(), encoding="utf-8")
+    out.write_text(build(stimmen=args.stimmen), encoding="utf-8")
     print(f"{out.relative_to(HERE.parent)}  {out.stat().st_size // 1024} KB")
     if args.artifact:
         p = pathlib.Path(args.artifact)
-        p.write_text(build(skeleton=False), encoding="utf-8")
+        p.write_text(build(skeleton=False, stimmen=args.stimmen), encoding="utf-8")
         print(f"{p}  {p.stat().st_size // 1024} KB")
 
 

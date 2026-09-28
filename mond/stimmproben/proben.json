@@ -1,0 +1,352 @@
+[
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "A",
+  "name": "Bisher",
+  "beschreibung": "Die aktuelle Stimme zum Vergleich.",
+  "datei": "erzaehler-A-bisher.mp3",
+  "verstaendlich": 0.92,
+  "einstellung": {
+   "stimme": "de_DE-thorsten-high",
+   "tempo": 1.08,
+   "tiefe": 0.96,
+   "hall": 0.2
+  }
+ },
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "B",
+  "name": "Alt und dunkel",
+  "beschreibung": "Gleiche Stimme, deutlich tiefer und langsamer, weniger Höhen, mehr Raum.",
+  "datei": "erzaehler-B-alt-und-dunkel.mp3",
+  "verstaendlich": 0.94,
+  "einstellung": {
+   "stimme": "de_DE-thorsten-high",
+   "tempo": 1.12,
+   "tiefe": 0.86,
+   "dunkel": 0.45,
+   "hall": 0.32
+  }
+ },
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "C",
+  "name": "Geisterhaft",
+  "beschreibung": "Tief, mit einer geflüsterten Schicht darunter und leichtem Doppelklang. Wie eine Stimme aus dem Wasser.",
+  "datei": "erzaehler-C-geisterhaft.mp3",
+  "verstaendlich": 0.96,
+  "einstellung": {
+   "stimme": "de_DE-thorsten-high",
+   "tempo": 1.1,
+   "tiefe": 0.9,
+   "fluestern": 0.45,
+   "chorus": 0.22,
+   "hall": 0.42
+  }
+ },
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "D",
+  "name": "Flüsternd",
+  "beschreibung": "Ganz geflüstert, nah und unheimlich.",
+  "datei": "erzaehler-D-fluesternd.mp3",
+  "verstaendlich": 0.81,
+  "einstellung": {
+   "stimme": "de_DE-thorsten_emotional-medium",
+   "sprecher": "whisper",
+   "tempo": 1.12,
+   "tiefe": 0.98,
+   "hall": 0.26
+  }
+ },
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "E",
+  "name": "Andere Männerstimme",
+  "beschreibung": "Eine andere, ältere Stimme (Karlsson), tiefer gelegt.",
+  "datei": "erzaehler-E-andere-maennerstimme.mp3",
+  "verstaendlich": 0.88,
+  "einstellung": {
+   "stimme": "de_DE-karlsson-low",
+   "tempo": 1.1,
+   "tiefe": 0.92,
+   "dunkel": 0.25,
+   "hall": 0.3
+  }
+ },
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "F",
+  "name": "Erzählerin",
+  "beschreibung": "Eine Frauenstimme (Kerstin) mit leichter Flüsterschicht und Hall.",
+  "datei": "erzaehler-F-erzaehlerin.mp3",
+  "verstaendlich": 0.84,
+  "einstellung": {
+   "stimme": "de_DE-kerstin-low",
+   "tempo": 1.15,
+   "tiefe": 0.97,
+   "fluestern": 0.14,
+   "hall": 0.34
+  }
+ },
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "G",
+  "name": "Pavoque",
+  "beschreibung": "Eine weitere Einzelstimme, eher klar und sachlich, tiefer gelegt.",
+  "datei": "erzaehler-G-pavoque.mp3",
+  "verstaendlich": 0.9,
+  "einstellung": {
+   "stimme": "de_DE-pavoque-low",
+   "tempo": 1.1,
+   "tiefe": 0.95,
+   "dunkel": 0.2,
+   "hall": 0.3
+  }
+ },
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "H",
+  "name": "Müder Erzähler",
+  "beschreibung": "Die bisherige Stimme im Tonfall „müde“: schwerer, langsamer, wie am Ende einer langen Nacht.",
+  "datei": "erzaehler-H-mueder-erzaehler.mp3",
+  "verstaendlich": 0.92,
+  "einstellung": {
+   "stimme": "de_DE-thorsten_emotional-medium",
+   "sprecher": "sleepy",
+   "tempo": 1.1,
+   "tiefe": 0.95,
+   "dunkel": 0.2,
+   "hall": 0.3
+  }
+ },
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "I",
+  "name": "Ruhiger Erzähler",
+  "beschreibung": "Die bisherige Stimme im neutralen Tonfall, tiefer und mit Raum.",
+  "datei": "erzaehler-I-ruhiger-erzaehler.mp3",
+  "verstaendlich": 0.9,
+  "einstellung": {
+   "stimme": "de_DE-thorsten_emotional-medium",
+   "sprecher": "neutral",
+   "tempo": 1.1,
+   "tiefe": 0.95,
+   "dunkel": 0.2,
+   "hall": 0.3
+  }
+ },
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "J",
+  "name": "Pavoque, geisterhaft",
+  "beschreibung": "Pavoque, tiefer, mit Flüsterschicht und Doppelklang.",
+  "datei": "erzaehler-J-pavoque-geisterhaft.mp3",
+  "verstaendlich": 0.9,
+  "einstellung": {
+   "stimme": "de_DE-pavoque-low",
+   "tempo": 1.1,
+   "tiefe": 0.9,
+   "fluestern": 0.4,
+   "chorus": 0.2,
+   "hall": 0.4
+  }
+ },
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "K",
+  "name": "Müder Erzähler, geisterhaft",
+  "beschreibung": "Die müde Stimme mit Flüsterschicht, wie ein Geist, der zu lange gewartet hat.",
+  "datei": "erzaehler-K-mueder-erzaehler-geisterhaft.mp3",
+  "verstaendlich": 0.79,
+  "einstellung": {
+   "stimme": "de_DE-thorsten_emotional-medium",
+   "sprecher": "sleepy",
+   "tempo": 1.08,
+   "tiefe": 0.92,
+   "fluestern": 0.35,
+   "chorus": 0.18,
+   "hall": 0.42
+  }
+ },
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "L",
+  "name": "Karlsson, alt und dunkel",
+  "beschreibung": "Karlsson, deutlich tiefer und langsamer, weniger Höhen, mehr Raum.",
+  "datei": "erzaehler-L-karlsson-alt-und-dunkel.mp3",
+  "verstaendlich": 0.82,
+  "einstellung": {
+   "stimme": "de_DE-karlsson-low",
+   "tempo": 1.12,
+   "tiefe": 0.86,
+   "dunkel": 0.45,
+   "hall": 0.32
+  }
+ },
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "M",
+  "name": "Pavoque, alt und dunkel",
+  "beschreibung": "Pavoque, deutlich tiefer und langsamer, weniger Höhen, mehr Raum.",
+  "datei": "erzaehler-M-pavoque-alt-und-dunkel.mp3",
+  "verstaendlich": 0.96,
+  "einstellung": {
+   "stimme": "de_DE-pavoque-low",
+   "tempo": 1.12,
+   "tiefe": 0.86,
+   "dunkel": 0.45,
+   "hall": 0.32
+  }
+ },
+ {
+  "gruppe": "erzaehler",
+  "buchstabe": "N",
+  "name": "Verbitterter Erzähler",
+  "beschreibung": "Die bisherige Stimme im verächtlichen Tonfall, tief und ruhig, mit Raum.",
+  "datei": "erzaehler-N-verbitterter-erzaehler.mp3",
+  "verstaendlich": 0.9,
+  "einstellung": {
+   "stimme": "de_DE-thorsten_emotional-medium",
+   "sprecher": "disgusted",
+   "tempo": 1.1,
+   "tiefe": 0.9,
+   "dunkel": 0.2,
+   "hall": 0.3
+  }
+ },
+ {
+  "gruppe": "strandvogt",
+  "buchstabe": "A",
+  "name": "Bisher",
+  "beschreibung": "Die aktuelle Stimme zum Vergleich.",
+  "datei": "strandvogt-A-bisher.mp3",
+  "verstaendlich": 1.0,
+  "einstellung": {
+   "stimme": "de_DE-thorsten_emotional-medium",
+   "sprecher": "disgusted",
+   "tempo": 1.12,
+   "tiefe": 0.8,
+   "hall": 0.5
+  }
+ },
+ {
+  "gruppe": "strandvogt",
+  "buchstabe": "B",
+  "name": "Ungeheuer",
+  "beschreibung": "Wütend, sehr tief, kratzig und mehrstimmig.",
+  "datei": "strandvogt-B-ungeheuer.mp3",
+  "verstaendlich": 0.82,
+  "einstellung": {
+   "stimme": "de_DE-thorsten_emotional-medium",
+   "sprecher": "angry",
+   "tempo": 1.15,
+   "tiefe": 0.77,
+   "chorus": 0.24,
+   "rau": 0.18,
+   "dunkel": 0.2,
+   "hall": 0.4
+  }
+ },
+ {
+  "gruppe": "strandvogt",
+  "buchstabe": "C",
+  "name": "Flüsternder Sammler",
+  "beschreibung": "Tief geflüstert mit Doppelklang, als spräche er direkt neben dir.",
+  "datei": "strandvogt-C-fluesternder-sammler.mp3",
+  "verstaendlich": 0.9,
+  "einstellung": {
+   "stimme": "de_DE-thorsten_emotional-medium",
+   "sprecher": "whisper",
+   "tempo": 1.15,
+   "tiefe": 0.86,
+   "fluestern": 0.15,
+   "chorus": 0.16,
+   "hall": 0.42
+  }
+ },
+ {
+  "gruppe": "strandvogt",
+  "buchstabe": "D",
+  "name": "Alter Seemann",
+  "beschreibung": "Andere Stimme (Karlsson), rau und tief, mit viel Raum.",
+  "datei": "strandvogt-D-alter-seemann.mp3",
+  "verstaendlich": 0.96,
+  "einstellung": {
+   "stimme": "de_DE-karlsson-low",
+   "tempo": 1.15,
+   "tiefe": 0.78,
+   "rau": 0.25,
+   "dunkel": 0.3,
+   "hall": 0.5
+  }
+ },
+ {
+  "gruppe": "strandvogt",
+  "buchstabe": "E",
+  "name": "Pavoque",
+  "beschreibung": "Tief gelegt, leicht rau, mit viel Raum.",
+  "datei": "strandvogt-E-pavoque.mp3",
+  "verstaendlich": 1.0,
+  "einstellung": {
+   "stimme": "de_DE-pavoque-low",
+   "tempo": 1.14,
+   "tiefe": 0.8,
+   "rau": 0.12,
+   "chorus": 0.15,
+   "dunkel": 0.2,
+   "hall": 0.45
+  }
+ },
+ {
+  "gruppe": "strandvogt",
+  "buchstabe": "F",
+  "name": "Pavoque, Ungeheuer",
+  "beschreibung": "Pavoque sehr tief, leicht rau und mehrstimmig.",
+  "datei": "strandvogt-F-pavoque-ungeheuer.mp3",
+  "verstaendlich": 0.96,
+  "einstellung": {
+   "stimme": "de_DE-pavoque-low",
+   "tempo": 1.15,
+   "tiefe": 0.74,
+   "chorus": 0.25,
+   "rau": 0.2,
+   "dunkel": 0.25,
+   "hall": 0.45
+  }
+ },
+ {
+  "gruppe": "strandvogt",
+  "buchstabe": "G",
+  "name": "Müder Sammler",
+  "beschreibung": "Die müde Stimme, sehr tief und schleppend, mit Flüsterschicht.",
+  "datei": "strandvogt-G-mueder-sammler.mp3",
+  "verstaendlich": 0.92,
+  "einstellung": {
+   "stimme": "de_DE-thorsten_emotional-medium",
+   "sprecher": "sleepy",
+   "tempo": 1.12,
+   "tiefe": 0.78,
+   "fluestern": 0.2,
+   "chorus": 0.15,
+   "hall": 0.5
+  }
+ },
+ {
+  "gruppe": "strandvogt",
+  "buchstabe": "H",
+  "name": "Karlsson, Ungeheuer",
+  "beschreibung": "Karlsson sehr tief, rau und mehrstimmig.",
+  "datei": "strandvogt-H-karlsson-ungeheuer.mp3",
+  "verstaendlich": 0.92,
+  "einstellung": {
+   "stimme": "de_DE-karlsson-low",
+   "tempo": 1.15,
+   "tiefe": 0.74,
+   "chorus": 0.25,
+   "rau": 0.25,
+   "dunkel": 0.3,
+   "hall": 0.45
+  }
+ }
+]
