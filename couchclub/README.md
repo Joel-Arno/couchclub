@@ -1,15 +1,16 @@
 # Couchclub
 
-Spieleabend-App für ein Handy: Spielerprofile, Statistiken und Spiele gegen die KI oder zu zweit, dazu zwei Solo-Abenteuer.
+Spieleabend-App für ein Handy: Spielerprofile, Statistiken und Spiele gegen die KI oder zu zweit, dazu drei Solo-Abenteuer.
 
 - `index.html`, `styles.css`, `core.js`: App-Kern mit Profilen, Spielauswahl und Spielrahmen
 - `g-*.js`: je ein Spiel, das sich mit `CC.register(...)` anmeldet
-- `g-abenteuer.js`: Kerker-Wischer und Lichtläufer. Beide laufen im Vollbild aus `spiele.html`. Jeder Spieler hat einen eigenen Spielstand (`kerker-licht-v2@<Spieler-ID>` im Browser-Speicher). Das Spiel meldet Start, Laufende und Rückweg per `postMessage` an den Couchclub.
+- `g-abenteuer.js`: die Solo-Abenteuer. Kerker-Wischer und Lichtläufer laufen im Vollbild aus `spiele.html`, Mondgeläut aus `mond.html`. Jeder Spieler hat einen eigenen Spielstand im Browser-Speicher (`kerker-licht-v2@<Spieler-ID>` und `mondgelaeut-v1@<Spieler-ID>`), der mit dem Spieler gelöscht wird. Den Spielstand von Mondgeläut kann man außerdem unter Spieler → Bearbeiten → Spielstände einzeln löschen und neu beginnen (Spiele mit `frame.save` in `g-abenteuer.js`). Die Spiele melden Start, Fortschritt und Rückweg per `postMessage` an den Couchclub.
 
-`spiele.html` wird aus `spiel/src` gebaut, bitte nicht von Hand bearbeiten:
+`spiele.html` und `mond.html` werden gebaut, bitte nicht von Hand bearbeiten:
 
 ```
 python3 spiel/build.py --couchclub couchclub
+python3 mond/build.py --couchclub couchclub
 ```
 
 `index.html` enthält nur den Seiteninhalt. Das Grundgerüst mit doctype, head und body ergänzt die Veröffentlichung als Artifact.

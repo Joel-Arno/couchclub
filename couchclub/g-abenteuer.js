@@ -1,10 +1,12 @@
-/* Couchclub — Solo-Abenteuer: Kerker-Wischer und Lichtläufer
-   Beide Spiele liegen fertig gebaut in spiele.html (aus spiel/ im Repo) und laufen
-   im Vollbild-Rahmen. Jeder Spieler hat dort seinen eigenen Spielstand. */
+/* Couchclub — Solo-Abenteuer: Kerker-Wischer, Lichtläufer und Mondgeläut
+   Kerker-Wischer und Lichtläufer liegen fertig gebaut in spiele.html (aus spiel/ im Repo),
+   Mondgeläut in mond.html (aus mond/). Alle laufen im Vollbild-Rahmen, jeder Spieler hat
+   dort seinen eigenen Spielstand. */
 (() => {
   'use strict';
   const num = (n) => Math.floor(n).toLocaleString('de-DE');
   const runs = (n) => `${num(n)} ${n === 1 ? 'Lauf' : 'Läufe'}`;
+  const dauer = (min) => (min >= 60 ? `${Math.floor(min / 60)} Std. ${min % 60} Min.` : `${min} Min.`);
 
   function kerkerThumb() {
     const pos = (i) => [4 + (i % 3) * 18, 4 + ((i / 3) | 0) * 18];
@@ -42,6 +44,41 @@
       <circle cx="30" cy="20" r="3.2" fill="#fff"/>
     </svg>`;
   }
+
+  function mondThumb() {
+    return `<svg viewBox="0 0 60 60" aria-hidden="true">
+      <rect width="60" height="60" rx="9" fill="var(--board)"/>
+      <path d="M9 17a25 25 0 0 1 42 0" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linecap="round"/>
+      <rect x="28.7" y="12.5" width="2.6" height="4.5" rx="1.1" fill="var(--p-teal)"/>
+      <path d="M30 16.5c-5.2 0-7.4 4-7.4 9.2v5.6c0 2.2-2 4.2-4.2 5.2h23.2c-2.2-1-4.2-3-4.2-5.2v-5.6c0-5.2-2.2-9.2-7.4-9.2z" fill="var(--p-teal)"/>
+      <circle cx="30" cy="39.6" r="2.3" fill="var(--p-teal)"/>
+      <circle cx="46.5" cy="28" r="2.1" fill="var(--p-saffron)"/>
+      <path d="M6 48.5c4 0 4-2.6 8-2.6s4 2.6 8 2.6 4-2.6 8-2.6 4 2.6 8 2.6 4-2.6 8-2.6 4 2.6 8 2.6" fill="none" stroke="var(--p-blue)" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`;
+  }
+
+  CC.register({
+    id: 'mond',
+    name: 'Mondgeläut',
+    tagline: 'Düsteres Abenteuer mit Bossen und Reaktionskampf.',
+    color: 'teal',
+    minutes: '20–60',
+    modes: ['solo'],
+    frame: { src: 'mond.html', g: 'mond', bg: '#0A0D12', save: 'mondgelaeut-v1' },   // save: Spielstand im Profil löschbar
+    thumb: mondThumb(),
+    rules: [
+      'Die Flut hat dich an einen fremden Strand gespült. Wähle deine Herkunft und finde heraus, warum nur du die Glocke hörst.',
+      'Im Kampf zählt der Moment: ausweichen, blocken oder parieren. Ein Aufblitzen an der Waffe verrät jeden Angriff.',
+      'Akt I mit Leuchtfeuern, Glut, Waffen, Talismanen und vier Bossen. Jeder Spieler hat seinen eigenen Spielstand.',
+    ],
+    statText(x) {
+      const parts = [];
+      if (x.akt) parts.push('Akt I geschafft');
+      parts.push(`Stufe ${num(x.lvl || 1)}`, `${num(x.bosse || 0)} von 4 Bossen`);
+      if (x.min) parts.push(dauer(x.min));
+      return parts.join(' · ');
+    },
+  });
 
   CC.register({
     id: 'kerker',
