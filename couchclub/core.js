@@ -13,7 +13,8 @@
   const MODE_LABEL = { ai: 'Gegen KI', duo: 'Zu zweit', solo: 'Alleine' };
   const SOON = ['Codeknacker', 'Zahlenkette', 'Reaktionsduell', 'Undercover', 'Schiffe versenken', 'Air-Hockey', 'Begriffe erklären', 'Wörter raten', 'Quiz'];
   const KEY = 'couchclub.v1';
-  const saveKeyOf = (pid) => 'kerker-licht-v2@' + pid;   // Spielstand der Solo-Abenteuer (spiele.html)
+  // Spielstände der Solo-Abenteuer: spiele.html (Kerker-Wischer und Lichtläufer) und mond.html (Mondgeläut)
+  const saveKeysOf = (pid) => ['kerker-licht-v2@' + pid, 'mondgelaeut-v1@' + pid];
 
   /* ---------- Speicher ---------- */
   function defaults() {
@@ -373,7 +374,7 @@
     state.players = state.players.filter((p) => p.id !== id);
     state.lineup = state.lineup.filter((x) => x !== id);
     delete state.stats[id];
-    try { localStorage.removeItem(saveKeyOf(id)); } catch (e) { /* nichts gespeichert */ }
+    saveKeysOf(id).forEach((k) => { try { localStorage.removeItem(k); } catch (e) { /* nichts gespeichert */ } });
     Object.values(state.last).forEach((l) => { if (l.picks) l.picks = l.picks.filter((x) => x !== id); });
     save();
     hideSheet();
@@ -539,7 +540,8 @@
   /* ---------- Solo-Abenteuer im Vollbild ---------- */
   const frameEl = $('#frame');
   let frame = null;
-  const SUM_KEYS = ['runs', 'wins', 'world', 'asc', 'bank', 'depth', 'best', 'rank', 'zone'];
+  const SUM_KEYS = ['runs', 'wins', 'world', 'asc', 'bank', 'depth', 'best', 'rank', 'zone', 'lvl', 'bosse', 'tode', 'min', 'akt'];
+  const FRAME_SOURCES = ['kerker-licht', 'mondgelaeut'];
   function openFrame(g, p) {
     const s = state.settings;
     const q = new URLSearchParams({ g: g.frame.g, p: p.id, n: p.name, snd: s.sound ? 1 : 0, vib: s.haptics ? 1 : 0, mot: motionOn() ? 1 : 0 });
@@ -574,7 +576,7 @@
   window.addEventListener('message', (e) => {
     if (!frame || e.source !== frame.win.contentWindow) return;
     const d = e.data;
-    if (!d || d.cc !== 'kerker-licht') return;
+    if (!d || !FRAME_SOURCES.includes(d.cc)) return;
     if (d.sum && typeof d.sum === 'object') {
       const sum = {};
       SUM_KEYS.forEach((k) => { const v = Number(d.sum[k]); if (Number.isFinite(v) && v >= 0) sum[k] = Math.floor(v); });

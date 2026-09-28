@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>Mondgeläut</title>
-<meta name="description" content="Kampf-Demo für Mondgeläut, ein düsteres Solo-Abenteuer im Couchclub: Strand, Leuchtfeuer, Ertrunkene und der Strandvogt, in zwei Kampfsystemen.">
+<meta name="description" content="Mondgeläut, Akt I: ein düsteres Solo-Abenteuer im Couchclub. Strandung, Salzmarsch und die versunkene Stadt Velmora, mit Leuchtfeuern, Bossen und Reaktionskampf.">
 <meta name="theme-color" content="#0A0D12">
 <style>/*@FONTS@*/</style>
 <style>/*@CSS@*/</style>
@@ -16,42 +16,44 @@
   <!-- ===================== TITEL ===================== -->
   <section class="screen title" id="title">
     <div class="t-head">
-      <p class="eyebrow">Kampf-Demo · Die Strandung</p>
+      <p class="eyebrow">Akt I · Die Ertränkte Braut</p>
       <h1>Mondgeläut</h1>
-      <p class="lede">Zwei normale Gegner, ein Leuchtfeuer und der erste Boss. Spiel die Demo in beiden Kampfsystemen und entscheide, welches ins Spiel kommt.</p>
+      <p class="lede">Die Flut hat dich ausgespuckt. Irgendwo läutet eine Glocke, die nur du hörst.</p>
     </div>
-    <div class="t-pick" role="radiogroup" aria-label="Kampfsystem">
-      <button type="button" role="radio" class="sys" data-sys="echt" id="sysEcht" aria-checked="true">
-        <b>Reaktion</b><span>Ausweichen, blocken, parieren. Im richtigen Moment.</span>
-      </button>
-      <button type="button" role="radio" class="sys" data-sys="runde" id="sysRunde" aria-checked="false">
-        <b>Runden</b><span>Absichten lesen, Züge planen. In Ruhe.</span>
-      </button>
-    </div>
-    <div class="t-actions">
-      <button type="button" class="btn primary" id="btnStart">Erwachen</button>
-      <button type="button" class="btn ghost" id="btnBoss">Direkt zum Boss</button>
-    </div>
-    <p class="t-foot"><button type="button" class="link" id="btnSound">Ton: an</button><button type="button" class="link" id="btnVoice">Stimme: an</button><span>Mit Kopfhörern am schönsten</span></p>
+    <div class="t-actions" id="tActions"></div>
+    <p class="t-foot"><button type="button" class="link" id="btnSound">Ton: an</button><button type="button" class="link" id="btnVoice" hidden>Stimme: an</button><button type="button" class="link" id="btnLeave" hidden>Zum Couchclub</button><span id="tHint">Mit Kopfhörern am schönsten</span></p>
   </section>
 
-  <!-- ===================== GESCHICHTE ===================== -->
-  <section class="screen story" id="story" hidden>
+  <!-- ===================== ORT, LEUCHTFEUER, GESPRÄCH ===================== -->
+  <section class="screen story" id="ort" hidden>
+    <div class="o-bar">
+      <button type="button" class="icon-btn" id="btnKarte" aria-label="Karte">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5l5-2 6 2 5-2v13l-5 2-6-2-5 2zM9 4.5v13M15 6.5v13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      </button>
+      <p class="o-where" id="oWhere"></p>
+      <div class="glut" aria-label="Glut"><small>Glut</small><b id="oGlut">0</b></div>
+      <button type="button" class="icon-btn" id="btnMenue" aria-label="Ausrüstung und Einstellungen">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
     <div class="st-panel" id="stPanel">
       <p class="st-place" id="stPlace"></p>
       <div class="st-text" id="stText" aria-live="polite"></div>
+      <dl class="f-stats" id="stStats" hidden></dl>
       <div class="st-choices" id="stChoices"></div>
     </div>
   </section>
 
-  <!-- ===================== LEUCHTFEUER ===================== -->
-  <section class="screen story fire" id="fire" hidden>
-    <div class="st-panel">
-      <p class="st-place" id="fPlace"></p>
-      <div class="st-text" id="fText"></div>
-      <dl class="f-stats" id="fStats"></dl>
-      <div class="st-choices" id="fChoices"></div>
+  <!-- ===================== KARTE ===================== -->
+  <section class="screen karte" id="karte" hidden>
+    <div class="k-head">
+      <div class="k-tabs" id="kTabs" role="tablist" aria-label="Gebiete"></div>
+      <button type="button" class="icon-btn" id="btnKarteZu" aria-label="Karte schließen">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
     </div>
+    <div class="k-map" id="kMap"></div>
+    <div class="k-info" id="kInfo"></div>
   </section>
 
   <!-- ===================== KAMPF ===================== -->
@@ -69,15 +71,12 @@
     </div>
     <p class="f-line" id="fLine" hidden></p>
     <div class="f-touch" id="fTouch"></div>
-    <div class="intent" id="intent" hidden></div>
 
     <div class="f-bottom">
       <div class="p-bars">
         <div class="p-row"><div class="bar p-hp"><i class="lag" id="pLag"></i><i class="fill" id="pHp"></i></div><span class="p-num" id="pHpN"></span></div>
         <div class="p-row" id="pStRow"><div class="bar p-st"><i class="fill" id="pSt"></i></div></div>
         <div class="p-row"><div class="bar p-fp"><i class="fill" id="pFp"></i></div></div>
-        <div class="ap" id="apPips" aria-label="Ausdauerpunkte" hidden></div>
-        <div class="stance" id="stance"></div>
       </div>
 
       <div class="rtc" id="rtc">
@@ -110,24 +109,22 @@
           </button>
         </div>
       </div>
-
-      <div class="tbc" id="tbc" hidden>
-        <div class="tb-grid" id="tbGrid"></div>
-      </div>
     </div>
   </section>
 
-  <!-- ===================== BILANZ ===================== -->
-  <section class="screen story bilanz" id="bilanz" hidden>
+  <!-- ===================== ENDE VON AKT I ===================== -->
+  <section class="screen story ende" id="ende" hidden>
     <div class="st-panel">
-      <p class="st-place">Ende der Demo</p>
-      <h2 class="b-title">Der Strandvogt ist gefallen</h2>
-      <dl class="f-stats wide" id="bStats"></dl>
-      <p class="b-ask">Welches Kampfsystem soll ins Spiel? Schreib es mir im Chat, dann baue ich damit Akt I.</p>
-      <div class="st-choices" id="bChoices"></div>
+      <p class="st-place">Ende von Akt I</p>
+      <h2 class="b-title">Eine Glocke schweigt</h2>
+      <p class="b-text" id="eText"></p>
+      <dl class="f-stats wide" id="eStats"></dl>
+      <p class="b-ask">Akt II folgt. Dein Spielstand bleibt erhalten.</p>
+      <div class="st-choices" id="eChoices"></div>
     </div>
   </section>
 
+  <div class="fade" id="fade" aria-hidden="true"></div>
   <div class="banner" id="banner" hidden><div class="band"><b id="bannerT"></b><small id="bannerS"></small></div></div>
   <div class="sheet-back" id="sheetBack" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
   <div class="toast" id="toast" role="status" hidden></div>

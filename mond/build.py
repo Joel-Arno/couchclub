@@ -4,6 +4,7 @@
     python3 mond/build.py                    -> mond/index.html (läuft direkt im Browser, auch offline)
     python3 mond/build.py --artifact PFAD    -> zusätzlich eine Variante ohne HTML-Grundgerüst
     python3 mond/build.py --stimmen          -> mit Sprachaufnahmen aus src/stimme (sonst ohne Stimme)
+    python3 mond/build.py --couchclub ORDNER -> zusätzlich ORDNER/mond.html für den Couchclub
 
 Die Schriften aus src/fonts und die Sprachaufnahmen aus src/stimme werden als
 Base64 eingebettet, damit das Spiel ohne Internet läuft. Keine Abhängigkeiten
@@ -24,7 +25,7 @@ FONTS = [
     ("IBM Plex Sans", "plexsans-400.woff2", "normal", "400"),
     ("IBM Plex Sans", "plexsans-600.woff2", "normal", "600 700"),
 ]
-JS = ["core.js", "figuren.js", "welt.js", "daten.js", "stimme.js", "kampf.js", "ablauf.js"]
+JS = ["core.js", "figuren.js", "wesen.js", "welt.js", "daten-kampf.js", "daten-welt.js", "stimme.js", "kampf.js", "ablauf.js"]
 
 
 def font_css():
@@ -53,10 +54,12 @@ def voices_js(stimmen):
             + "const STIMMEN_ENDE = " + json.dumps(ende, separators=(",", ":")) + ";\n")
 
 
-def build(skeleton=True, stimmen=False):
+def build(skeleton=True, stimmen=False, couchclub=False):
+    """couchclub=True: Spieler und Einstellungen kommen aus der Adresse, der Spielstand gilt pro Spieler."""
     shell = (SRC / "shell.html").read_text(encoding="utf-8")
     css = (SRC / "style.css").read_text(encoding="utf-8")
-    js = voices_js(stimmen) + "\n".join((SRC / f).read_text(encoding="utf-8") for f in JS)
+    js = ("const CC_MODE = " + ("true" if couchclub else "false") + ";\n" + voices_js(stimmen)
+          + "\n".join((SRC / f).read_text(encoding="utf-8") for f in JS))
     html = (
         shell.replace("/*@FONTS@*/", font_css())
         .replace("/*@CSS@*/", css)
@@ -75,6 +78,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--artifact", help="Pfad für die Variante ohne HTML-Grundgerüst")
     ap.add_argument("--stimmen", action="store_true", help="Sprachaufnahmen einbetten")
+    ap.add_argument("--couchclub", help="Ordner des Couchclubs, dorthin kommt mond.html")
     args = ap.parse_args()
     out = HERE / "index.html"
     out.write_text(build(stimmen=args.stimmen), encoding="utf-8")
@@ -82,6 +86,10 @@ def main():
     if args.artifact:
         p = pathlib.Path(args.artifact)
         p.write_text(build(skeleton=False, stimmen=args.stimmen), encoding="utf-8")
+        print(f"{p}  {p.stat().st_size // 1024} KB")
+    if args.couchclub:
+        p = pathlib.Path(args.couchclub) / "mond.html"
+        p.write_text(build(stimmen=args.stimmen, couchclub=True), encoding="utf-8")
         print(f"{p}  {p.stat().st_size // 1024} KB")
 
 

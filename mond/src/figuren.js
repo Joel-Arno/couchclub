@@ -219,13 +219,16 @@ function toWorld(a, pt){
 }
 function weaponTip(a){
   const sk = a.sk; if (!sk) return [a.x, a.gy - a.H * .6];
+  if (a.look.kind) return toWorld(a, sk.tip);
   const d = dirv(sk.wAng), len = WLEN[a.look.weapon] || .45, H = a.H;
   let tip = [sk.handA[0] + d[0] * len * H, sk.handA[1] + d[1] * len * H];
-  if (a.look.weapon === 'flegel') tip = flailBall(a, sk, H);
+  if (KETTE[a.look.weapon]) tip = flailBall(a, sk, H);
   return toWorld(a, tip);
 }
-const WLEN = { schwert: .47, harpune: .64, hammer: .48, entermesser: .33, flegel: .5, haken: .66 };
-function chestPt(a){ const sk = a.sk; if (!sk) return [a.x, a.gy - a.H * .6]; return toWorld(a, [lerp(sk.hip[0], sk.sho[0], .65), lerp(sk.hip[1], sk.sho[1], .65)]); }
+const WLEN = { schwert: .47, harpune: .64, hammer: .48, entermesser: .33, flegel: .5, haken: .66, pfahlspeer: .6, nadel: .42, kolben: .4, stab: .62, glockenstab: .5, kettenglocke: .55 };
+// Waffen mit Kette: Länge der Kette und Größe des Endes (Anteile von H)
+const KETTE = { flegel: { len: .3, r: .05 }, kettenglocke: { len: .36, r: .11 } };
+function chestPt(a){ const sk = a.sk; if (!sk) return [a.x, a.gy - a.H * .6]; if (sk.chest) return toWorld(a, sk.chest); return toWorld(a, [lerp(sk.hip[0], sk.sho[0], .65), lerp(sk.hip[1], sk.sho[1], .65)]); }
 function headPt(a){ const sk = a.sk; if (!sk) return [a.x, a.gy - a.H]; return toWorld(a, sk.head); }
 
 /* ---------- Zeichnen ---------- */
@@ -234,6 +237,7 @@ function seg(ctx, p, q, w){ ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(p[0],
 
 function drawActor(ctx, a, alpha = 1){
   const L = a.look, H = a.H, p = a.pose;
+  if (L.kind) return drawWesen(ctx, a, alpha);
   const sk = skeleton(p, H, L);
   a.sk = sk;
   const jit = a.shake > 0 ? (rnd() - .5) * H * .025 : 0;
@@ -258,7 +262,7 @@ function drawActor(ctx, a, alpha = 1){
   // Leuchtspur beim Schlag merken
   if (a.trailUntil > a.t && !a.hideW){
     const d = dirv(sk.wAng), len = (WLEN[L.weapon] || .45) * H, h = sk.handA;
-    const tip = L.weapon === 'flegel' ? flailBall(a, sk, H) : [h[0] + d[0] * len, h[1] + d[1] * len];
+    const tip = KETTE[L.weapon] ? flailBall(a, sk, H) : [h[0] + d[0] * len, h[1] + d[1] * len];
     a.trail.push({ tip, mid: [lerp(h[0], tip[0], .45), lerp(h[1], tip[1], .45)], t: a.t });
   }
 }
@@ -293,12 +297,13 @@ function paintFigure(ctx, a, sk, col, colB, H){
   ctx.strokeStyle = col;
   seg(ctx, sk.hip, sk.kneeF, lw * .08); seg(ctx, sk.kneeF, sk.footF, lw * .064);
   seg(ctx, sk.footF, [sk.footF[0] + H * .055, sk.footF[1]], lw * .05);
+  if (L.kleid) skirt(ctx, a, sk, H, col);
   if (L.lantern) lantern(ctx, a, sk, H, col);
   // Waffe und vorderer Arm
   if (!a.hideW) weapon(ctx, a, sk, H, col);
   ctx.strokeStyle = col;
   seg(ctx, sk.sho, sk.elbA, lw * .058); seg(ctx, sk.elbA, sk.handA, lw * .048);
-  if (L.off === 'schild') shield(ctx, a, sk, H, col);
+  if (L.off === 'schild' || L.off === 'glockenschild') shield(ctx, a, sk, H, col);
   if (L.twoHand){ ctx.strokeStyle = colB === col ? col : INK; seg(ctx, sk.elbB, sk.handB, lw * .046); }
 }
 
@@ -324,6 +329,43 @@ function head(ctx, a, sk, H, c){
     ctx.beginPath();
     ctx.moveTo(-r * 2.0, -r * .55); ctx.quadraticCurveTo(0, -r * 1.15, r * 2.0, -r * .6);
     ctx.lineTo(r * 1.25, -r * .95); ctx.quadraticCurveTo(r * .1, -r * 2.6, -r * 1.3, -r * .95);
+    ctx.closePath(); ctx.fill();
+  }
+  if (L.hut === 'suedwester'){
+    ctx.beginPath();
+    ctx.moveTo(-r * 1.9, r * .2); ctx.quadraticCurveTo(-r * .2, -r * .8, r * 1.5, -r * .45);
+    ctx.lineTo(r * .9, -r * .7); ctx.quadraticCurveTo(0, -r * 1.9, -r * 1.1, -r * .6);
+    ctx.closePath(); ctx.fill();
+  }
+  if (L.hut === 'glockenhelm'){
+    ctx.beginPath();
+    ctx.moveTo(-r * 1.35, r * 1.1); ctx.quadraticCurveTo(-r * 1.2, -r * .4, -r * .7, -r * 1.2);
+    ctx.quadraticCurveTo(0, -r * 1.7, r * .7, -r * 1.2); ctx.quadraticCurveTo(r * 1.2, -r * .4, r * 1.35, r * 1.1);
+    ctx.closePath(); ctx.fill();
+    ctx.lineWidth = r * .3; ctx.beginPath(); ctx.moveTo(-r * 1.55, r * 1.1); ctx.lineTo(r * 1.55, r * 1.1); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, -r * 1.6, r * .25, 0, TAU); ctx.fill();
+  }
+  if (L.hut === 'ritterhelm'){
+    ctx.beginPath(); ctx.arc(0, 0, r * 1.12, 0, TAU); ctx.fill();
+    ctx.fillRect(-r * 1.12, -r * .1, r * 2.24, r * 1.2);
+    const fl = Math.sin(a.t * .004) * r * .15;
+    ctx.beginPath(); ctx.moveTo(-r * .1, -r * 1.1); ctx.quadraticCurveTo(-r * 1.4, -r * 1.9 + fl, -r * 2.3, -r * .6 + fl); ctx.quadraticCurveTo(-r * 1.1, -r * 1.1, -r * .1, -r * .7); ctx.fill();
+  }
+  if (L.krone){
+    for (let i = 0; i < 5; i++){
+      const x = -r * .8 + i * r * .4, h = r * (.7 + (i % 2) * .5);
+      ctx.beginPath(); ctx.moveTo(x - r * .15, -r * .8); ctx.lineTo(x, -r * .8 - h); ctx.lineTo(x + r * .15, -r * .8); ctx.fill();
+    }
+  }
+  if (L.schleier){
+    // Schleier fällt vom Kopf weit über den Rücken
+    const sw = Math.sin(a.t * .003) * r * .4, len = r * (L.schleier || 1) * 6;
+    ctx.beginPath();
+    ctx.moveTo(r * .5, -r * 1.05);
+    ctx.quadraticCurveTo(-r * 1.6, -r * 1.2, -r * 2.2 + sw, r * 1.5);
+    ctx.quadraticCurveTo(-r * 2.6 + sw * 1.5, len * .6, -r * 1.8 + sw * 2, len);
+    ctx.lineTo(-r * .6 + sw, len * .9);
+    ctx.quadraticCurveTo(-r * .9, r * 1.5, r * .3, r * .6);
     ctx.closePath(); ctx.fill();
   }
   if (L.hair){
@@ -392,13 +434,29 @@ function lantern(ctx, a, sk, H, c){
   ctx.fillStyle = c; ctx.fillRect(q[0] - .022 * H, q[1], .044 * H, .058 * H);
 }
 function shield(ctx, a, sk, H, c){
-  const h = sk.handB;
+  const h = sk.handB, big = a.look.off === 'glockenschild' ? 1.35 : 1;
   ctx.fillStyle = c; ctx.beginPath();
-  ctx.ellipse(h[0] + .025 * H, h[1], .036 * H, .092 * H, a.pose.lean * .4 - .08, 0, TAU); ctx.fill();
+  ctx.ellipse(h[0] + .025 * H, h[1], .036 * H * big, .092 * H * big, a.pose.lean * .4 - .08, 0, TAU); ctx.fill();
+}
+// Langer Rock, der die Beine verdeckt
+function skirt(ctx, a, sk, H, c){
+  const h = sk.hip, t = a.t * .003, sw = Math.sin(t) * .02 * H, gy = 0;
+  const fx = Math.max(sk.footF[0], sk.footB[0]) + .08 * H, bx = Math.min(sk.footF[0], sk.footB[0]) - .1 * H;
+  ctx.fillStyle = c; ctx.beginPath();
+  ctx.moveTo(h[0] - .06 * H, h[1] - .04 * H);
+  ctx.lineTo(h[0] + .06 * H, h[1] - .04 * H);
+  ctx.quadraticCurveTo(fx, h[1] + (gy - h[1]) * .5, fx + sw, gy - .01 * H);
+  for (let i = 1; i <= 6; i++){
+    const u = i / 6, x = lerp(fx + sw, bx + sw * 1.5, u), y = gy - .01 * H + ((i % 2) ? .015 * H : 0) + Math.sin(t * 2 + i) * .005 * H;
+    ctx.lineTo(x, y);
+  }
+  ctx.quadraticCurveTo(bx, h[1] + (gy - h[1]) * .4, h[0] - .06 * H, h[1] - .04 * H);
+  ctx.closePath(); ctx.fill();
 }
 function flailBall(a, sk, H){
-  const d = dirv(sk.wAng), end = [sk.handA[0] + d[0] * .14 * H, sk.handA[1] + d[1] * .14 * H];
-  const cd = dirv(a.pose.wb), len = .3 * H * (1 + a.pose.ext);
+  const K = KETTE[a.look.weapon] || KETTE.flegel;
+  const d = dirv(sk.wAng), end = [sk.handA[0] + d[0] * (a.look.weapon === 'kettenglocke' ? .12 : .14) * H, sk.handA[1] + d[1] * (a.look.weapon === 'kettenglocke' ? .12 : .14) * H];
+  const cd = dirv(a.pose.wb), len = K.len * H * (1 + a.pose.ext);
   return [end[0] + cd[0] * len, end[1] + cd[1] * len];
 }
 function weapon(ctx, a, sk, H, c){
@@ -438,6 +496,42 @@ function weapon(ctx, a, sk, H, c){
     ctx.beginPath(); ctx.arc(ball[0], ball[1], H * .05, 0, TAU); ctx.fill();
     ctx.lineWidth = H * .014;
     for (let i = 0; i < 6; i++){ const an = i / 6 * TAU + a.t * .002; seg(ctx, ball, [ball[0] + Math.cos(an) * H * .075, ball[1] + Math.sin(an) * H * .075], H * .014); }
+  } else if (kind === 'pfahlspeer'){
+    seg(ctx, P(-.3), P(.52), H * .022);
+    poly([P(.5, -.022), P(.6, 0), P(.5, .022)]);
+    ctx.lineWidth = H * .008; seg(ctx, P(.46, -.03), P(.48, .03), H * .008);
+  } else if (kind === 'nadel'){
+    seg(ctx, P(-.05), P(.03), H * .02);
+    seg(ctx, P(.02, -.04), P(.02, .04), H * .012);
+    poly([P(.03, -.008), P(.42, 0), P(.03, .008)]);
+  } else if (kind === 'kolben'){
+    seg(ctx, P(-.06), P(.32), H * .026);
+    poly([P(.28, -.06), P(.42, -.05), P(.44, 0), P(.42, .05), P(.28, .06)]);
+    for (let i = -1; i <= 1; i++) seg(ctx, P(.35, i * .05), P(.35, i * .09), H * .016);
+  } else if (kind === 'stab'){
+    ctx.lineWidth = H * .018; ctx.beginPath();
+    const s0 = P(-.2), s1 = P(.52), m = P(.18, .03); ctx.moveTo(s0[0], s0[1]); ctx.quadraticCurveTo(m[0], m[1], s1[0], s1[1]); ctx.stroke();
+    poly([P(.5, -.035), P(.58, 0), P(.66, -.01), P(.58, .04), P(.52, .03)]);
+  } else if (kind === 'glockenstab'){
+    seg(ctx, P(-.1), P(.44), H * .02);
+    const b = P(.47), bs = H * .06, an = sk.wAng;
+    ctx.save(); ctx.translate(b[0], b[1]); ctx.rotate(-an + Math.PI);
+    ctx.beginPath(); ctx.moveTo(-bs * .45, -bs * .2); ctx.quadraticCurveTo(-bs * .55, bs * .9, -bs * 1.05, bs * 1.1); ctx.lineTo(bs * 1.05, bs * 1.1); ctx.quadraticCurveTo(bs * .55, bs * .9, bs * .45, -bs * .2); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  } else if (kind === 'kettenglocke'){
+    seg(ctx, P(-.04), P(.12), H * .028);
+    const end = P(.12), ball = flailBall(a, sk, H), K = KETTE.kettenglocke;
+    const mid = [(end[0] + ball[0]) / 2, (end[1] + ball[1]) / 2 + H * .05 * (1 - Math.min(1, a.pose.ext))];
+    ctx.lineWidth = H * .011; ctx.setLineDash([H * .014, H * .009]);
+    ctx.beginPath(); ctx.moveTo(end[0], end[1]); ctx.quadraticCurveTo(mid[0], mid[1], ball[0], ball[1]); ctx.stroke();
+    ctx.setLineDash([]);
+    // Die Glocke hängt immer mit der Öffnung weg von der Hand
+    const an = Math.atan2(ball[1] - end[1], ball[0] - end[0]) - Math.PI / 2, bs = K.r * H;
+    ctx.save(); ctx.translate(ball[0], ball[1]); ctx.rotate(an);
+    ctx.beginPath(); ctx.moveTo(-bs * .45, -bs * .25); ctx.quadraticCurveTo(-bs * .55, bs * .8, -bs * 1.05, bs * 1.05);
+    ctx.lineTo(bs * 1.05, bs * 1.05); ctx.quadraticCurveTo(bs * .55, bs * .8, bs * .45, -bs * .25); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, bs * 1.15, bs * .18, 0, TAU); ctx.fill();
+    ctx.restore();
   } else if (kind === 'haken'){
     seg(ctx, P(-.34), P(.62), H * .02);
     poly([P(.6, -.012), P(.7, 0), P(.6, .012)]);
@@ -467,9 +561,22 @@ function paintGlow(ctx, a, sk, H){
     ctx.restore();
     dot(sk.head[0] + r * .8, sk.head[1] - r * .1, r * 1.3, L.visor, .35);
   }
+  if (L.krone){
+    ctx.save(); ctx.translate(sk.head[0], sk.head[1]); ctx.rotate(sk.hd);
+    dot(0, -r * 1.3, r * 2, '#e8f4ff', .35 + a.glow * .3);
+    ctx.restore();
+  }
+  if (L.weapon === 'stab' && !a.hideW){
+    const d = dirv(sk.wAng), c = [sk.handA[0] + d[0] * .58 * H, sk.handA[1] + d[1] * .58 * H];
+    dot(c[0], c[1], H * (.07 + a.glow * .06), '#dff2ff', .7 + Math.sin(t * .008) * .15);
+  }
+  if (L.weapon === 'kettenglocke' && a.glow > .3){
+    const b = flailBall(a, sk, H);
+    dot(b[0], b[1], H * .2, '#bfe6ee', a.glow * .35);
+  }
   if (L.lantern && a.lanternPt){
     const q = a.lanternPt, lv = .7 + a.glow * .8 + Math.sin(t * .011) * .08;
-    dot(q[0], q[1] + .03 * H, H * (.09 + a.glow * .12), '#cfeee4', lv);
+    dot(q[0], q[1] + .03 * H, H * (.09 + a.glow * .12), L.lanternCol || '#cfeee4', lv);
     dot(q[0], q[1] + .03 * H, H * .016, '#ffffff', 1);
   }
   if (L.heart){

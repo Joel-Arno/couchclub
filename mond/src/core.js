@@ -17,14 +17,31 @@ const EASE = {
 const rnd = Math.random;
 const rr = (a, b) => a + rnd() * (b - a);
 const fmt = n => Math.floor(n).toLocaleString('de-DE');
-const reduceMotion = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
-const DEBUG = /(^|#)test$/.test(location.hash);
+/* ---------- Im Couchclub eingebettet ----------
+   CC_MODE setzt der Build. Spieler und Einstellungen kommen aus der Adresse,
+   z. B. mond.html#p=p1&n=Joel&snd=1&vib=1&mot=1 */
+const EMB = CC_MODE ? (() => {
+  const q = new URLSearchParams(location.hash.slice(1));
+  return {
+    p: (q.get('p') || '').replace(/[^\w-]/g, '').slice(0, 24),
+    name: (q.get('n') || '').slice(0, 14),
+    sound: q.get('snd') !== '0', vibe: q.get('vib') !== '0', motion: q.get('mot') !== '0'
+  };
+})() : null;
+function ccPost(msg){
+  if (!EMB || parent === window) return;
+  try { parent.postMessage(Object.assign({ cc: 'mondgelaeut', p: EMB.p }, msg), '*'); } catch (e) {}
+}
+const reduceMotion = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || !!(EMB && !EMB.motion);
+const DEBUG = /(^|#|&)test$/.test(location.hash);
 
 /* ---------- Einstellungen (nur auf diesem Gerät) ---------- */
-const SET_KEY = 'mondgelaeut-demo-v1';
+const SET_KEY = 'mondgelaeut-einstellungen-v1';
 const S = (() => {
-  const d = { sound: true, voice: true, ring: true, vib: true, sys: 'echt' };
+  const d = { sound: true, voice: true, ring: true, vib: true, tut: false };
   try { Object.assign(d, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch (e) {}
+  // Im Couchclub gelten Ton und Vibration von dort
+  if (EMB){ d.sound = EMB.sound; d.vib = EMB.vibe; }
   return d;
 })();
 function saveSettings(){ try { localStorage.setItem(SET_KEY, JSON.stringify(S)); } catch (e) {} }
@@ -92,7 +109,9 @@ const Snd = (() => {
   }
   // Glocke: unharmonische Teiltöne wie bei einer gegossenen Glocke
   const BELL = [[.5, 1, 1.15], [1, .9, .9], [1.19, .5, .62], [1.5, .34, .5], [2, .42, .45], [2.51, .2, .3], [2.66, .17, .28], [3.01, .14, .22], [4.1, .07, .14]];
-  function bell(f, vol = .2, dur = 3, wet = .5, t = ac.currentTime){
+  function bell(f, vol = .2, dur = 3, wet = .5, t){
+    if (!ac) return;
+    if (t == null) t = ac.currentTime;
     for (const [r, v, dk] of BELL) tone('sine', f * r * (1 + (rnd() - .5) * .003), t, .003, dur * dk, vol * v * .5, wet);
   }
   const now = () => ac.currentTime;

@@ -1,79 +1,117 @@
 /* =====================================================================
-   BÜHNE: die beiden Figuren und ihre Plätze
+   BÜHNE: die Figuren und ihre Plätze
    ===================================================================== */
 const Stage = {
-  P: null, E: null, showP: true, showE: false,
+  P: null, E: null, N: null, showP: true, showE: false, showN: false, enterT: 0,
   place(){
     const [W, Hh] = World.size(), A = World.arenaW(), gy = World.groundY();
     const H = Math.min(Hh * .2, A * .42);
     if (this.P){ this.P.x = W / 2 - A * .22; this.P.gy = gy; this.P.H = H; }
-    if (this.E){
-      const L = this.E.look;
-      this.E.x = W / 2 + A * (L.scale > 1.3 ? .26 : .2); this.E.gy = gy; this.E.H = H * (L.scale || 1);
-    }
+    [this.E, this.N].forEach(a => {
+      if (!a) return;
+      const L = a.look, big = (L.scale || 1) > 1.3;
+      // Breite Wesen wie die Spinne stehen näher an der Mitte, damit sie ganz ins Bild passen
+      a.baseX = W / 2 + A * (L.breit ? .15 : big ? .26 : .2); a.gy = gy; a.H = H * (L.scale || 1);
+      a.x = a.baseX + (a.enter || 0) * W * .5;
+    });
   },
-  hero(herk){ this.P = makeActor({ set: herk, look: LOOK[herk], face: 1 }); this.place(); return this.P; },
-  foe(key){
+  // Spielfigur mit Herkunft und Ausrüstung
+  hero(herk, waffe, schild){
+    const w = WAFFEN[waffe] || WAFFEN.langschwert;
+    const look = Object.assign({}, LOOK[herk] || LOOK.kron, { weapon: w.look, off: w.klasse === 'klinge' && schild ? (schild === 'glockenschild' ? 'glockenschild' : 'schild') : null, twoHand: w.klasse === 'speer' ? -.2 : w.klasse === 'wucht' ? .15 : 0 });
+    const P = makeActor({ set: KLASSE_SET[w.klasse], look, face: 1 });
+    if (this.P){ P.pose = this.P.pose; P.t = this.P.t; }
+    this.P = P; this.place(); return P;
+  },
+  foe(key, enter = false){
     const d = FEINDE[key];
-    this.E = makeActor({ set: d.set, look: LOOK[d.set], face: -1 });
+    this.E = makeActor({ set: d.set, look: LOOK[d.look || d.set], face: -1, enter: enter ? 1 : 0 });
     this.showE = true; this.place(); return this.E;
+  },
+  npc(key){
+    const n = NPC[key];
+    this.N = makeActor({ set: n.set || 'npc', look: LOOK[n.look], face: -1 });
+    this.showN = true; this.place(); return this.N;
+  },
+  update(dt){
+    [this.E, this.N].forEach(a => {
+      if (!a || !a.enter) return;
+      a.enter = Math.max(0, a.enter - dt / 700);
+      const [W] = World.size(); a.x = a.baseX + EASE.out(a.enter) * W * .5;
+    });
   }
 };
+const KLASSE_SET = { klinge: 'kron', speer: 'harp', wucht: 'moench' };
 
 /* =====================================================================
-   KAMPF: gemeinsame Regeln für Reaktion und Runden
+   KAMPF: Reaktion. Gegner holen sichtbar aus, der Spieler weicht aus,
+   blockt oder pariert im richtigen Moment.
    ===================================================================== */
 const PARRY_WIN = 210, PARRY_CD = 480, DODGE = { dur: 500, i0: 30, i1: 380, perfect: 200 }, BUF = 320;
 
 const Fight = (() => {
-  let on = false, mode = 'echt', def = null, key = '', T = 0, hitStop = 0, slowUntil = 0, paused = false;
-  let pl = null, en = null, herk = null, P = null, E = null, onEnd = null, ended = false;
-  const tells = [], projs = [];
+  let on = false, def = null, key = '', T = 0, hitStop = 0, slowUntil = 0, paused = false;
+  let pl = null, en = null, W = null, P = null, E = null, onEnd = null, ended = false;
+  let queue = [], idx = 0, glut = 0, dmgScale = 1;
+  const tells = [], projs = [], eprojs = [];
   let stats = { parries: 0, perfect: 0, hits: 0, taken: 0 };
-  let tb = null;
-  const hook = { toast: () => {}, line: () => {}, turn: () => {} };
+  const hook = { toast: () => {}, line: () => {}, foe: () => {} };
 
   /* ---------- Start ---------- */
+  // o: { foes: [key, ...], profil, zustand: { hp, fp, flasks }, onEnd }
   function start(o){
-    key = o.foe; def = FEINDE[key]; mode = o.mode; herk = HERK[o.herk]; onEnd = o.onEnd;
-    P = Stage.P; E = Stage.foe(key);
-    P.stance = null; P.anim = null; P.hideW = false; P.glow = 0; E.torn = false; E.glow = 0;
-    T = 0; hitStop = 0; slowUntil = 0; paused = false; ended = false; tells.length = 0; projs.length = 0;
-    const g = o.stats;
-    pl = {
-      hpMax: herk.hp + g.vit * 12, stMax: herk.st + g.aus * 10, fpMax: herk.fp, dmgMul: 1 + g.str * .08,
-      block: herk.block, blockSt: herk.blockSt, tbBlock: herk.tbBlock + g.aus * 2,
-      flasks: g.flasks, flasksMax: g.flasksMax,
+    queue = o.foes.slice(); idx = 0; glut = 0; onEnd = o.onEnd; dmgScale = o.scale || 1;
+    const pr = o.profil;
+    W = pr.waffe;
+    P = Stage.P;
+    P.stance = null; P.anim = null; P.hideW = false; P.glow = 0;
+    T = 0; hitStop = 0; slowUntil = 0; paused = false; ended = false;
+    tells.length = 0; projs.length = 0; eprojs.length = 0;
+    const z = o.zustand || {};
+    pl = Object.assign({}, pr, {
       act: null, blockHeld: false, heavyHeld: false, blockPress: -1e9, lastParryTry: -1e9, lastSpend: -1e9,
       combo: 0, comboUntil: 0, buf: null
-    };
-    pl.hp = Math.min(pl.hpMax, g.hp == null ? pl.hpMax : g.hp); pl.st = pl.stMax; pl.fp = g.fp == null ? pl.fpMax : g.fp;
-    const hpMul = mode === 'runde' ? .85 : 1;
-    en = {
-      hp: Math.round(def.hp * hpMul), hpMax: Math.round(def.hp * hpMul), pz: def.pz, pzMax: def.pz, st: 'idle', t0: 0, next: 1300, move: null, hi: 0, told: [],
-      phase: 1, lastPz: -1e9, hist: [], moves: def.moves, dmgMul: mode === 'runde' ? 1.15 : 1, buff: 1, armor: 0, until: 0, trailed: []
-    };
+    });
+    pl.hp = Math.min(pl.hpMax, z.hp == null ? pl.hpMax : z.hp);
+    pl.fp = Math.min(pl.fpMax, z.fp == null ? pl.fpMax : z.fp);
+    pl.flasks = z.flasks == null ? pl.flasksMax : z.flasks;
+    pl.st = pl.stMax;
     stats = { parries: 0, perfect: 0, hits: 0, taken: 0 };
-    World.setFlood(0); World.setTint(0); World.setSlow(false);
+    World.setFlood(o.flood != null ? o.flood : World.sceneFlood()); World.setTint(0); World.setSlow(false);
     on = true;
-    if (mode === 'runde') tbStart();
+    setupFoe(false);
+  }
+  function setupFoe(enter){
+    key = queue[idx]; def = FEINDE[key];
+    E = Stage.foe(key, enter);
+    E.torn = false; E.glow = 0;
+    const s = def.boss ? 1 : dmgScale;
+    en = {
+      hp: Math.round(def.hp * s), hpMax: Math.round(def.hp * s), pz: def.pz, pzMax: def.pz, st: 'idle', t0: 0,
+      next: T + (enter ? 1500 : def.boss ? 3600 : 1300), move: null, hi: 0, told: [], trailed: [],
+      phase: 1, lastPz: -1e9, hist: [], moves: def.moves, dmgMul: s, until: 0
+    };
+    tells.length = 0; eprojs.length = 0;
+    hook.foe(def, idx, queue.length);
   }
   function stop(){ on = false; pl && (pl.blockHeld = false); World.setSlow(false); }
   function finish(result){
     if (ended) return;
     ended = true;
-    setTimeout(() => { on = false; onEnd && onEnd(result, { hp: pl.hp, fp: pl.fp, flasks: pl.flasks, stats }); }, result === 'win' ? 1900 : 1800);
+    setTimeout(() => {
+      on = false;
+      onEnd && onEnd(result, { hp: pl.hp, fp: pl.fp, flasks: pl.flasks, stats, glut, boss: def.boss ? key : null, idx });
+    }, result === 'win' ? 1900 : 1800);
   }
 
   /* ---------- Spieler: Aktionen ---------- */
   const P_SET = () => SETS[P.set];
   function spend(c){ pl.st = Math.max(0, pl.st - c); pl.lastSpend = T; }
-  function hasSt(c){ if (mode === 'runde') return true; if (pl.st >= c * .5 && pl.st > 1) return true; hook.toast('st'); return false; }
+  function hasSt(c){ if (pl.st >= c * .5 && pl.st > 1) return true; hook.toast('st'); return false; }
   function act(k, o = {}){ pl.act = Object.assign({ k, t0: T, done: false }, o); }
-  function trailAt(hit, len = 150){ P.trailUntil = P.t + hit + 70; P.trailFrom = P.t + hit - len; }
 
   function startLight(){
-    const i = T < pl.comboUntil ? (pl.combo + 1) % 3 : 0, L = herk.light[i];
+    const i = T < pl.comboUntil ? (pl.combo + 1) % W.light.length : 0, L = W.light[i];
     if (!hasSt(L.st)) return true;
     spend(L.st); pl.combo = i; pl.comboUntil = T + L.dur + 260;
     act('light', { hit: L.hit, dur: L.dur, L });
@@ -83,29 +121,28 @@ const Fight = (() => {
     setTimeout(() => Snd.play('swing'), Math.max(0, L.hit - 80));
     return true;
   }
+  // Schwerer Angriff: gedrückt ausholen, loslassen schlägt zu. Jede Waffe hat ihr eigenes Mindestausholen.
   function startHeavy(){
-    if (!hasSt(herk.heavy.st)) return true;
-    spend(herk.heavy.st);
+    if (!hasSt(W.heavy.st)) return true;
+    spend(W.heavy.st);
     act('heavyW');
-    const S = P_SET();
-    playAnim(P, [[0, S.hW]], true);
+    playAnim(P, [[0, P_SET().hW]], true);
     return true;
   }
   function releaseHeavy(){
     const a = pl.act; if (!a || a.k !== 'heavyW') return;
-    const held = T - a.t0, extra = Math.max(0, 180 - held), charged = held >= 520 && mode === 'echt';
-    const hit = 130 + extra, dur = hit + herk.heavy.dur - 130;
+    const H = W.heavy, held = T - a.t0, extra = Math.max(0, H.wind - held), charged = held >= H.wind + 420;
+    const hit = H.hit + extra, dur = hit + H.dur;
     act('heavyS', { hit, dur, mult: charged ? 1.35 : 1 });
     const S = P_SET();
-    playAnim(P, [[0, S.hW], [hit - 60, S.hW], [hit, S.hS, EASE.in], [hit + 120, S.hS], [dur, S.idle]]);
-    P.trailUntil = P.t + hit + 70;
+    playAnim(P, [[0, S.hW], [hit - 70, S.hW], [hit, S.hS, EASE.in], [hit + 140, S.hS], [dur, S.idle]]);
+    P.trailUntil = P.t + hit + 80;
     if (charged){ P.glow = 1; World.pop(P.x, P.gy - P.H * 1.15, 'Aufgeladen', '#f4c08a', 13); }
-    setTimeout(() => Snd.play('heavySwing'), Math.max(0, hit - 110));
+    setTimeout(() => Snd.play('heavySwing'), Math.max(0, hit - 120));
   }
   function startDodge(){
-    const c = herk.dodgeSt;
-    if (!hasSt(c)) return true;
-    spend(c);
+    if (!hasSt(pl.dodgeSt)) return true;
+    spend(pl.dodgeSt);
     act('dodge', { dur: DODGE.dur });
     const S = P_SET();
     playAnim(P, [[0, S.dodge], [300, S.dodge], [DODGE.dur, S.idle]]);
@@ -128,22 +165,25 @@ const Fight = (() => {
     return true;
   }
   function startArt(){
-    const A = herk.art;
+    const A = W.art;
     if (pl.fp < A.fp){ hook.toast('fp'); return true; }
     pl.fp -= A.fp;
-    act('art', { hit: A.hit, dur: A.dur, art: A });
+    const hit = A.hits[0].t;
+    act('art', { dur: A.dur, art: A, hitsDone: 0 });
     const S = P_SET();
     Snd.play('art');
-    if (A.id === 'kronhieb'){
-      playAnim(P, [[0, S.artW], [200, S.artW], [380, S.artA, EASE.out], [A.hit, S.artS, EASE.in], [A.hit + 160, S.artS], [A.dur, S.idle]]);
-      P.trailUntil = P.t + A.hit + 60;
-    } else if (A.id === 'widerhaken'){
+    if (A.anim === 'sprung'){
+      playAnim(P, [[0, S.artW], [200, S.artW], [380, S.artA, EASE.out], [hit, S.artS, EASE.in], [hit + 160, S.artS], [A.dur, S.idle]]);
+    } else if (A.anim === 'wurf'){
       playAnim(P, [[0, S.artW], [200, S.artW], [260, S.artS, EASE.in], [460, S.artS], [A.dur, S.idle]]);
-      setTimeout(() => { if (!on) return; P.hideW = true; projs.push({ t0: T, hit: A.hit - 240, back: 360 }); }, 240);
+      setTimeout(() => { if (!on) return; P.hideW = true; projs.push({ t0: T, hit: hit - 240, back: 360, look: P.look.weapon }); }, 240);
+    } else if (A.anim === 'wirbel'){
+      const h2 = A.hits[1].t;
+      playAnim(P, [[0, S.l2W], [hit - 60, S.l2W], [hit, S.l2S, EASE.in], [h2 - 70, S.l1W, EASE.io], [h2, S.l1S, EASE.in], [h2 + 120, S.l1S], [A.dur, S.idle]]);
     } else {
-      playAnim(P, [[0, S.artW], [300, S.artA], [A.hit, S.artS, EASE.in], [A.hit + 220, S.artS], [A.dur, S.idle]]);
-      P.trailUntil = P.t + A.hit + 60;
+      playAnim(P, [[0, S.artW], [300, S.artA], [hit, S.artS, EASE.in], [hit + 220, S.artS], [A.dur, S.idle]]);
     }
+    P.trailUntil = P.t + A.hits[A.hits.length - 1].t + 60;
     P.glow = 1;
     return true;
   }
@@ -157,7 +197,7 @@ const Fight = (() => {
 
   function tryAct(k){
     const a = pl.act, t = a ? T - a.t0 : 0;
-    if (pl.hp <= 0 || en.st === 'dead') return true;
+    if (pl.hp <= 0 || en.st === 'dead' || en.st === 'enter') return true;
     let free = !a || a.k === 'block';
     if (a && (a.k === 'light' || a.k === 'heavyS' || a.k === 'crit') && t >= a.hit + 70 && k !== 'flask' && k !== 'art') free = true;
     if (a && a.k === 'parry' && k === 'dodge') free = true;
@@ -175,24 +215,21 @@ const Fight = (() => {
   function endAct(){
     const a = pl.act;
     pl.act = null;
-    if (a && a.k === 'art') P.glow = 0;
-    if (a && a.k === 'heavyS') P.glow = 0;
-    if (mode === 'echt' && pl.blockHeld){ act('block'); P.stance = 'block'; }
-    else P.stance = mode === 'runde' && tb && (tb.block || tb.parry || tb.dodge) ? 'block' : null;
-    if (mode === 'runde'){ tb.busy = false; hook.turn(); return; }
+    if (a && (a.k === 'art' || a.k === 'heavyS')) P.glow = 0;
+    if (pl.blockHeld){ act('block'); P.stance = 'block'; } else P.stance = null;
     const b = pl.buf; pl.buf = null;
     if (b && T - b.t < BUF) tryAct(b.k);
   }
 
   /* ---------- Eingaben ---------- */
   function press(k){
-    if (!on || paused || mode !== 'echt' || ended) return;
+    if (!on || paused || ended) return;
     if (k === 'block') pl.blockHeld = true;
     if (k === 'heavy') pl.heavyHeld = true;
     if (!tryAct(k)) pl.buf = { k, t: T };
   }
   function release(k){
-    if (!on || mode !== 'echt') return;
+    if (!on) return;
     if (k === 'block'){
       pl.blockHeld = false;
       if (pl.act && pl.act.k === 'block'){ pl.act = null; P.stance = null; }
@@ -204,10 +241,14 @@ const Fight = (() => {
   function stepPlayer(){
     const a = pl.act; if (!a) return;
     const t = T - a.t0;
-    if (a.k === 'heavyW' && (t >= 760 || (!pl.heavyHeld && mode === 'echt'))) { releaseHeavy(); return; }
+    if (a.k === 'heavyW' && (t >= W.heavy.wind + 900 || !pl.heavyHeld)) { releaseHeavy(); return; }
     if (a.hit != null && !a.done && t >= a.hit){ a.done = true; playerHits(a); }
+    if (a.k === 'art'){
+      const hs = a.art.hits;
+      while (a.hitsDone < hs.length && t >= hs[a.hitsDone].t){ artHit(a.art, hs[a.hitsDone], a.hitsDone); a.hitsDone++; }
+    }
     if (a.k === 'heal' && !a.healed && t >= 620){
-      a.healed = true; pl.flasks--; const h = Math.round(pl.hpMax * .45);
+      a.healed = true; pl.flasks--; const h = Math.round(pl.hpMax * pl.heal);
       pl.hp = Math.min(pl.hpMax, pl.hp + h);
       Snd.play('heal'); const c = chestPt(P); World.burst(c[0], c[1], 'heal', 18); World.pop(P.x, P.gy - P.H * 1.1, '+' + h, '#cfe3ff', 16);
     }
@@ -215,107 +256,115 @@ const Fight = (() => {
   }
   function playerHits(a){
     if (a.k === 'light') return hitEnemy(a.L.d, a.L.pz, {});
-    if (a.k === 'heavyS') return hitEnemy(herk.heavy.d * a.mult, herk.heavy.pz * a.mult, { heavy: true });
-    if (a.k === 'crit') return hitEnemy(herk.heavy.d * 2.4, 0, { crit: true, heavy: true });
-    if (a.k === 'art'){
-      const A = a.art, c = chestPt(E);
-      if (A.id === 'grabgelaeut'){
-        Snd.play('geleut');
-        const g = [P.x + P.H * .5, P.gy - P.H * .1];
-        World.ring(g[0], g[1], 10, P.H * 1.6, 'rgba(230,220,190,.9)', 700, 3); World.ring(g[0], g[1], 10, P.H * 1.1, 'rgba(200,225,255,.7)', 520, 2);
-        const h = A.heal; pl.hp = Math.min(pl.hpMax, pl.hp + h); World.pop(P.x, P.gy - P.H * 1.1, '+' + h, '#cfe3ff', 16);
-        World.shake(8);
-      }
-      if (A.id === 'kronhieb'){ World.shake(12); World.burst(P.x + P.H * .5, P.gy, 'spark', 16); }
-      const interrupted = A.id === 'widerhaken' && interrupt();
-      hitEnemy(A.d, A.pz, { heavy: true, art: true });
-      if (interrupted){ World.pop(c[0], c[1] - E.H * .45, 'Unterbrochen', '#f4c08a', 15); }
-    }
+    if (a.k === 'heavyS') return hitEnemy(W.heavy.d * a.mult, W.heavy.pz * a.mult, { heavy: true });
+    if (a.k === 'crit') return hitEnemy(W.heavy.d * 2.4, 0, { crit: true, heavy: true });
   }
-  // Widerhaken: reißt den Gegner aus dem Ausholen
-  function interrupt(){
-    if (mode === 'runde'){
-      if (tb.intent && tb.intent.move && !tb.intent.move.hits.some(h => h.k === 'u')){
-        tb.intent = { id: 'gestoert', special: SPEZIAL.gestoert }; hook.turn(); return true;
-      }
-      return false;
+  function artHit(A, h, i){
+    const c = chestPt(E);
+    if (A.ring){
+      Snd.play('geleut');
+      const g = [P.x + P.H * .5, P.gy - P.H * .1], big = A.ring === 'gross';
+      World.ring(g[0], g[1], 10, P.H * (big ? 2.4 : 1.6), 'rgba(230,220,190,.9)', big ? 900 : 700, 3);
+      World.ring(g[0], g[1], 10, P.H * (big ? 1.7 : 1.1), 'rgba(200,225,255,.7)', 520, 2);
+      World.shake(big ? 14 : 8);
     }
+    if (A.heal && i === 0){ pl.hp = Math.min(pl.hpMax, pl.hp + A.heal); World.pop(P.x, P.gy - P.H * 1.1, '+' + A.heal, '#cfe3ff', 16); }
+    if (A.anim === 'sprung'){ World.shake(12); World.burst(P.x + P.H * .5, P.gy, 'spark', 16); }
+    const interrupted = A.interrupt && interrupt();
+    hitEnemy(h.d, h.pz, { heavy: true, art: true });
+    if (interrupted) World.pop(c[0], c[1] - E.H * .45, 'Unterbrochen', '#f4c08a', 15);
+  }
+  // Harpune und Haken reißen den Gegner aus dem Ausholen, aber nicht bei roten Angriffen
+  function interrupt(){
     if (en.st !== 'move') return false;
     const nh = en.move.hits[en.hi];
-    if (!nh || nh.t - (T - en.t0) < 140) return false;
-    en.st = 'flinch'; en.until = T + 850; en.move = null; tells.length = 0; E.glow = 0;
-    playAnim(E, [[0, SETS[E.set].stagger], [500, SETS[E.set].stagger], [850, SETS[E.set].idle]]);
+    if (!nh || nh.t - (T - en.t0) < 140 || en.move.hits.some(h => h.k === 'u') && def.boss) return false;
+    en.st = 'flinch'; en.until = T + 850; en.move = null; tells.length = 0; eprojs.length = 0; E.glow = 0;
+    const S = SETS[E.set];
+    playAnim(E, [[0, S.stagger], [500, S.stagger], [850, S.idle]]);
     return true;
   }
 
   /* ---------- Treffer am Gegner ---------- */
   function hitEnemy(d, pz, o){
-    if (en.st === 'dead' || en.st === 'trans') return;
-    let dmg = Math.round(d * pl.dmgMul);
-    if (mode === 'runde' && en.armor > 0){ const ab = Math.min(en.armor, dmg); en.armor -= ab; dmg -= ab; if (ab) World.pop(E.x, E.gy - E.H * 1.05, '−' + ab + ' Panzer', '#aab4c2', 13); }
+    if (en.st === 'dead' || en.st === 'trans' || en.st === 'enter') return;
+    const dmg = Math.max(1, Math.round(d * pl.dmgMul));
     en.hp = Math.max(0, en.hp - dmg);
-    en.pz -= pz; en.lastPz = T; stats.hits++;
+    en.pz -= pz * pl.pzMul; en.lastPz = T; stats.hits++;
     const c = chestPt(E);
     World.pop(c[0] + (rnd() - .5) * 20, c[1] - 10, String(dmg), o.crit ? '#f4d27a' : '#eef1f5', o.crit ? 26 : o.heavy ? 21 : 18);
-    World.burst(c[0], c[1], def.set === 'kette' ? 'spark' : 'drop', o.heavy ? 16 : 9, Math.PI);
+    World.burst(c[0], c[1], def.blut || 'drop', o.heavy ? 16 : 9, Math.PI);
     Snd.play(o.heavy ? 'hitHeavy' : 'hit');
     hitStop = o.crit ? 140 : o.heavy ? 85 : 55;
     E.shake = 140; World.shake(o.crit ? 16 : o.heavy ? 8 : 4);
     buzz(o.heavy ? 25 : 12);
     if (o.crit){ World.flash('#fff', .35); slowUntil = T + 260; World.burst(c[0], c[1], 'gold', 26); }
     if (en.hp <= 0) return enemyDie();
-    if (def.boss && en.phase === 1 && en.hp <= en.hpMax * .5) return phaseChange();
+    if (def.phase2 && en.phase === 1 && en.hp <= en.hpMax * def.phase2.at) return phaseChange();
     if (o.crit){
       en.st = 'idle'; en.pz = en.pzMax; en.next = T + 1000; E.stance = null;
-      if (mode === 'runde'){ tb.broken = false; }
       playAnim(E, [[0, SETS[E.set].hurt], [300, SETS[E.set].stagger], [900, SETS[E.set].idle]]);
       return;
     }
     if (en.pz <= 0 && en.st !== 'broken') return breakPoise();
-    if (mode === 'echt' && en.st === 'idle' && !def.boss){
+    if (en.st === 'idle' && !def.boss){
       en.next = Math.max(en.next, T + 280);
       playAnim(E, [[0, SETS[E.set].hurt], [240, SETS[E.set].idle]]);
     }
   }
   function breakPoise(){
-    en.pz = 0; en.move = null; tells.length = 0; E.glow = 0; E.trailUntil = 0;
+    en.pz = 0; en.move = null; tells.length = 0; eprojs.length = 0; E.glow = en.phase === 2 ? .8 : 0; E.trailUntil = 0;
     Snd.play('hitHeavy'); World.flash('rgba(240,205,120,1)', .12);
     const c = chestPt(E); World.pop(c[0], c[1] - E.H * .5, 'Haltung gebrochen', '#f0cd78', 15);
     E.stance = 'stagger'; playAnim(E, [[0, SETS[E.set].stagger]]);
-    if (mode === 'runde'){ tb.broken = true; tb.intent = { id: 'taumelt', special: SPEZIAL.taumelt }; hook.turn(); en.st = 'broken'; return; }
     en.st = 'broken'; en.until = T + 2700;
   }
+  // Zweite Phase: jeder Boss hat seinen eigenen Auftritt
   function phaseChange(){
-    en.phase = 2; en.st = 'trans'; en.until = T + 2800; en.move = null; tells.length = 0;
-    en.moves = scaleMoves(def.moves, .9); en.pz = en.pzMax; E.stance = null;
-    const S = SETS[E.set];
-    playAnim(E, [[0, S.stagger], [700, S.stagger], [1300, S.W_slam, EASE.io], [1600, S.S_slam, EASE.in], [2200, S.S_slam], [2800, S.idle]]);
+    const ph = def.phase2;
+    en.phase = 2; en.st = 'trans'; en.until = T + 2800; en.move = null; tells.length = 0; eprojs.length = 0;
+    en.moves = scaleMoves(def.moves, ph.tempo || .9); en.pz = en.pzMax; E.stance = null;
+    const S = SETS[E.set], big = S.W_slam ? ['W_slam', 'S_slam'] : ['W_over', 'S_over'];
+    playAnim(E, [[0, S.stagger], [700, S.stagger], [1300, S[big[0]], EASE.io], [1600, S[big[1]], EASE.in], [2200, S[big[1]]], [2800, S.idle]]);
     setTimeout(() => {
       if (!on) return;
-      E.torn = true; E.glow = 1; World.setFlood(1); World.setTint(1); World.shake(22); World.flash('rgba(190,240,236,1)', .25);
-      World.burst(E.x, E.gy, 'drop', 40); World.ring(E.x, E.gy - E.H * .3, 20, E.H * 1.6, 'rgba(190,240,236,.8)', 900, 3);
-      Music.setLevel(1); Snd.play('wave');
+      E.torn = true; E.glow = 1; World.shake(22);
+      if (ph.fx === 'flut'){ World.setFlood(1.2); World.setTint(1); World.flash('rgba(190,240,236,1)', .25); World.burst(E.x, E.gy, 'drop', 40); Snd.play('wave'); }
+      if (ph.fx === 'glocke'){ World.bell(1); World.setFlood(1.6); World.setTint(1); World.flash('rgba(210,220,255,1)', .3); Snd.bell(65.4, .5, 7, .9); }
+      if (ph.fx === 'wut'){ World.flash('rgba(200,60,40,1)', .22); Snd.play('danger'); }
+      World.ring(E.x, E.gy - E.H * .3, 20, E.H * 1.6, ph.fx === 'wut' ? 'rgba(235,110,90,.8)' : 'rgba(190,240,236,.8)', 900, 3);
+      if (def.boss) Music.setLevel(1);
     }, 1600);
-    hook.line(def.line2, 5200, key + '.line2');
-    if (mode === 'runde'){
-      tb.lock = true; tb.broken = false; tb.intent = null; hook.turn();
-      setTimeout(() => { if (!on || ended) return; tb.lock = false; tb.turn--; tbNext(); }, 2900);
-    }
+    if (ph.line) hook.line(ph.line, 5200, key + '.line2');
   }
   function enemyDie(){
-    en.st = 'dead'; en.move = null; tells.length = 0; E.glow = 0;
+    en.st = 'dead'; en.deadT = T; en.move = null; tells.length = 0; eprojs.length = 0; E.glow = 0;
+    glut += Math.round(def.glut * (def.boss ? 1 : dmgScale));
     const S = SETS[E.set];
     playAnim(E, [[0, S.stagger], [400, S.kneel, EASE.out], [1100, S.dead, EASE.io]], true);
     Snd.play(def.boss ? 'bossDie' : 'enemyDie');
     slowUntil = T + (def.boss ? 900 : 400); World.setSlow(true); setTimeout(() => World.setSlow(false), 900);
-    setTimeout(() => { const c = chestPt(E); World.burst(c[0], c[1], 'mist', 16); World.glutFlow(c, chestPt(P), def.boss ? 60 : 24); Snd.play('glut'); }, 900);
+    setTimeout(() => { if (!E) return; const c = chestPt(E); World.burst(c[0], c[1], 'mist', 16); World.glutFlow(c, chestPt(P), def.boss ? 60 : 24); Snd.play('glut'); }, 900);
+    if (idx < queue.length - 1){
+      // Der nächste Gegner tritt aus dem Nebel
+      const dying = E;
+      setTimeout(() => {
+        if (!on || ended || pl.hp <= 0) return;
+        idx++; setupFoe(true);
+        en.st = 'enter'; en.until = T + 900;
+      }, 2000);
+      return;
+    }
     finish('win');
   }
 
   /* ---------- Gegner: Ablauf ---------- */
   function scaleMoves(ms, f){
     const o = {};
-    for (const k in ms){ const m = ms[k]; o[k] = Object.assign({}, m, { dur: m.dur * f, hits: m.hits.map(h => Object.assign({}, h, { t: h.t * f, hold: (h.hold || 0) * f, wave: h.wave })) }); }
+    for (const k in ms){
+      const m = ms[k];
+      o[k] = Object.assign({}, m, { dur: m.dur * f, hits: m.hits.map(h => Object.assign({}, h, { t: h.t * f, hold: (h.hold || 0) * f })) });
+    }
     return o;
   }
   function wpick(list){
@@ -326,16 +375,17 @@ const Fight = (() => {
     return cand[0][0];
   }
   function chooseMove(){
-    let id = wpick(en.phase === 2 ? def.p2 : def.p1);
+    let id = wpick(en.phase === 2 ? def.phase2.p2 : def.p1);
     if (en.forceFast && def.punish){ id = def.punish; en.forceFast = false; }
     en.hist.unshift(id); en.hist.length = 3;
     return en.moves[id];
   }
+  const strikeAt = h => h.t - (h.flug || 0);
   function moveTrack(set, m){
     const S = SETS[set], tr = [[0, S.idle]];
     let t = 0;
     m.hits.forEach(h => {
-      const ts = h.t - (h.wave || 0), lead = h.s === 'lunge' ? 180 : h.s === 'grab' ? 150 : 115;
+      const ts = strikeAt(h), lead = h.s === 'lunge' ? 180 : h.s === 'grab' ? 150 : 115;
       const Wp = S['W_' + h.s], Sp = S['S_' + h.s];
       const wT = ts - lead, reach = Math.max(t + 90, wT - (h.hold || 0) - 40);
       tr.push([reach, Wp, EASE.io]);
@@ -350,20 +400,22 @@ const Fight = (() => {
     return tr;
   }
   function beginMove(m){
-    en.move = m; en.st = 'move'; en.t0 = T; en.hi = 0; en.told = []; en.trailed = [];
+    en.move = m; en.st = 'move'; en.t0 = T; en.hi = 0; en.told = []; en.trailed = []; en.shot = [];
     playAnim(E, moveTrack(E.set, m));
-    if (m.hits.some(h => h.k === 'u')){ E.glow = .6; Snd.play('danger'); }
-    if (mode === 'runde') tbPlanMove(m);
+    if (m.hits.some(h => h.k === 'u')){ E.glow = Math.max(E.glow, .6); Snd.play('danger'); }
   }
-  function tellLead(h){ return h.k === 'u' ? 480 : 320; }
-  function gap(){ const g = en.phase === 2 && def.gap2 ? def.gap2 : def.gap; return rr(g[0], g[1]); }
+  const tellLead = h => h.k === 'u' ? 480 : 320;
+  function gap(){ const g = en.phase === 2 && def.phase2.gap ? def.phase2.gap : def.gap; return rr(g[0], g[1]); }
 
   function stepEnemy(dt){
     if (en.st === 'dead') return;
-    if (mode === 'echt' && en.st !== 'broken' && T - en.lastPz > 1600) en.pz = Math.min(en.pzMax, en.pz + def.pzRegen * dt / 1000);
+    if (en.st !== 'broken' && T - en.lastPz > 1600) en.pz = Math.min(en.pzMax, en.pz + def.pzRegen * dt / 1000);
     switch (en.st){
+      case 'enter':
+        if (T >= en.until){ en.st = 'idle'; en.next = T + 700; }
+        break;
       case 'idle':
-        if (mode !== 'echt' || pl.hp <= 0) break;
+        if (pl.hp <= 0) break;
         if (def.punish && pl.act && pl.act.k === 'heal' && en.next - T > 260){ en.next = T + 180; en.forceFast = true; }
         if (T >= en.next) beginMove(chooseMove());
         break;
@@ -375,38 +427,48 @@ const Fight = (() => {
             tells.push({ at: en.t0 + h.t, from: T, k: h.k, i });
             if (h.k !== 'u') Snd.play('tell');
           }
-          const ts = h.t - (h.wave || 0);
+          const ts = strikeAt(h);
           if (!en.trailed[i] && t >= ts - 130){
-            en.trailed[i] = true; E.trailUntil = E.t + 200;
-            if (h.wave){ World.wave(E.x - E.H * .3, P.x + P.H * .1, h.wave); Snd.play('wave'); World.shake(10); World.burst(E.x - E.H * .3, E.gy, 'drop', 20); }
-            else if (h.s === 'lunge' || h.s === 'grab') Snd.play('heavySwing');
-            else Snd.play(def.set === 'kette' ? 'chain' : 'swing');
+            // Bei Geschossen zieht die Waffe keine Spur, sonst wirkt ein langer Stab wie eine Fahne
+            en.trailed[i] = true; if (!h.flug) E.trailUntil = E.t + 200;
+            if (h.s === 'lunge' || h.s === 'grab') Snd.play('heavySwing');
+            else if (!h.flug) Snd.play(def.klang === 'kette' ? 'chain' : 'swing');
+          }
+          // Geschoss abfeuern
+          if (h.flug && !en.shot[i] && t >= ts){
+            en.shot[i] = true;
+            launch(h);
           }
         });
         if (en.hi < m.hits.length && t >= m.hits[en.hi].t){
-          const h = m.hits[en.hi], i = en.hi; en.hi++;
-          if (mode === 'echt') resolveHit(h); else tbResolve(h, i);
+          const h = m.hits[en.hi]; en.hi++;
+          resolveHit(h);
           if (en.hi >= m.hits.length) E.glow = en.phase === 2 ? 1 : 0;
         }
         if (en.st === 'move' && t >= m.dur){
           en.st = 'idle'; en.move = null; en.next = T + gap();
-          if (mode === 'runde') tbEnemyDone();
         }
         break;
       }
       case 'broken':
-        if (mode === 'echt' && T >= en.until){ en.st = 'idle'; en.pz = en.pzMax; en.next = T + 450; E.stance = null; }
+        if (T >= en.until){ en.st = 'idle'; en.pz = en.pzMax; en.next = T + 450; E.stance = null; }
         break;
       case 'flinch':
         if (T >= en.until){ en.st = 'idle'; en.next = T + 250; }
         break;
       case 'trans':
-        if (T >= en.until){ en.st = 'idle'; en.next = T + 500; E.glow = 1; if (mode === 'runde') hook.turn(); }
+        if (T >= en.until){ en.st = 'idle'; en.next = T + 500; E.glow = 1; }
         break;
     }
   }
+  function launch(h){
+    const from = weaponTip(E), sfx = { welle: 'wave', salz: 'danger', netz: 'heavySwing', klang: 'geleut' }[h.proj];
+    if (h.proj === 'welle'){ World.wave(E.x - E.H * .3, P.x + P.H * .1, h.flug); World.shake(10); World.burst(E.x - E.H * .3, E.gy, 'drop', 20); }
+    else eprojs.push({ kind: h.proj, t0: T, t1: T + h.flug, from, k: h.k });
+    if (sfx) Snd.play(sfx);
+  }
 
-  /* ---------- Treffer am Spieler (Reaktion) ---------- */
+  /* ---------- Treffer am Spieler ---------- */
   function resolveHit(h){
     if (pl.hp <= 0) return;
     const d = Math.round(h.d * en.dmgMul), a = pl.act, t = a ? T - a.t0 : 0;
@@ -419,11 +481,7 @@ const Fight = (() => {
     if (h.k === 'p' && defending && T - pl.blockPress <= PARRY_WIN) return parried(h);
     if (h.k !== 'u' && a && (a.k === 'block' || a.k === 'parry') && (pl.blockHeld || a.k === 'parry')){
       const cost = d * pl.blockSt * 1.15;
-      if (pl.st >= cost * .5){
-        spend(cost);
-        blocked(Math.round(d * (1 - pl.block)));
-        return;
-      }
+      if (pl.st >= cost * .5){ spend(cost); blocked(Math.round(d * (1 - pl.block))); return; }
       World.pop(P.x, P.gy - P.H * 1.15, 'Deckung gebrochen', '#e08a7e', 13);
       damagePlayer(Math.round(d * .7), 700);
       return;
@@ -438,16 +496,16 @@ const Fight = (() => {
   }
   function parried(h){
     stats.parries++;
-    pl.fp = Math.min(pl.fpMax, pl.fp + 10);
+    pl.fp = Math.min(pl.fpMax, pl.fp + pl.parryFp);
     const s = P.sk ? toWorld(P, P.look.off === 'schild' ? P.sk.handB : P.sk.handA) : chestPt(P);
     Snd.play('parry'); World.burst(s[0] + 8, s[1], 'gold', 22, 0); World.ring(s[0] + 8, s[1], 6, P.H * .7, 'rgba(240,205,120,.95)', 380, 2.5);
     World.flash('rgba(240,205,120,1)', .1); World.pop(P.x, P.gy - P.H * 1.15, 'Pariert', '#f0cd78', 16);
     hitStop = 95; World.shake(6); E.shake = 220; buzz(20);
     playAnim(P, [[0, P_SET().parry], [180, P_SET().parry], [320, pl.blockHeld ? P_SET().block : P_SET().idle]]);
-    en.pz -= def.boss ? 30 : 22; en.lastPz = T;
+    en.pz -= (def.boss ? 30 : 22) * pl.pzMul; en.lastPz = T;
     if (en.pz <= 0) return breakPoise();
     // Wer den letzten Schlag pariert, bekommt eine Lücke
-    if (mode === 'echt' && en.move && en.hi >= en.move.hits.length){
+    if (en.move && en.hi >= en.move.hits.length){
       en.st = 'flinch'; en.until = T + 700; en.move = null; tells.length = 0;
       playAnim(E, [[0, SETS[E.set].hurt], [300, SETS[E.set].hurt], [700, SETS[E.set].idle]]);
     }
@@ -466,8 +524,7 @@ const Fight = (() => {
     hitStop = 70; P.shake = 160;
     if (pl.hp <= 0) return die();
     const a = pl.act;
-    if (a && a.k === 'art' && a.art.id === 'kronhieb' && T - a.t0 > 120 && T - a.t0 < a.hit) return;   // unerschütterlich im Sprung
-    if (mode === 'runde' && tb){ playAnim(P, [[0, P_SET().hurt], [300, P_SET().hurt], [520, P_SET().idle]]); return; }
+    if (a && a.k === 'art' && a.art.hyper && T - a.t0 > a.art.hyper[0] && T - a.t0 < a.art.hyper[1]) return;   // unerschütterlich
     pl.act = null; pl.buf = null; P.glow = 0; P.hideW = false;
     act('hurt', { dur: stun });
     playAnim(P, [[0, P_SET().hurt], [stun * .6, P_SET().hurt], [stun, P_SET().idle]]);
@@ -476,130 +533,12 @@ const Fight = (() => {
     pl.hp = 0; pl.act = { k: 'dead', t0: T }; pl.buf = null; P.glow = 0; P.hideW = false;
     const S = P_SET();
     playAnim(P, [[0, S.hurt], [500, S.kneel, EASE.out], [1300, S.dead, EASE.io]], true);
-    en.move = null; tells.length = 0;
+    en.move = null; tells.length = 0; eprojs.length = 0;
     if (en.st !== 'dead') en.st = 'idle';
     en.next = 1e12;
     slowUntil = T + 700; World.setSlow(true);
     Snd.play('death');
     finish('dead');
-  }
-
-  /* =====================================================================
-     RUNDENKAMPF
-     ===================================================================== */
-  const COST = { atk: 1, heavy: 2, block: 1, parry: 2, dodge: 2, flask: 1, art: 2, crit: 1 };
-  // Im Rundenkampf lässt sich ein verzögerter Hieb nicht parieren
-  const tbKind = h => h.k === 'p' && (h.hold || 0) >= 500 ? 'b' : h.k;
-  function tbStart(){
-    tb = { ap: 4, apMax: 4, lock: false, block: 0, parry: false, dodge: 0, busy: false, enemyTurn: false, intent: null, broken: false, turn: 1, plan: null, lastSpecial: '' };
-    tb.intent = tbChoose();
-    hook.turn();
-  }
-  function tbChoose(){
-    const list = en.phase === 2 ? def.tb2 : def.tb1;
-    if (tb.forced){ const f = tb.forced; tb.forced = null; return { id: f, move: en.moves[f] }; }
-    let id = wpick(list.filter(([i]) => !(SPEZIAL[i] && i === tb.lastSpecial)));
-    en.hist.unshift(id); en.hist.length = 3;
-    if (SPEZIAL[id]){ tb.lastSpecial = id; return { id, special: SPEZIAL[id] }; }
-    tb.lastSpecial = '';
-    return { id, move: en.moves[id] };
-  }
-  function tbCan(k){
-    if (!on || !tb || tb.busy || tb.lock || ended || pl.hp <= 0 || en.st === 'dead' || en.st === 'trans') return false;
-    if (tb.ap < COST[k]) return false;
-    if (k === 'crit') return tb.broken;
-    if (k === 'flask') return pl.flasks > 0;
-    if (k === 'art') return pl.fp >= herk.art.fp;
-    if (k === 'parry') return !tb.parry;
-    return true;
-  }
-  function tbAct(k){
-    if (!tbCan(k)) return false;
-    tb.ap -= COST[k];
-    const S = P_SET();
-    switch (k){
-      case 'atk': tb.busy = true; startLight(); break;
-      case 'heavy':
-        tb.busy = true; startHeavy();
-        pl.act.t0 = T - 400;   // im Rundenkampf ohne Aufladen
-        setTimeout(() => { if (on && pl.act && pl.act.k === 'heavyW') releaseHeavy(); }, 120);
-        break;
-      case 'crit': tb.busy = true; startCrit(); break;
-      case 'art': tb.busy = true; startArt(); break;
-      case 'flask': tb.busy = true; startHeal(); break;
-      case 'block':
-        tb.block += pl.tbBlock; P.stance = 'block'; Snd.play('block');
-        playAnim(P, [[0, S.parry], [160, S.block]]);
-        World.pop(P.x, P.gy - P.H * 1.1, '+' + pl.tbBlock + ' Schutz', '#c9d3e0', 13);
-        break;
-      case 'parry':
-        tb.parry = true; P.stance = 'block'; Snd.play('tell');
-        playAnim(P, [[0, S.block], [200, S.parry], [360, S.block]]);
-        World.pop(P.x, P.gy - P.H * 1.1, 'Parade bereit', '#f0cd78', 13);
-        break;
-      case 'dodge':
-        tb.dodge++; Snd.play('dodge');
-        playAnim(P, [[0, mkPose({ x: -.12 }, S.dodge)], [200, S.idle]]);
-        World.pop(P.x, P.gy - P.H * 1.1, 'Ausweichen bereit', '#bcd3f5', 13);
-        break;
-    }
-    hook.turn();
-    return true;
-  }
-  function tbEnd(){
-    if (!on || !tb || tb.busy || tb.lock || !tb.intent || ended || pl.hp <= 0 || en.st === 'dead' || en.st === 'trans') return;
-    tb.busy = true; tb.enemyTurn = true; en.armor = 0;
-    const it = tb.intent;
-    hook.turn();
-    if (it.move){ setTimeout(() => { if (on && !ended) beginMove(it.move); }, 250); return; }
-    // Kein Angriff
-    const S = SETS[E.set];
-    let wait = 900;
-    if (it.id === 'lauern'){ en.buff = 1.5; playAnim(E, [[0, S.W_grab], [500, S.W_grab], [900, S.idle]]); Snd.play('lure'); }
-    if (it.id === 'panzer'){ en.armor = 12; playAnim(E, [[0, S.recover], [500, S.recover], [900, S.idle]]); Snd.play('chain'); }
-    if (it.id === 'sammeln'){ en.pz = Math.min(en.pzMax, en.pz + en.pzMax * .4); playAnim(E, [[0, S.recover], [600, S.recover], [900, S.idle]]); Snd.play('lure'); }
-    if (it.id === 'flutsammeln'){ tb.forced = 'flut'; World.setFlood(1.6); playAnim(E, [[0, S.W_slam], [700, S.W_slam], [1100, S.idle]]); Snd.play('rise'); wait = 1200; }
-    if (it.id === 'taumelt' || it.id === 'gestoert') wait = 700;
-    if (it.special) World.pop(E.x, E.gy - E.H * 1.1, it.special.name, '#c9d3e0', 14);
-    setTimeout(() => {
-      if (!on || ended) return;
-      if (it.id === 'taumelt'){ tb.broken = false; en.st = 'idle'; en.pz = en.pzMax; E.stance = null; }
-      tbNext();
-    }, wait);
-  }
-  function tbPlanMove(m){
-    let block = tb.block, parry = tb.parry, dodge = tb.dodge;
-    tb.plan = m.hits.map(h => {
-      const d = Math.round(h.d * en.dmgMul * en.buff), k = tbKind(h);
-      if (k === 'p' && parry){ parry = false; return { r: 'parry' }; }
-      if (k === 'u'){ if (dodge > 0){ dodge--; return { r: 'dodge' }; } return { r: 'hit', d }; }
-      if (block >= d){ block -= d; return { r: 'block', d: 0 }; }
-      if (dodge > 0){ dodge--; return { r: 'dodge' }; }
-      const ab = block; block = 0;
-      return { r: ab ? 'block' : 'hit', d: d - ab };
-    });
-    en.buff = 1;
-    // Abwehrbewegungen rechtzeitig vor dem Treffer
-    m.hits.forEach((h, i) => {
-      const p = tb.plan[i];
-      if (p.r === 'dodge') setTimeout(() => { if (!on) return; const S = P_SET(); playAnim(P, [[0, S.dodge], [300, S.dodge], [DODGE.dur, S.idle]]); Snd.play('dodge'); World.ghost(P); }, Math.max(0, h.t - 170));
-      if (p.r === 'parry') setTimeout(() => { if (!on) return; playAnim(P, [[0, P_SET().parry], [260, P_SET().parry], [420, P_SET().block]]); }, Math.max(0, h.t - 120));
-    });
-  }
-  function tbResolve(h, i){
-    const p = tb.plan && tb.plan[i]; if (!p || pl.hp <= 0) return;
-    if (p.r === 'dodge'){ World.pop(P.x, P.gy - P.H * 1.1, 'Ausgewichen', '#bcd3f5', 13); return; }
-    if (p.r === 'parry') return parried(h);
-    if (p.r === 'block'){ blocked(p.d); return; }
-    damagePlayer(p.d, 380);
-  }
-  function tbEnemyDone(){ setTimeout(() => { if (on && !ended) tbNext(); }, 350); }
-  function tbNext(){
-    if (pl.hp <= 0 || en.st === 'dead') return;
-    tb.turn++; tb.ap = tb.apMax; tb.block = 0; tb.parry = false; tb.dodge = 0; tb.busy = false; tb.enemyTurn = false; P.stance = null;
-    if (!tb.broken) en.pz = Math.min(en.pzMax, en.pz + en.pzMax * .12);
-    tb.intent = tb.broken ? { id: 'taumelt', special: SPEZIAL.taumelt } : tbChoose();
-    hook.turn();
   }
 
   /* ---------- Pro Bild ---------- */
@@ -611,21 +550,24 @@ const Fight = (() => {
     T += dt;
     if (pl.hp > 0) stepPlayer();
     stepEnemy(dt);
-    if (mode === 'echt' && pl.hp > 0){
+    if (pl.hp > 0){
       const busy = pl.act && pl.act.k !== 'block' && pl.act.k !== 'parry' && pl.act.k !== 'hurt';
       const blocking = pl.act && (pl.act.k === 'block' || pl.act.k === 'parry');
-      if (!busy && T - pl.lastSpend > 520) pl.st = Math.min(pl.stMax, pl.st + (blocking ? 20 : 55) * dt / 1000);
+      if (!busy && T - pl.lastSpend > 520) pl.st = Math.min(pl.stMax, pl.st + (blocking ? 20 : 55) * pl.stRegen * dt / 1000);
     }
     if (E.torn) E.glow = Math.max(E.glow, .8);
+    // Besiegte Gegner lösen sich langsam auf
+    if (en.st === 'dead') E.alpha = clamp(1 - (T - en.deadT - 1300) / 700, 0, 1);
+    Stage.update(dt);
     updateActor(P, dt); updateActor(E, dt);
     for (let i = tells.length - 1; i >= 0; i--) if (T > tells[i].at + 200) tells.splice(i, 1);
+    for (let i = eprojs.length - 1; i >= 0; i--) if (T > eprojs[i].t1 + 120) eprojs.splice(i, 1);
   }
 
-  /* ---------- Zeichnen: Warnzeichen und Wurfgeschoss ---------- */
+  /* ---------- Zeichnen: Warnzeichen und Geschosse ---------- */
   const TELL_COL = { p: '240,205,120', b: '225,232,240', u: '235,90,70' };
   function drawFx(ctx){
     if (!on) return;
-    // rote Aura bei Angriffen, die nur Ausweichen erlauben
     if (en.st === 'move' && en.move && en.move.hits.slice(en.hi).some(h => h.k === 'u')){
       const c = chestPt(E), r = E.H * .75, pulse = .5 + .5 * Math.sin(T * .02);
       const g = ctx.createRadialGradient(c[0], c[1], r * .2, c[0], c[1], r);
@@ -636,7 +578,6 @@ const Fight = (() => {
     drawTrail(ctx, E, en.phase === 2 ? 'rgba(170,235,228,1)' : 'rgba(214,224,238,1)');
     for (const tl of tells){
       const left = tl.at - T, col = TELL_COL[tl.k];
-      // Aufblitzen an der Waffe
       if (left < 320 && left > 80){
         const tip = weaponTip(E), k = 1 - (left - 80) / 240, s = Math.min(E.H, P.H * 1.1) * (.04 + .08 * Math.sin(k * Math.PI));
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = Math.sin(k * Math.PI);
@@ -645,8 +586,7 @@ const Fight = (() => {
         ctx.lineTo(tip[0], tip[1] + s * 2); ctx.lineTo(tip[0] - s * .3, tip[1] + s * .3); ctx.lineTo(tip[0] - s * 2, tip[1]); ctx.lineTo(tip[0] - s * .3, tip[1] - s * .3); ctx.closePath(); ctx.fill();
         ctx.restore();
       }
-      // Zeitring um den Spieler
-      if (S.ring && mode === 'echt' && left > 0 && left < 700){
+      if (S.ring && left > 0 && left < 700){
         const c = chestPt(P), k = 1 - left / 700, r0 = P.H * .38, r = r0 + (1 - k) * P.H * .9;
         ctx.save();
         ctx.strokeStyle = `rgba(${col},${.15 + k * .55})`; ctx.lineWidth = 1.5 + k * 1.5;
@@ -655,6 +595,31 @@ const Fight = (() => {
         ctx.beginPath(); ctx.arc(c[0], c[1], r0, 0, TAU); ctx.stroke();
         ctx.restore();
       }
+    }
+    // Geschosse der Gegner
+    for (const g of eprojs){
+      const k = clamp((T - g.t0) / (g.t1 - g.t0), 0, 1), to = chestPt(P);
+      const x = lerp(g.from[0], to[0], k), y = lerp(g.from[1], to[1], k) - Math.sin(k * Math.PI) * P.H * .25;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      if (g.kind === 'salz'){
+        for (let i = 0; i < 4; i++){
+          const ox = Math.cos(T * .02 + i * 1.6) * 7, oy = Math.sin(T * .025 + i * 1.6) * 5;
+          ctx.fillStyle = 'rgba(235,245,255,.85)';
+          ctx.beginPath(); ctx.moveTo(x + ox, y + oy - 6); ctx.lineTo(x + ox + 3, y + oy); ctx.lineTo(x + ox, y + oy + 6); ctx.lineTo(x + ox - 3, y + oy); ctx.fill();
+        }
+        if (rnd() < .5) World.burst(x, y, 'spark', 1);
+      } else if (g.kind === 'netz'){
+        ctx.strokeStyle = 'rgba(210,220,225,.7)'; ctx.lineWidth = 1;
+        const r = P.H * (.08 + .14 * k);
+        for (let i = 0; i < 6; i++){ const an = i / 6 * TAU + T * .003; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(an) * r, y + Math.sin(an) * r); ctx.stroke(); }
+        ctx.beginPath(); ctx.arc(x, y, r * .6, 0, TAU); ctx.stroke();
+      } else if (g.kind === 'klang'){
+        ctx.strokeStyle = `rgba(200,225,255,${.8 - k * .3})`; ctx.lineWidth = 3;
+        const r = P.H * (.2 + .5 * k);
+        ctx.beginPath(); ctx.arc(x, y, r, Math.PI * .6, Math.PI * 1.4); ctx.stroke();
+        ctx.beginPath(); ctx.arc(x + 14, y, r * .8, Math.PI * .6, Math.PI * 1.4); ctx.stroke();
+      }
+      ctx.restore();
     }
     // Harpune im Flug
     for (let i = projs.length - 1; i >= 0; i--){
@@ -674,11 +639,12 @@ const Fight = (() => {
   }
 
   return {
-    start, stop, update, drawFx, press, release, tbAct, tbEnd, tbCan, tbKind, hook,
-    on: () => on, mode: () => mode, def: () => def, pl: () => pl, en: () => en, tb: () => tb, key: () => key,
+    start, stop, update, drawFx, press, release, hook,
+    on: () => on, def: () => def, pl: () => pl, en: () => en, key: () => key,
+    count: () => [idx, queue.length], glut: () => glut,
     setPaused(v){ paused = v; if (v && pl){ pl.blockHeld = false; pl.heavyHeld = false; } },
-    paused: () => paused, herk: () => herk, COST,
+    paused: () => paused,
     critReady: () => on && en && en.st === 'broken',
-    debug: () => ({ T, pl, en, tb, tells })
+    debug: () => ({ T, pl, en, tells, W })
   };
 })();

@@ -8,7 +8,7 @@ Mögliche Stimmen für Erzähler und Strandvogt, zum Anhören und Auswählen. Si
 
 ## Eine Probe ins Spiel übernehmen
 
-1. Die `einstellung` der gewählten Probe aus `proben.json` als Eintrag in `SPRECHER` in `src/daten.js` eintragen (für den Erzähler unter `erzaehler`, für den Boss unter `vogt`).
+1. Die `einstellung` der gewählten Probe aus `proben.json` als Eintrag in `SPRECHER` in `src/daten-welt.js` eintragen (für den Erzähler unter `erzaehler`, für den Boss unter `vogt`).
 2. Aufnahmen erzeugen: `python3 mond/stimme.py --modelle ORDNER_MIT_STIMMEN`
 3. Mit Stimmen bauen: `python3 mond/build.py --stimmen`
 

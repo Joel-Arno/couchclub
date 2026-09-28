@@ -4,6 +4,7 @@
     python3 couchclub/build.py --out _site
 
 - spiele.html (Kerker-Wischer und Lichtläufer) wird frisch aus spiel/src gebaut
+- mond.html (Mondgeläut) wird frisch aus mond/src gebaut
 - index.html bekommt das volle Grundgerüst mit Manifest, App-Symbolen und Service Worker
 - sw.js bekommt eine Version aus dem Inhalt aller Dateien, damit Handys Änderungen erkennen
 
@@ -30,7 +31,7 @@ HEAD = """<!DOCTYPE html>
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#ECE7E1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#161218" media="(prefers-color-scheme: dark)">
-<meta name="description" content="Spieleabend auf einem Handy: Spiele gegen die KI oder zu zweit, dazu Kerker-Wischer und Lichtläufer.">
+<meta name="description" content="Spieleabend auf einem Handy: Spiele gegen die KI oder zu zweit, dazu Kerker-Wischer, Lichtläufer und Mondgeläut.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Couchclub">
@@ -50,8 +51,8 @@ if ('serviceWorker' in navigator) addEventListener('load', () => navigator.servi
 """
 
 
-def spiel_build():
-    spec = importlib.util.spec_from_file_location("spiel_build", ROOT / "spiel" / "build.py")
+def load_build(folder):
+    spec = importlib.util.spec_from_file_location(folder + "_build", ROOT / folder / "build.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -74,13 +75,14 @@ def main():
     (out / "icons").mkdir(parents=True)
 
     (out / "index.html").write_text(page(), encoding="utf-8")
-    (out / "spiele.html").write_text(spiel_build().build(couchclub=True), encoding="utf-8")
+    (out / "spiele.html").write_text(load_build("spiel").build(couchclub=True), encoding="utf-8")
+    (out / "mond.html").write_text(load_build("mond").build(couchclub=True), encoding="utf-8")
     for f in STATIC:
         shutil.copy2(HERE / f, out / f)
     for f in ICONS:
         shutil.copy2(HERE / "icons" / f, out / "icons" / f)
 
-    files = ["./", "index.html", "spiele.html"] + STATIC + ["icons/" + f for f in ICONS]
+    files = ["./", "index.html", "spiele.html", "mond.html"] + STATIC + ["icons/" + f for f in ICONS]
     digest = hashlib.sha256()
     for f in sorted(p for p in out.rglob("*") if p.is_file()):
         digest.update(f.relative_to(out).as_posix().encode())

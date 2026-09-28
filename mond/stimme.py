@@ -6,8 +6,9 @@
     python3 mond/stimme.py --liste                     nur die Sprechzeilen anzeigen
     python3 mond/stimme.py --pruefen [ID ...]          Aufnahmen mit Spracherkennung gegenlesen
 
-Welche Zeilen es gibt und wer sie spricht, steht in src/daten.js (stimmZeilen und
-SPRECHER). Das Skript liest das über Node aus, damit Text und Stimme nie auseinanderlaufen.
+Welche Zeilen es gibt und wer sie spricht, steht in src/daten-welt.js (stimmZeilen und
+SPRECHER, die Gegner kommen aus src/daten-kampf.js). Das Skript liest das über Node aus,
+damit Text und Stimme nie auseinanderlaufen.
 
 Voraussetzungen, nur zum Erzeugen (das Spiel selbst braucht nichts davon):
     pip install piper-tts lameenc
@@ -46,7 +47,7 @@ AUSSPRACHE = {
 
 
 def zeilen():
-    js = (SRC / "daten.js").read_text(encoding="utf-8")
+    js = "\n".join((SRC / f).read_text(encoding="utf-8") for f in ("daten-kampf.js", "daten-welt.js"))
     code = js + "\nprocess.stdout.write(JSON.stringify({ z: stimmZeilen(), s: SPRECHER }));"
     res = subprocess.run(["node", "-e", code], capture_output=True, text=True, check=True)
     data = json.loads(res.stdout)
