@@ -25,7 +25,9 @@ FONTS = [
     ("IBM Plex Sans", "plexsans-400.woff2", "normal", "400"),
     ("IBM Plex Sans", "plexsans-600.woff2", "normal", "600 700"),
 ]
-JS = ["core.js", "figuren.js", "wesen.js", "welt.js", "daten-kampf.js", "daten-welt.js", "stimme.js", "kampf.js", "ablauf.js"]
+JS = ["core.js", "figuren.js", "wesen.js", "level.js", "themen.js", "szene.js", "eingabe.js",
+      "daten-kampf.js", "daten-welt.js", "lore.js", "karten-bild.js", "karten.js", "skripte.js", "stimme.js",
+      "kampf.js", "erkundung.js", "prolog.js", "menues.js", "ablauf.js"]
 
 
 def font_css():

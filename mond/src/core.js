@@ -36,9 +36,9 @@ const reduceMotion = !!(window.matchMedia && matchMedia('(prefers-reduced-motion
 const DEBUG = /(^|#|&)test$/.test(location.hash);
 
 /* ---------- Einstellungen (nur auf diesem Gerät) ---------- */
-const SET_KEY = 'mondgelaeut-einstellungen-v1';
+const SET_KEY = 'mondgelaeut-einstellungen-v2';
 const S = (() => {
-  const d = { sound: true, voice: true, ring: true, vib: true, tut: false };
+  const d = { sound: true, voice: true, ring: false, vib: true, tut: false };
   try { Object.assign(d, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch (e) {}
   // Im Couchclub gelten Ton und Vibration von dort
   if (EMB){ d.sound = EMB.sound; d.vib = EMB.vibe; }
@@ -143,7 +143,18 @@ const Snd = (() => {
     heart(){ const t = now(); bell(98, .11, 2.4, .6, t); bell(98, .075, 2, .6, t + .3); },
     fire(){ const t = now(); noise(t, 1.4, 'bandpass', 420, .8, .16, .3, 900, .35); bell(392, .1, 3, .7, t + .15); },
     rise(){ const t = now(); noise(t, 1.4, 'lowpass', 200, .7, .12, .4, 700, .6); },
-    lure(){ tone('sine', 196, now(), .3, 1.4, .05, .7, 147); }
+    lure(){ tone('sine', 196, now(), .3, 1.4, .05, .7, 147); },
+    // Erkunden
+    schritt(){ const t = now(); noise(t, .045, 'lowpass', 700 + rnd() * 500, .8, .045, .02); },
+    platsch(){ const t = now(); noise(t, .14, 'bandpass', 900 + rnd() * 500, 1.2, .06, .08, 2200); },
+    sprung(){ const t = now(); noise(t, .09, 'bandpass', 480, 1, .05, .02, 900); },
+    landen(){ const t = now(); tone('sine', 95, t, .002, .12, .12, 0, 50); noise(t, .1, 'lowpass', 700, .7, .1, .04); },
+    bemerkt(){ const t = now(); tone('triangle', 880, t, .002, .09, .05, .2); tone('triangle', 1175, t + .08, .002, .14, .05, .3); tone('sawtooth', 110, t, .02, .3, .04, .2, 80); },
+    tuer(){ const t = now(); tone('sawtooth', 120, t, .08, .45, .025, .2, 84); noise(t + .1, .35, 'bandpass', 380, 3, .06, .3); tone('sine', 70, t + .45, .002, .2, .12, .2, 45); },
+    hebel(){ const t = now(); tone('square', 190, t, .002, .06, .05, .1, 120); noise(t, .12, 'bandpass', 1500, 4, .12, .15); tone('sine', 85, t + .05, .002, .18, .12, .1, 50); },
+    gitter(){ const t = now(); for (let i = 0; i < 14; i++) tone('square', 1300 + rnd() * 900, t + i * .07, .001, .03, .02, .15); noise(t, 1.2, 'lowpass', 220, .8, .2, .3, 120, .2); },
+    bruch(){ const t = now(); noise(t, 1.1, 'lowpass', 900, .7, .4, .3, 140, .01); tone('sine', 62, t, .005, .7, .35, .2, 32); for (let i = 0; i < 6; i++) noise(t + .1 + rnd() * .6, .05, 'bandpass', 1400 + rnd() * 1500, 2, .07, .1); },
+    thunder(){ const t = now(); noise(t, 3.2, 'lowpass', 160, .7, .38, .5, 60, .08); noise(t, .25, 'lowpass', 1200, .7, .18, .3, 300, .01); }
   };
   function play(name, ...args){
     if (!ac || !S.sound || !P[name]) return;
@@ -161,8 +172,9 @@ const Music = (() => {
   // d-Moll, B-Dur, g-Moll, A-Dur
   const CHORDS = [[50, 53, 57], [46, 50, 53], [43, 46, 50], [45, 49, 52]];
 
+  const RUHIG = ['amb', 'marsch', 'stadt', 'hoehle', 'turm'];
   function stepDur(){
-    if (mode === 'amb') return .5;
+    if (RUHIG.includes(mode)) return .5;
     if (mode === 'kampf') return 60 / 86 / 2;
     return 60 / (level ? 94 : 76) / 2;
   }
@@ -184,9 +196,15 @@ const Music = (() => {
     const ac = Snd.ac();
     if (!ac || !m) return;
     bus = ac.createGain(); bus.gain.value = .0001;
-    bus.gain.exponentialRampToValueAtTime(m === 'amb' ? .8 : .7, ac.currentTime + 2.5);
+    bus.gain.exponentialRampToValueAtTime(RUHIG.includes(m) ? .8 : .7, ac.currentTime + 2.5);
     bus.connect(duckNode());
     if (m === 'amb') { sea(.16); drone([38, 45], .045, 380); }
+    // Jede Gegend klingt anders: Marsch mit Wind und Wiegenlied, Stadt mit fernen Glocken,
+    // Höhlen und Häuser ohne Meer, dafür Tropfen, im Turm die große Glocke
+    if (m === 'marsch') { sea(.05); wind(.05); drone([40, 47], .04, 300); }
+    if (m === 'stadt') { sea(.08); wind(.03); drone([36, 43], .045, 320); }
+    if (m === 'hoehle') { drone([33, 40], .05, 220); }
+    if (m === 'turm') { wind(.07); drone([31, 38], .05, 260); }
     if (m === 'kampf') { sea(.08); drone([38, 50], .05, 260); }
     if (m === 'boss') { sea(.06); drone([26, 38], .1, 190); }
     nextT = ac.currentTime + .15; step = 0;
@@ -219,6 +237,14 @@ const Music = (() => {
     s.buffer = Snd.noiseBuf(); s.loop = true; f.type = 'lowpass'; f.frequency.value = 520; f.Q.value = .4;
     g.gain.value = vol * .6; lfo.frequency.value = .085; lg.gain.value = vol * .5;
     lfo.connect(lg); lg.connect(g.gain);
+    s.connect(f); f.connect(g); g.connect(bus);
+    s.start(); lfo.start(); held.push(s, lfo);
+  }
+  function wind(vol){
+    const ac = Snd.ac(), s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    const lfo = ac.createOscillator(), lg = ac.createGain();
+    s.buffer = Snd.noiseBuf(); s.loop = true; f.type = 'bandpass'; f.frequency.value = 700; f.Q.value = .8;
+    g.gain.value = vol * .6; lfo.frequency.value = .05; lg.gain.value = 380; lfo.connect(lg); lg.connect(f.frequency);
     s.connect(f); f.connect(g); g.connect(bus);
     s.start(); lfo.start(); held.push(s, lfo);
   }
@@ -266,6 +292,27 @@ const Music = (() => {
     if (mode === 'amb'){
       if (i % 14 === 0) { Snd.bell(98, .07, 2.4, .7, t); Snd.bell(98, .05, 2, .7, t + .3); }
       if (i % 29 === 11) Snd.bell(hz(pickNote([74, 77, 81, 69])), .018, 3.5, .9, t);
+      return;
+    }
+    if (mode === 'marsch'){
+      if (i % 18 === 0) { Snd.bell(98, .045, 2.2, .7, t); Snd.bell(98, .03, 2, .7, t + .3); }
+      // Wendas Wiegenlied, ganz leise aus der Ferne
+      const w = i % 48; if (w >= 20 && w < 27) Snd.bell(hz([69, 72, 71, 67, 69, 64, 67][w - 20] + 12), .012, 2.6, .95, t);
+      return;
+    }
+    if (mode === 'stadt'){
+      if (i % 14 === 0) { Snd.bell(98, .05, 2.2, .7, t); Snd.bell(98, .035, 2, .7, t + .3); }
+      if (i % 23 === 5) Snd.bell(pickNote([65.4, 73.4, 82.4, 110]), .045, 5, .92, t);
+      return;
+    }
+    if (mode === 'hoehle'){
+      if (i % 16 === 0) { Snd.bell(98, .04, 2, .6, t); Snd.bell(98, .028, 1.8, .6, t + .3); }
+      if (rnd() < .09) Snd.tone('sine', 1600 + rnd() * 1600, t + rnd() * .4, .001, .09, .018, .7, 900);
+      return;
+    }
+    if (mode === 'turm'){
+      if (i % 24 === 0) Snd.bell(73.4, .09, 7, .9, t);
+      if (i % 24 === 12) { Snd.bell(98, .04, 2, .7, t); Snd.bell(98, .028, 1.8, .7, t + .3); }
       return;
     }
     if (mode === 'kampf'){

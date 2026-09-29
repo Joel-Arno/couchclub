@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>Mondgeläut</title>
-<meta name="description" content="Mondgeläut, Akt I: ein düsteres Solo-Abenteuer im Couchclub. Strandung, Salzmarsch und die versunkene Stadt Velmora, mit Leuchtfeuern, Bossen und Reaktionskampf.">
-<meta name="theme-color" content="#0A0D12">
+<meta name="description" content="Mondgeläut, Akt I: ein düsteres Abenteuer im Couchclub. Erkunde Strandung, Salzmarsch und die versunkene Stadt Velmora, kämpfe im richtigen Moment und finde heraus, warum nur du die Glocke hörst.">
+<meta name="theme-color" content="#050608">
 <style>/*@FONTS@*/</style>
 <style>/*@CSS@*/</style>
 </head>
@@ -24,36 +24,41 @@
     <p class="t-foot"><button type="button" class="link" id="btnSound">Ton: an</button><button type="button" class="link" id="btnVoice" hidden>Stimme: an</button><button type="button" class="link" id="btnLeave" hidden>Zum Couchclub</button><span id="tHint">Mit Kopfhörern am schönsten</span></p>
   </section>
 
-  <!-- ===================== ORT, LEUCHTFEUER, GESPRÄCH ===================== -->
-  <section class="screen story" id="ort" hidden>
-    <div class="o-bar">
+  <!-- ===================== PROLOG ===================== -->
+  <section class="screen prolog" id="prolog" hidden>
+    <p class="p-text" id="pText" aria-live="polite"></p>
+    <button type="button" class="link p-skip" id="pSkip">Überspringen</button>
+  </section>
+
+  <!-- ===================== ERKUNDUNG ===================== -->
+  <section class="screen welt" id="welt" hidden>
+    <div class="w-top">
+      <div class="w-stat">
+        <div class="bar w-hp" id="wHpBar"><i class="lag" id="wLag"></i><i class="fill" id="wHp"></i></div>
+        <div class="w-sub"><span class="w-phiolen" id="wPhiolen"></span><span class="w-glut"><small>Glut</small><b id="wGlut">0</b></span></div>
+      </div>
       <button type="button" class="icon-btn" id="btnKarte" aria-label="Karte">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5l5-2 6 2 5-2v13l-5 2-6-2-5 2zM9 4.5v13M15 6.5v13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
       </button>
-      <p class="o-where" id="oWhere"></p>
-      <div class="glut" aria-label="Glut"><small>Glut</small><b id="oGlut">0</b></div>
       <button type="button" class="icon-btn" id="btnMenue" aria-label="Ausrüstung und Einstellungen">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
     </div>
-    <div class="st-panel" id="stPanel">
-      <p class="st-place" id="stPlace"></p>
-      <div class="st-text" id="stText" aria-live="polite"></div>
-      <dl class="f-stats" id="stStats" hidden></dl>
-      <div class="st-choices" id="stChoices"></div>
-    </div>
-  </section>
-
-  <!-- ===================== KARTE ===================== -->
-  <section class="screen karte" id="karte" hidden>
-    <div class="k-head">
-      <div class="k-tabs" id="kTabs" role="tablist" aria-label="Gebiete"></div>
-      <button type="button" class="icon-btn" id="btnKarteZu" aria-label="Karte schließen">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <p class="w-ort" id="wOrt"></p>
+    <p class="w-hinweis" id="wHinweis" hidden></p>
+    <div class="w-stick" id="wStick" aria-label="Laufen: hier tippen und ziehen"><div class="w-ring" id="wRing"><i id="wKnopf"></i></div><span class="w-stick-hilfe" id="wStickHilfe">Ziehen zum Laufen</span></div>
+    <div class="w-knoepfe">
+      <button type="button" class="w-aktion" id="wAktion" hidden><b id="wAktionT">Untersuchen</b></button>
+      <button type="button" class="cb sm" data-w="rolle" aria-label="Ausweichen">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6l-6 6 6 6M19 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Rolle</span>
+      </button>
+      <button type="button" class="cb" data-w="angriff" aria-label="Angriff">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19l3.2-3.2M6.8 13.8l3.4 3.4M9.3 14.7L19 5V4h-1L8.3 13.7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Angriff</span>
+      </button>
+      <button type="button" class="cb big" data-w="sprung" aria-label="Springen">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6.5 11.5L12 6l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Springen</span>
       </button>
     </div>
-    <div class="k-map" id="kMap"></div>
-    <div class="k-info" id="kInfo"></div>
   </section>
 
   <!-- ===================== KAMPF ===================== -->
@@ -71,14 +76,12 @@
     </div>
     <p class="f-line" id="fLine" hidden></p>
     <div class="f-touch" id="fTouch"></div>
-
     <div class="f-bottom">
       <div class="p-bars">
         <div class="p-row"><div class="bar p-hp"><i class="lag" id="pLag"></i><i class="fill" id="pHp"></i></div><span class="p-num" id="pHpN"></span></div>
         <div class="p-row" id="pStRow"><div class="bar p-st"><i class="fill" id="pSt"></i></div></div>
         <div class="p-row"><div class="bar p-fp"><i class="fill" id="pFp"></i></div></div>
       </div>
-
       <div class="rtc" id="rtc">
         <div class="cl left">
           <button type="button" class="cb sm" data-k="flask" style="grid-area:1/2" aria-label="Phiole trinken">
@@ -112,8 +115,50 @@
     </div>
   </section>
 
+  <!-- ===================== GESPRÄCH UND ZWISCHENSZENE ===================== -->
+  <section class="screen dialog" id="dialog" hidden>
+    <div class="d-box" id="dBox">
+      <p class="d-wer" id="dWer"></p>
+      <p class="d-text" id="dText" aria-live="polite"></p>
+      <div class="d-wahl" id="dWahl"></div>
+      <p class="d-weiter" id="dWeiter" hidden>Tippen</p>
+    </div>
+  </section>
+
+  <!-- ===================== LESEN ===================== -->
+  <section class="screen lesen" id="lesen" hidden>
+    <div class="l-blatt" role="dialog" aria-modal="true" aria-labelledby="lTitel">
+      <p class="l-art" id="lArt"></p>
+      <h2 id="lTitel"></h2>
+      <div class="l-text" id="lText"></div>
+      <button type="button" class="btn ghost" id="lZu">Weiter</button>
+    </div>
+  </section>
+
+  <!-- ===================== LEUCHTFEUER ===================== -->
+  <section class="screen feuer" id="feuer" hidden>
+    <div class="st-panel">
+      <p class="st-place" id="fOrt"></p>
+      <p class="f-satz" id="fSatz"></p>
+      <dl class="f-stats" id="fStats"></dl>
+      <div class="st-choices" id="fWahl"></div>
+    </div>
+  </section>
+
+  <!-- ===================== KARTE ===================== -->
+  <section class="screen karte" id="karte" hidden>
+    <div class="k-head">
+      <div class="k-tabs" id="kTabs" role="tablist" aria-label="Gebiete"></div>
+      <button type="button" class="icon-btn" id="btnKarteZu" aria-label="Karte schließen">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="k-map" id="kMap"></div>
+    <div class="k-info" id="kInfo"></div>
+  </section>
+
   <!-- ===================== ENDE VON AKT I ===================== -->
-  <section class="screen story ende" id="ende" hidden>
+  <section class="screen ende" id="ende" hidden>
     <div class="st-panel">
       <p class="st-place">Ende von Akt I</p>
       <h2 class="b-title">Eine Glocke schweigt</h2>

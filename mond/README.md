@@ -2,23 +2,24 @@
 
 Ernstes Solo-Abenteuer für den Couchclub, in der Richtung von Elden Ring: eigene Welt, Bosse, mehrere Enden. Das ganze Konzept steht in `KONZEPT.md` (enthält Spoiler).
 
-## Stand: Akt I
+## Stand: Akt I (Version 2)
 
-Akt I umfasst drei Gebiete mit 20 Orten:
+Akt I ist eine begehbare Welt aus 25 Gebieten in drei Regionen. Man läuft, springt, klettert Leitern, fällt durch Stege, watet durch Wasser und schlägt brüchige Wände ein:
 
-- **Die Strandung:** Kiesstrand, Wrackfeld, Stille Bucht, Leuchtturm, Kettentor, Mole und der Strandvogt im Nebel
-- **Die Salzmarsch:** Salzpfad, Schilfmeer, Pfahldorf, Totes Ufer, Nebelbrücke und die Salzhexe in der Salzgrube (Nebenboss)
-- **Velmora:** Stadttor, überflutete Gassen, Brunnenplatz, Brautkapelle, Turmtreppe, die Wrackspinne im Hafen (Nebenboss) und Isolde, die Ertränkte Braut, im Glockenturm (Hauptboss)
+- **Die Strandung:** Kiesstrand, Wrackfeld mit der Seraphine, die Stille Bucht hinter dem hohlen Fels (Ertrunkener Ritter), Leuchtturm mit seinem Inneren, Klippenpfad mit Kettentor und Gang zurück, Mole und der Strandvogt am Ende der Mole
+- **Die Salzmarsch:** Salzpfad, Schilfmeer, Pfahlwyk mit Wendas Haus, die Salzgrube tief hinab zur Salzhexe (mit Schacht als Abkürzung), Totes Ufer und die Nebelbrücke, die unter einem einstürzt
+- **Velmora:** Stadttor mit Mauer, überflutete Gassen mit Dächern und dem blauen Haus, Brunnenplatz, Hafen mit der Wrackspinne, das Hafenbecken mit Jonte, Brautkapelle, Gruft, Turmtreppe und Isolde im Glockenturm
 
 Dazu gehören:
 
-- drei Herkünfte mit Startwaffe und Attributen (Vitalität, Ausdauer, Stärke, Geschick)
-- sechs Waffen mit eigener Waffenkunst, zwei davon aus dem Nachhall der Bosse gegossen, drei Schilde, sechs Talismane mit zwei Plätzen
-- Reaktionskampf: Angriff, schwerer Angriff (halten lädt auf), Ausweichen, Blocken und Parieren im richtigen Moment, Ausdauer, Haltung und Todesstoß; Gegner mit Geschossen, Bosse mit zweiter Phase
-- Leuchtfeuer zum Rasten, Aufsteigen und Reisen, Glut als Währung, die beim Tod liegen bleibt, Mondtau für mehr Phiolen, Amboss mit Glockenerz
-- Karte mit Wegen zwischen den Orten: Weiter geht es erst, wenn die Gegner besiegt sind, zurück immer; beim Rasten stehen die Toten wieder auf
-- drei Figuren mit Gesprächen und Entscheidungen: Enna, die Leuchtfeuerwärterin, Mira, die Taucherin (mit Laden und Suche nach ihrem Bruder), und Ser Kalden, der Eidlose
-- Spielstand im Browser, im Couchclub pro Spieler
+- ein Prolog in fünf Bildern, dann drei Herkünfte mit Startwaffe und Attributen
+- Gegner stehen in der Welt, patrouillieren, liegen im Wasser oder lauern oben; sie sehen nach vorn, wer sich von hinten anschleicht, beginnt mit einem Hinterhalt
+- Kampf an Ort und Stelle: Angriff, schwerer Angriff, Ausweichen, Blocken und Parieren im richtigen Moment; Gegner mit Finten, verzögerten Schlägen, Mischangriffen, Schild, Panzer, Konter und Fernkämpfern in zweiter Reihe; Bosse mit mehreren Phasen
+- Leuchtfeuer zum Rasten, Aufsteigen und Reisen, Glut, die beim Tod liegen bleibt, Mondtau, Amboss, acht Talismane
+- Hebel, Gitter, Riegeltüren als Abkürzungen, verschlossene Türen mit Schlüsseln, verborgene Gänge
+- Figuren mit Gesprächen und Entscheidungen: Enna, Oswin, Mira (Laden, Suche nach ihrem Bruder, Wahrheit oder Lüge), Greta (Harks Nadel) und Ser Kalden, dessen Geheimnis man in der Gruft findet; am Ende die Wahl, wer Isoldes Splitter behält
+- Briefe, Inschriften und Erinnerungen der Bosse, gesammelt in der Chronik
+- eigene Klangwelt je Region, Spielstand im Browser, im Couchclub pro Spieler
 
 Grafik, Musik und Geräusche entstehen im Browser. Das Spiel läuft ohne Internet.
 
@@ -26,14 +27,33 @@ Grafik, Musik und Geräusche entstehen im Browser. Das Spiel läuft ohne Interne
 
 - `src/shell.html`, `src/style.css`: Seite und Stil
 - `src/core.js`: Hilfsfunktionen, Einstellungen, Einbettung in den Couchclub, Klang und Musik
-- `src/figuren.js`: Skelett, Posen und Scherenschnitt-Figuren
-- `src/wesen.js`: die Figuren von Akt I, dazu Krabbe und Wrackspinne mit eigenem Körperbau
-- `src/welt.js`: Hintergründe aller Orte, Wetter, Flut und Effekte
+- `src/figuren.js`, `src/wesen.js`: Skelett, Posen und Scherenschnitt-Figuren, dazu Krabbe und Wrackspinne
+- `src/level.js`: Gebiete aus Textkarten, Kollision und Geländeformen
+- `src/themen.js`: Himmel, Hintergrundebenen und Farben jeder Gegend
+- `src/szene.js`: Kamera, Zeichnen von Gelände, Wasser, Licht, Wetter und Effekten
+- `src/eingabe.js`: Stick und Knöpfe auf dem Bildschirm, Tastatur
+- `src/erkundung.js`: Laufen, Springen, Klettern, Gegner in der Welt, alles, womit man handeln kann
+- `src/kampf.js`: Kampfregeln, der Kampf findet mitten in der Welt statt
 - `src/daten-kampf.js`: Herkünfte, Waffen, Schilde, Talismane, Gegenstände und Gegner mit ihren Angriffen
-- `src/daten-welt.js`: Gebiete, Orte und Wege, Figuren, Gespräche, Laden, Texte und Besetzung der Stimmen
+- `src/daten-welt.js`: Regionen, Figuren, Gespräche, Laden und Texte
+- `src/lore.js`: Briefe, Inschriften, Erinnerungen, Figuren in der Chronik
+- `src/karten-bild.js`: das Gelände aller Gebiete (erzeugt, siehe unten)
+- `src/karten.js`: was in jedem Gebiet steht: Gegner, Figuren, Feuer, Türen, Hebel, Geheimnisse
+- `src/skripte.js`: Hinweise, Ereignisse und Zwischenszenen, vor und nach jedem Boss
+- `src/prolog.js`, `src/menues.js`: Prolog, Menüs, Aufsteigen, Amboss, Laden, Chronik
 - `src/stimme.js`: spielt Sprachaufnahmen ab, falls welche eingebaut sind
-- `src/kampf.js`: Bühne und Kampfregeln
-- `src/ablauf.js`: Titel, Orte, Karte, Leuchtfeuer, Gespräche, Menüs, Anzeige und Steuerung
+- `src/ablauf.js`: Spielstand, Titel, Erkunden, Gespräche, Leuchtfeuer, Kämpfe, Tod, Karte
+
+## Karten
+
+Das Gelände wird mit `werkzeug/karten.py` beschrieben (Boden, Fels, Leitern, Wasser, Anker für Objekte) und als Textkarte nach `src/karten-bild.js` geschrieben:
+
+```
+python3 mond/werkzeug/karten.py
+node mond/werkzeug/pruefe-karten.js
+```
+
+Der Prüfer simuliert mit der echten Sprung- und Kletterphysik von jedem Standplatz aus Laufen, Springen, Fallen, Stege und Leitern, öffnet Hebel, Riegel, brüchige Wände und Schlösser, sobald man sie erreicht, und meldet, was nicht erreichbar ist oder wo man festsitzen könnte. Mit `--zeige GEBIET` zeigt er die Karte mit allen erreichten Plätzen.
 
 ## Bauen
 
@@ -41,11 +61,11 @@ Grafik, Musik und Geräusche entstehen im Browser. Das Spiel läuft ohne Interne
 python3 mond/build.py
 ```
 
-Das erzeugt `mond/index.html` mit eingebetteten Schriften. Mit `--artifact PFAD` entsteht zusätzlich eine Variante ohne HTML-Grundgerüst, mit `--couchclub couchclub` die Fassung `couchclub/mond.html` für den Couchclub. Dort kommen Spieler, Ton und Vibration aus der Adresse (`mond.html#p=p1&n=Joel&snd=1&vib=1&mot=1`), der Spielstand liegt unter `mondgelaeut-v1@<Spieler-ID>`, und das Spiel meldet Stufe, Bosse, Tode und Spielzeit per `postMessage` zurück. Mit `#test` am Ende der Adresse stehen im Browser unter `window.__mg` Hilfen zum Testen bereit.
+Das erzeugt `mond/index.html` mit eingebetteten Schriften. Mit `--artifact PFAD` entsteht zusätzlich eine Variante ohne HTML-Grundgerüst, mit `--couchclub couchclub` die Fassung `couchclub/mond.html` für den Couchclub. Dort kommen Spieler, Ton und Vibration aus der Adresse (`mond.html#p=p1&n=Joel&snd=1&vib=1&mot=1`), der Spielstand liegt unter `mondgelaeut-v2@<Spieler-ID>`, und das Spiel meldet Stufe, Bosse, Tode und Spielzeit per `postMessage` zurück. Mit `#test` am Ende der Adresse stehen im Browser unter `window.__mg` Hilfen zum Testen bereit.
 
 ## Stimmen
 
-Erzähler und Figuren sprechen mit freien deutschen Piper-Stimmen. Welche Zeilen es gibt, ergibt sich aus den Texten in `src/daten-welt.js` (`stimmZeilen`), wer mit welcher Stimme spricht, steht in `SPRECHER`. Die Aufnahmen erzeugt:
+Erzähler und Figuren sprechen mit freien deutschen Piper-Stimmen. Welche Zeilen es gibt, ergibt sich aus den Texten in `src/daten-welt.js` (`stimmZeilen`: Erwachen, Herkünfte, Leuchtfeuer und die Sätze der Gegner), wer mit welcher Stimme spricht, steht in `SPRECHER`. Die Aufnahmen erzeugt:
 
 ```
 pip install piper-tts lameenc

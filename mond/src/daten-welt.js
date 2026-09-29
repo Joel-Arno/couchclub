@@ -1,8 +1,7 @@
 /* =====================================================================
-   DATEN: Welt von Akt I – Regionen, Orte, Figuren, Gespräche
-   Orte sind über „nach“ verbunden (in beide Richtungen). Ein Ort mit
-   Kampf muss geräumt sein, bevor man tiefer hineingeht; zurück geht immer.
-   Beim Rasten kehren alle normalen Gegner zurück, Bosse nicht.
+   DATEN: Welt von Akt I – Regionen, Figuren, Gespräche, Laden
+   Die Gebiete selbst stehen in karten.js, Briefe und Erinnerungen in
+   lore.js, Zwischenszenen in skripte.js.
    ===================================================================== */
 const REGIONEN = {
   strandung: { name: 'Die Strandung' },
@@ -10,316 +9,227 @@ const REGIONEN = {
   velmora: { name: 'Velmora' }
 };
 
-const ORTE = {
-  /* ---------- Die Strandung ---------- */
-  kiesstrand: {
-    region: 'strandung', name: 'Kiesstrand', welt: 'strand', pos: [.22, .9], nach: ['wrackfeld'],
-    leer: 'Der Kies ist noch nass von der Flut, die dich ausgespuckt hat. Im Wasser treiben Planken, Seile, eine Kiste ohne Deckel. Nichts davon gehört dir.'
-  },
-  wrackfeld: {
-    region: 'strandung', name: 'Wrackfeld', welt: 'strand', pos: [.45, .74], nach: ['feuer_strand', 'bucht'],
-    kampf: ['ertrunkener', 'ertrunkener'], liegend: true,
-    text: ['Zwischen den Wrackteilen bewegt sich etwas. Ein Mensch, oder was die Flut von einem übrig gelassen hat.', 'Wasser läuft ihm aus dem Mund, als es sich zu dir dreht.'],
-    wieder: 'Die Ertrunkenen stehen wieder zwischen den Wrackteilen. Die Flut gibt her, was sie nimmt, immer wieder.',
-    leer: 'Zwischen den Rippen des Schiffes ist es still geworden. Die Flut leckt an den Planken, als suchte sie etwas.',
-    aktionen: [
-      { id: 'treibholz', t: 'Zwischen den Planken suchen', text: 'Unter einer Planke klemmt ein Schild aus Treibholz, mit Eisen beschlagen. Schwer, aber besser als nichts.', gibt: { schild: 'treibholz' } }
-    ]
-  },
-  bucht: {
-    region: 'strandung', name: 'Stille Bucht', welt: 'bucht', pos: [.82, .8], nach: [],
-    kampf: ['krabbe', 'krabbe'],
-    text: ['Hinter einem Felsen öffnet sich eine kleine Bucht. Das Wasser ist hier glatt wie Glas, und am Grund glimmt etwas Bläuliches.', 'Zwischen den Steinen klackern Scheren. Die Krabben hier sind groß wie Hunde, ihre Panzer von Salz verkrustet.'],
-    wieder: 'Zwischen den Steinen klackern wieder Scheren.',
-    leer: 'Die Bucht liegt still. Am Grund glimmt es noch immer.',
-    aktionen: [
-      { id: 'mondtau1', t: 'Ins Wasser greifen', text: 'Deine Finger schließen sich um einen Kristall, kalt wie Mondlicht. Mondtau. Am Leuchtfeuer wird daraus eine weitere Phiole.', gibt: { item: 'mondtau' } },
-      { id: 'erz_bucht', t: 'Die Felsspalte absuchen', text: 'In einer Spalte steckt ein Klumpen grünlichen Metalls. Glockenerz. An einem Amboss lässt sich damit eine Waffe schärfen.', gibt: { item: 'glockenerz' } }
-    ]
-  },
-  feuer_strand: {
-    region: 'strandung', name: 'Leuchtturm', welt: 'feuer', pos: [.32, .54], nach: ['kettentor'],
-    feuer: 'Leuchtfeuer am Strand',
-    text: ['Am Ende des Strandes steht ein Leuchtturm ohne Licht. Unten, in einer eisernen Schale, glimmt noch Glut.', 'Neben der Schale sitzt eine Frau in einem langen Mantel, eine Laterne auf den Knien. Sie sieht dir entgegen, als hätte sie dich erwartet.'],
-    leer: 'Die Flamme brennt ruhig am Fuß des Leuchtturms.',
-    npc: [{ id: 'enna', wenn: D => !D.merker.isolde }]
-  },
-  kettentor: {
-    region: 'strandung', name: 'Kettentor', welt: 'tor', pos: [.58, .38], nach: ['mole'],
-    kampf: ['knecht'],
-    text: ['Der Pfad führt die Klippe hinauf zu einem Tor aus rostigen Ketten.', 'Davor steht ein Wächter mit einem Helm wie ein Eimer. In seiner Faust hängt eine eiserne Kugel an einer Kette. Er sagt nichts. Er wartet.'],
-    wieder: 'Der Wächter steht wieder vor dem Tor, als wäre nichts gewesen.',
-    leer: 'Das Tor aus Ketten steht offen. Der Wind lässt die Glieder aneinanderschlagen, wie ein schlecht gestimmtes Glockenspiel.'
-  },
-  mole: {
-    region: 'strandung', name: 'Mole', welt: 'mole', pos: [.38, .22], nach: ['nebel'],
-    feuer: 'Leuchtfeuer an der Mole', amboss: true,
-    text: ['Eine steinerne Mole führt hinaus aufs Meer. Am Weg steht eine Feuerschale voller Asche. Du hältst die Hand darüber, und die Asche beginnt zu glühen.', 'Daneben steht ein Amboss, verrostet, aber heil. Jemand hat hier einmal Waffen gepflegt.'],
-    leer: 'Die Feuerschale an der Mole glüht. Der Amboss wartet.'
-  },
-  nebel: {
-    region: 'strandung', name: 'Ende der Mole', welt: 'nebel', pos: [.62, .08], nach: ['salzpfad'],
-    boss: 'vogt', arena: 'arena',
-    text: ['Am Ende der Mole steht der Nebel wie eine Wand.', 'Das Läuten ist hier lauter. Und dahinter hörst du noch etwas anderes: Eisen, das über Stein schleift.'],
-    nachBoss: ['Der Strandvogt sinkt ins flache Wasser. Seine Laterne erlischt als Letztes.', 'Wo der Nebel war, ist jetzt nur noch Wasser, flach und grau. Am Ufer entlang führt ein Pfad aus weißem Salz ins Land hinein.'],
-    leer: 'Wo der Strandvogt stand, schwappt flaches Wasser über die Steine. Landeinwärts schimmert der Salzpfad.',
-    beute: { item: 'nachhall_vogt' }
-  },
-
-  /* ---------- Die Salzmarsch ---------- */
-  salzpfad: {
-    region: 'marsch', name: 'Salzpfad', welt: 'marsch', pos: [.5, .9], nach: ['pfahldorf', 'schilf'],
-    sperre: { wenn: D => D.bosse.vogt, text: 'Der Nebel am Ende der Mole versperrt den Weg.' },
-    kampf: ['ertrunkener', 'pfahl'], scale: 1.2,
-    text: ['Der Pfad ist aus Salz, hart wie Stein und weiß wie Knochen. Links und rechts liegt die Marsch: flaches Wasser, Schilf, tote Bäume.', 'Auf dem Pfad stehen Gestalten mit Stangen in den Händen. Sie haben sich lange nicht bewegt. Jetzt bewegen sie sich.'],
-    wieder: 'Auf dem Salzpfad stehen wieder Gestalten, reglos, bis du näherkommst.',
-    leer: 'Der Salzpfad liegt weiß und leer vor dir.'
-  },
-  schilf: {
-    region: 'marsch', name: 'Schilfmeer', welt: 'marsch', pos: [.15, .72], nach: [],
-    kampf: ['krabbe', 'krabbe', 'krabbe'], scale: 1.25,
-    text: ['Das Schilf steht höher als du. Es raschelt, obwohl kein Wind geht.', 'Dann klicken Scheren.'],
-    wieder: 'Im Schilf klicken wieder Scheren.',
-    leer: 'Im Schilf ist es still. Nur das Wasser gluckst.',
-    aktionen: [
-      { id: 'salzamulett', t: 'Den Reiher im Schilf untersuchen', text: 'Ein toter Reiher, das Gefieder weiß vor Salz. Um seinen Hals hängt ein Amulett aus Salzkristall. Jemand hat es ihm umgebunden, vor langer Zeit.', gibt: { tal: 'salzamulett' } },
-      { id: 'erz_schilf', t: 'Im Schlamm graben', text: 'Unter dem Schlamm liegt ein Klumpen Glockenerz, rund gewaschen vom Wasser.', gibt: { item: 'glockenerz' } }
-    ]
-  },
-  pfahldorf: {
-    region: 'marsch', name: 'Pfahldorf', welt: 'pfahldorf', pos: [.55, .62], nach: ['salzgrube', 'ufer'],
-    feuer: 'Leuchtfeuer im Pfahldorf',
-    text: ['Ein Dorf auf Pfählen, halb im Wasser versunken. Die meisten Häuser sind leer. In einem brennt Licht.', 'Auf dem Steg davor sitzt eine Frau in einem Anzug aus geöltem Leder und flickt ein Netz. Neben ihr glimmt eine Feuerschale.'],
-    leer: 'Das Pfahldorf knarrt im Wind. Die Feuerschale am Steg glimmt.',
-    npc: [{ id: 'mira', wenn: D => !D.merker.velmora || !D.merker.mira1 }]
-  },
-  salzgrube: {
-    region: 'marsch', name: 'Salzgrube', welt: 'grube', pos: [.86, .44], nach: [],
-    boss: 'hexe', arena: 'grube',
-    text: ['Der Boden fällt ab in eine Grube aus weißem Kristall. Die Wände glitzern, als hätte jemand die Sterne hier unten eingesperrt.', 'In der Mitte steht eine Gestalt, gebeugt über einen Stab. Ihr Haar ist steif vor Salz. Sie summt ein Lied, das du fast kennst.'],
-    nachBoss: ['Die Salzhexe zerfällt zu Staub, weiß und fein. Das Lied hört mitten im Takt auf.', 'Wo sie stand, liegt eine Perle, glatt und kühl, und daneben zwei Klumpen Glockenerz.'],
-    leer: 'Die Salzgrube ist still. Die Kristalle glitzern weiter, für niemanden.',
-    beute: { tal: 'traenenperle', item: ['glockenerz', 2] }
-  },
-  ufer: {
-    region: 'marsch', name: 'Totes Ufer', welt: 'marsch', pos: [.3, .4], nach: ['bruecke'],
-    kampf: ['pfahl', 'pfahl'], scale: 1.25,
-    text: ['Am Ufer liegen Boote kieloben, wie Tiere, die sich zum Sterben hingelegt haben.', 'Zwischen ihnen gehen Pfahlgänger auf und ab. Sie bewachen etwas.'],
-    wieder: 'Zwischen den Booten gehen wieder Pfahlgänger auf und ab.',
-    leer: 'Die Boote liegen still. Das Wasser leckt an ihren Kielen.',
-    aktionen: [
-      { id: 'entermesser', t: 'Unter dem größten Boot nachsehen', text: 'Unter dem Boot liegt ein Seemann, der schon lange nicht mehr atmet. In seiner Hand ein Entermesser, krumm und scharf. Er braucht es nicht mehr.', gibt: { waffe: 'entermesser' } },
-      { id: 'mondtau2', t: 'Die Laterne am Bootshaus ansehen', text: 'In der Laterne brennt keine Kerze. Darin liegt ein Kristall aus Mondtau, als hätte ihn jemand hier aufbewahrt, für schlechte Zeiten.', gibt: { item: 'mondtau' } }
-    ]
-  },
-  bruecke: {
-    region: 'marsch', name: 'Nebelbrücke', welt: 'bruecke', pos: [.52, .12], nach: ['stadttor'],
-    kampf: ['pfahl', 'knecht'], scale: 1.3,
-    text: ['Eine Brücke aus Stein führt über dunkles Wasser. Am anderen Ende, im Nebel, stehen Türme. Velmora.', 'Auf der Brücke warten Gestalten. Weiter hinten lehnt ein Ritter am Geländer und sieht zu, wie sie auf dich zukommen.'],
-    wieder: 'Auf der Brücke warten wieder Gestalten.',
-    leer: 'Auf der Brücke ist es still. Der Nebel hängt über Velmora.',
-    npc: [{ id: 'kalden', wenn: D => !D.merker.kalden1 }]
-  },
-
-  /* ---------- Velmora ---------- */
-  stadttor: {
-    region: 'velmora', name: 'Stadttor', welt: 'velmora', pos: [.5, .9], nach: ['gassen', 'feuer_velmora'],
-    kampf: ['waechter'], scale: 1.35,
-    text: ['Das Tor von Velmora steht halb unter Wasser. Über dem Bogen hängt eine Glocke ohne Klöppel.', 'Davor wacht ein Riese in einer Rüstung aus Glockenbronze. Er hebt den Schild, als du näherkommst.'],
-    wieder: 'Der Glockenwächter steht wieder vor dem Tor.',
-    leer: 'Das Tor steht offen. Die Glocke darüber schweigt.'
-  },
-  gassen: {
-    region: 'velmora', name: 'Überflutete Gassen', welt: 'velmora', pos: [.2, .72], nach: ['kapelle'],
-    kampf: ['jungfer', 'ertrunkener', 'jungfer'], scale: 1.4,
-    text: ['Die Gassen von Velmora stehen knietief im Wasser. Blütenblätter treiben darauf, weiß und verfault.', 'Aus den Hauseingängen treten Frauen in Brautkleidern, die Schleier nass und schwer. Sie tanzen, bevor sie angreifen.'],
-    wieder: 'In den Gassen tanzen wieder die Brautjungfern.',
-    leer: 'Die Gassen sind still. Die Blütenblätter treiben weiter.',
-    aktionen: [
-      { id: 'ehering', t: 'Das Haus mit dem blauen Tor betreten', text: 'Auf einem Tisch stehen zwei Gläser, eines umgekippt. Daneben liegt ein Ring, rostig, mit einer Gravur: „für immer“.', gibt: { tal: 'ehering' } },
-      { id: 'schild_gassen', t: 'Den gefallenen Wächter durchsuchen', text: 'Im Wasser liegt ein Glockenwächter, der seinen letzten Kampf verloren hat. Sein Schild ist aus Glockenbronze und dröhnt leise, als du ihn aufhebst.', gibt: { schild: 'glockenschild' } }
-    ]
-  },
-  feuer_velmora: {
-    region: 'velmora', name: 'Brunnenplatz', welt: 'brunnen', pos: [.62, .62], nach: ['hafen', 'kapelle'],
-    feuer: 'Leuchtfeuer am Brunnen', amboss: true,
-    text: ['Mitten auf dem Platz steht ein Brunnen, und in seiner Schale glimmt Glut, obwohl Wasser darüber läuft.', 'Daneben steht ein Amboss aus Glockenbronze. Hier haben die Glockengießer von Velmora gearbeitet.'],
-    leer: 'Die Glut im Brunnen glimmt unter dem Wasser.',
-    npc: [
-      { id: 'kalden', wenn: D => D.merker.isolde && D.merker.kalden1 && !D.merker.kalden3 },
-      { id: 'mira', wenn: D => D.merker.velmora && D.merker.mira1 }
-    ]
-  },
-  hafen: {
-    region: 'velmora', name: 'Hafen', welt: 'hafen', pos: [.9, .44], nach: [],
-    boss: 'spinne', arena: 'hafen',
-    text: ['Im Hafen liegen Schiffe übereinander, wie von einer Riesenhand zusammengeschoben. Zwischen den Masten hängen Seile, gespannt wie Netze.', 'Etwas Großes bewegt sich in den Tauen. Es hat zu viele Beine, und jedes davon war einmal ein Ruder.'],
-    nachBoss: ['Die Wrackspinne fällt in sich zusammen, ein Haufen aus Planken und Tau.', 'Zwischen den Trümmern liegt ein Taucherhelm aus Messing, verbeult, und daneben Glockenerz, das die Spinne gesammelt hat wie andere Tiere Knochen.'],
-    leer: 'Im Hafen knarren die Schiffe. Die Taue hängen schlaff.',
-    beute: { item: [['helm', 1], ['glockenerz', 2]] }
-  },
-  kapelle: {
-    region: 'velmora', name: 'Brautkapelle', welt: 'kapelle', pos: [.35, .34], nach: ['turmtreppe'],
-    kampf: ['jungfer', 'jungfer', 'waechter'], scale: 1.5,
-    text: ['Die Kapelle ist geschmückt, als sollte heute geheiratet werden. Die Girlanden sind schwarz vor Alter, die Kerzen nur noch Stümpfe.', 'Vor dem Altar warten Brautjungfern. Und ein Glockenwächter, der die Tür zur Treppe bewacht.'],
-    wieder: 'Vor dem Altar warten wieder die Brautjungfern.',
-    leer: 'Die Kapelle ist leer. Auf dem Altar liegt ein Brief.',
-    aktionen: [
-      { id: 'brief', t: 'Den Brief auf dem Altar lesen', text: '„Meine Isolde. Wenn die Glocke läutet, komme ich. Warte auf mich, und wenn es hundert Jahre dauert. Dein …“ Der Name ist herausgerissen. Jemand hat das Papier so oft gefaltet, dass es an den Knicken durchscheint.', wiederholbar: true },
-      { id: 'glockenzunge', t: 'Unter der Altarglocke nachsehen', text: 'Die Glocke über dem Altar hat keinen Klöppel mehr. Er liegt darunter auf dem Boden, als hätte ihn jemand herausgerissen, damit sie nie wieder läutet. Du nimmst ihn mit.', gibt: { tal: 'glockenzunge' } }
-    ]
-  },
-  turmtreppe: {
-    region: 'velmora', name: 'Turmtreppe', welt: 'treppe', pos: [.58, .2], nach: ['turm'],
-    feuer: 'Leuchtfeuer an der Turmtreppe',
-    text: ['Am Fuß der Treppe glimmt ein letztes Leuchtfeuer. Von oben hörst du eine Glocke.', 'Nicht die, die nur du hörst. Eine andere, tiefere, die jeder hören kann.'],
-    leer: 'Die Treppe windet sich nach oben ins Dunkel. Die Glocke oben schweigt.',
-    npc: [
-      { id: 'enna', wenn: D => !D.merker.enna_treppe || D.merker.isolde && !D.merker.enna_ende },
-      { id: 'kalden', wenn: D => D.merker.kalden1 && !D.merker.kalden2 && !D.merker.isolde }
-    ]
-  },
-  turm: {
-    region: 'velmora', name: 'Glockenturm', welt: 'turm', pos: [.46, .05], nach: [],
-    boss: 'isolde', arena: 'turm',
-    text: ['Oben im Turm hängt eine Glocke, so groß wie ein Haus. Darunter, an der Brüstung, steht eine Frau in einem Brautkleid. Wasser tropft von ihrem Schleier.', 'In der Hand hält sie eine zweite Glocke, kleiner, an einer Kette. Sie dreht sich nicht um.'],
-    nachBoss: [
-      'Isolde sinkt auf die Knie. Ihr Schleier gleitet zur Seite, und darunter ist ein Gesicht, jung und sehr müde.',
-      '„Er kommt nicht, oder?“ Sie sieht dich an, und zum ersten Mal scheint sie dich wirklich zu sehen. „Dann nimm du es. Ich habe lange genug gewartet.“',
-      'Aus ihrer Brust löst sich ein Splitter, hell wie Mondlicht. Er schwebt zu dir herüber, und die Glocke, die nur du hörst, schlägt einmal, laut.',
-      'Über dir beginnt die große Glocke zu schwingen. Ein Schlag. Dann nichts mehr. Irgendwo draußen hebt sich das Wasser.'
-    ],
-    leer: 'Die große Glocke hängt still. Durch die Bögen siehst du weit übers Meer, und das Wasser steht höher als gestern.',
-    beute: { item: [['splitter_isolde', 1], ['nachhall_isolde', 1]] },
-    ende: true
-  }
-};
-
 /* ---------- Figuren ---------- */
 const NPC = {
-  enna: { name: 'Enna', look: 'enna', titel: 'Leuchtfeuerwärterin' },
+  enna: { name: 'Enna', look: 'enna', titel: 'Hüterin der Leuchtfeuer' },
+  oswin: { name: 'Oswin', look: 'oswin', titel: 'Strandgut' },
   mira: { name: 'Mira', look: 'mira', titel: 'Taucherin' },
+  greta: { name: 'Greta', look: 'greta', titel: 'Netzflickerin aus Pfahlwyk' },
   kalden: { name: 'Ser Kalden', look: 'kalden', titel: 'Der Eidlose' }
 };
 // Welches Gespräch gerade dran ist
 function gespraechFuer(id, D, ort){
+  const m = D.merker;
   if (id === 'enna'){
-    if (ort === 'turmtreppe' && D.merker.isolde) return 'enna_ende';
-    if (ort === 'turmtreppe') return 'enna_treppe';
-    if (!D.merker.enna1) return 'enna1';
-    if (D.bosse.vogt && !D.merker.enna_vogt) return 'enna_vogt';
+    if (ort === 'turmtreppe') return D.bosse.isolde ? 'enna_ende' : 'enna_treppe';
+    if (!m.enna1) return 'enna1';
+    if (D.bosse.vogt && !m.enna_vogt) return 'enna_vogt';
     return 'enna_rast';
   }
+  if (id === 'oswin') return m.oswin1 ? 'oswin2' : 'oswin1';
   if (id === 'mira'){
-    if (!D.merker.mira1) return 'mira1';
+    if (!m.mira1) return 'mira1';
     if ((D.items.helm || 0) > 0) return 'mira_helm';
-    if (ort === 'feuer_velmora' && !D.merker.mira_velmora) return 'mira_velmora';
+    if (ort === 'brunnenplatz' && !m.mira_velmora) return 'mira_velmora';
     return 'mira_handel';
   }
+  if (id === 'greta'){
+    if (!m.greta1) return 'greta1';
+    if ((D.items.nadel || 0) > 0) return 'greta_nadel';
+    return m.greta_fertig ? 'greta_nach' : 'greta_warten';
+  }
   if (id === 'kalden'){
-    if (!D.merker.kalden1) return 'kalden1';
-    if (D.merker.isolde) return 'kalden3';
+    if (ort === 'brunnenplatz') return 'kalden_abschied';
+    if (!m.kalden1) return 'kalden1';
     return 'kalden2';
   }
 }
 
 // Gespräche: Knoten mit Text und Antworten. „go“ ist der nächste Knoten, ohne „go“ endet es.
+// text darf eine Funktion des Spielstands sein, Antworten mit „wenn“ erscheinen nur manchmal.
 const GESPRAECHE = {
+  /* ---------- Enna ---------- */
   enna1: {
     wer: 'enna', setze: 'enna1', start: 'a',
     k: {
       a: { text: 'Du bist aufgestanden. Die meisten bleiben liegen.', a: [
         { t: 'Wer bist du?', go: 'wer' }, { t: 'Wo bin ich?', go: 'wo' }, { t: 'Ich höre eine Glocke.', go: 'glocke' } ] },
-      wer: { text: 'Enna. Ich hüte die Leuchtfeuer, solange es welche gibt. Und ich warte.', a: [{ t: 'Worauf?', go: 'worauf' }] },
-      worauf: { text: 'Auf jemanden wie dich, vielleicht. Das wird sich zeigen.', a: [{ t: 'Wo bin ich?', go: 'wo' }, { t: 'Was ist mit der Flamme?', go: 'feuer' }] },
-      wo: { text: 'An der Strandung. Hier spuckt die Flut aus, was sie nicht behalten will. Die Lebenden nennen euch Strandgut.', a: [{ t: 'Ich höre eine Glocke.', go: 'glocke' }, { t: 'Was ist mit der Flamme?', go: 'feuer' }] },
-      glocke: { text: 'Tust du das. … Dann hör weiter hin. Und erzähl es niemandem, der eine Krone trägt.', setze: 'enna_glocke', a: [{ t: 'Was ist mit der Flamme?', go: 'feuer' }] },
+      wer: { text: 'Enna. Ich hüte die Leuchtfeuer, solange es welche gibt. Früher waren es hundert entlang der Küste. Jetzt zähle ich sie an einer Hand.', a: [{ t: 'Wo bin ich?', go: 'wo' }, { t: 'Ich höre eine Glocke.', go: 'glocke' }] },
+      wo: { text: 'An der Strandung. Hier spuckt die Flut aus, was sie nicht behalten will. Die Lebenden nennen euch Strandgut. Die meisten von euch sind leer, wenn sie aufstehen. Hohl wie Treibholz.', a: [{ t: 'Und ich?', go: 'licht' }] },
+      glocke: { text: 'Tust du das. … Dann hör weiter hin. Und erzähl es niemandem, der eine Krone trägt. Oder eine Laterne.', setze: 'enna_glocke', a: [{ t: 'Du trägst selbst eine Laterne.', go: 'laterne' }, { t: 'Warum nicht?', go: 'licht' }] },
+      laterne: { text: 'Ja. Merk dir, dass ich es dir trotzdem gesagt habe.', a: [{ t: 'Warum soll ich es niemandem sagen?', go: 'licht' }] },
+      licht: { text: 'Sieh an dir hinunter. Da, unter dem nassen Hemd. Es leuchtet. Die Flut gibt selten etwas zurück, in dem noch Licht ist, und es gibt Leute, die genau danach suchen.', setze: 'enna_licht', a: [{ t: 'Wer sucht danach?', go: 'wer_sucht' }] },
+      wer_sucht: { text: 'Der Vogt, zum Beispiel. Er geht nachts mit seiner Laterne den Strand ab und sieht jedem von euch in die Brust. Halt dich von ihm fern, solange du kannst. Du wirst es nicht lange können.', a: [{ t: 'Was ist mit der Flamme hier?', go: 'feuer' }] },
       feuer: { text: 'Die Glut, die du den Toten nimmst, macht dich stärker. Gib sie der Flamme, und die Flamme gibt sie dir zurück. Stirbst du, bleibt sie dort liegen, wo du gefallen bist. Hol sie dir, bevor du ein zweites Mal fällst.', a: [{ t: 'Und die Toten?', go: 'tote' }] },
-      tote: { text: 'Wer an einem Leuchtfeuer rastet, ruft sie zurück. Das ist der Preis. Ich bin an den Feuern, wenn du mich brauchst.', a: [{ t: 'Danke, Enna.' }] }
+      tote: { text: 'Wer an einem Leuchtfeuer rastet, ruft sie zurück. Das ist der Preis. Die Flamme heilt dich, und sie weckt alles, was du erschlagen hast.', a: [{ t: 'Wohin soll ich gehen?', go: 'wohin' }] },
+      wohin: { text: 'Hinter dem Leuchtturm führt ein Pfad die Klippe hinauf, zur Mole. Dahinter steht der Nebel. Und hinter dem Nebel ist das Land. Der Leuchtturm selbst ist offen, falls du neugierig bist. Der Wärter braucht ihn nicht mehr.', a: [{ t: 'Danke, Enna.' }] }
+    }
+  },
+  enna_rast: {
+    wer: 'enna', start: 'a',
+    k: {
+      a: { text: D => !D.bosse.vogt ? 'Ruh dich aus. Die Klippe ist schlüpfrig, und der Knecht am Kettentor schlägt härter, als er aussieht. Er holt weit aus. Warte auf den Schlag, dann antworte.'
+        : !D.merker.velmora ? 'Die Marsch ist still, aber nicht leer. Bleib auf dem Salzpfad, wenn du kannst. Was im Wasser liegt, schläft nur.'
+        : 'Die Flamme brennt, solange du sie brauchst.', a: [
+        { t: 'Was weißt du über das Licht in mir?', go: 'licht', wenn: D => D.merker.enna_licht && !D.merker.enna_licht2 },
+        { t: 'Danke.' } ] },
+      licht: { text: 'Weniger, als du glaubst. Mehr, als ich sagen will. Frag mich wieder, wenn du eine Glocke zum Schweigen gebracht hast.', setze: 'enna_licht2', a: [{ t: 'Das werde ich.' }] }
     }
   },
   enna_vogt: {
     wer: 'enna', setze: 'enna_vogt', start: 'a',
     k: {
-      a: { text: 'Der Vogt ist gefallen. Hundert Jahre hat er gesammelt, was die Flut bringt.', a: [{ t: 'Für wen?', go: 'wen' }, { t: 'Er hat die Glocke erwähnt.', go: 'glocke' }] },
+      a: { text: 'Der Vogt ist gefallen. Thore Brandt. So hieß er, bevor er Vogt wurde. Einunddreißig Jahre hat er das Licht dort oben gehütet.', a: [
+        { t: 'Er hat Strandgut gesammelt. Für wen?', go: 'wen' },
+        { t: 'Ich habe sein Verzeichnis gelesen.', go: 'buch', wenn: D => D.gelesen.liste_vogt } ] },
       wen: { text: 'Das hat er nie gesagt. Aber niemand sammelt hundert Jahre lang für sich allein.', a: [{ t: 'Ich gehe weiter.' }] },
-      glocke: { text: 'Hat er das. … Dann weiß es bald nicht mehr nur ich. Sei vorsichtig in der Marsch.', a: [{ t: 'Ich gehe weiter.' }] }
+      buch: { text: '„Für die Mutter vom Wiederaufgang.“ … Ich hatte gehofft, es gibt sie nicht mehr. Sie glauben, der Mond gehört an den Himmel zurück. Um jeden Preis. Und Licht wie deins ist ein Teil dieses Preises.', setze: 'enna_mutter', a: [{ t: 'Wer ist die Mutter?', go: 'mutter' }] },
+      mutter: { text: 'Keine Frau. Eine Kirche. Ein Versprechen. Sie tragen Laternen, weil sie auf ein Licht warten, das nicht kommt. Geh in die Marsch. Und zeig dein Licht niemandem.', a: [{ t: 'Ich gehe weiter.' }] }
     }
-  },
-  enna_rast: {
-    wer: 'enna', start: 'a',
-    k: { a: { text: 'Ruh dich aus. Die Flamme brennt, solange du sie brauchst.', a: [{ t: 'Danke.' }] } }
   },
   enna_treppe: {
     wer: 'enna', setze: 'enna_treppe', start: 'a',
     k: {
-      a: { text: 'Da oben ist sie. Isolde. Die Jüngste der fünf Kinder des Königs.', a: [{ t: 'Worauf wartet sie?', go: 'wartet' }, { t: 'Muss ich sie töten?', go: 'toeten' }] },
-      wartet: { text: 'Auf einen Mann, der versprochen hat zu kommen, wenn die Glocke läutet. Sie läutet seit hundert Jahren.', a: [{ t: 'Muss ich sie töten?', go: 'toeten' }] },
-      toeten: { text: 'Sie trägt einen Splitter der Krone, und er frisst sie auf. Du tust ihr keinen Gefallen, wenn du sie lässt. Aber du tust auch der Welt keinen, wenn du ihn nimmst. Das wirst du noch verstehen.', a: [{ t: 'Das klingt nicht nach einer Antwort.', go: 'antwort' }] },
+      a: { text: 'Du bist weit gekommen. Da oben ist sie. Isolde. Die Jüngste der fünf Kinder des Königs.', a: [{ t: 'Worauf wartet sie?', go: 'wartet' }, { t: 'Muss ich sie töten?', go: 'toeten' }] },
+      wartet: { text: 'Auf einen Mann, der versprochen hat zu kommen, wenn die Glocke läutet. Sie läutet seit dreihundert Jahren.', a: [{ t: 'Muss ich sie töten?', go: 'toeten' }] },
+      toeten: { text: 'Sie trägt einen Splitter der Krone, und er frisst sie auf. Du tust ihr keinen Gefallen, wenn du sie lässt. Aber du tust auch der Welt keinen, wenn du ihn nimmst. Das wirst du noch verstehen.', a: [
+        { t: 'Kalden sagt, ich soll dir nicht trauen.', go: 'kalden', wenn: D => D.merker.kalden_warnung },
+        { t: 'Das klingt nicht nach einer Antwort.', go: 'antwort' } ] },
+      kalden: { text: 'Ser Kalden hat mit Vertrauen keine gute Hand. Frag ihn, warum er nicht selbst hinaufgeht. Frag ihn, wen er dort oben nicht sehen will.', setze: 'enna_kalden', a: [{ t: 'Ich gehe hinauf.' }] },
       antwort: { text: 'Nein. Es ist keine.', a: [{ t: 'Ich gehe hinauf.' }] }
     }
   },
   enna_ende: {
     wer: 'enna', setze: 'enna_ende', start: 'a',
     k: {
-      a: { text: 'Eine Glocke weniger. Hörst du, wie still es geworden ist? … Und wie das Wasser steigt.', a: [{ t: 'Was bedeutet das?', go: 'was' }, { t: 'Ich habe einen Splitter.', go: 'splitter' }] },
-      was: { text: 'Dass du etwas getan hast, das man nicht zurücknimmt. Ruh dich aus. Es wird nicht leichter.', a: [{ t: 'Ich habe einen Splitter.', go: 'splitter' }, { t: 'Ich ruhe mich aus.' }] },
-      splitter: { text: 'Ich weiß. Ich kann ihn hören. Behalt ihn nah bei dir, und zeig ihn niemandem. Auch mir nicht.', setze: 'enna_splitter', a: [{ t: 'Ich ruhe mich aus.' }] }
+      a: { text: 'Eine Glocke weniger. Hörst du, wie still es geworden ist? … Und wie das Wasser steigt.', a: [{ t: 'Was bedeutet das?', go: 'was' }, { t: 'Das Licht in mir. Du wolltest es mir sagen.', go: 'licht', wenn: D => D.merker.enna_licht2 }] },
+      was: { text: 'Dass du etwas getan hast, das man nicht zurücknimmt. Solange sie gewartet hat, stand das Meer still. Jetzt nicht mehr.', a: [{ t: 'Du hast es gewusst.', go: 'gewusst' }] },
+      gewusst: { text: 'Ja. Und ich habe dich trotzdem gehen lassen. Weil der Splitter sie gefressen hätte, Stück für Stück, noch einmal dreihundert Jahre lang. Manchmal gibt es nur falsche Wege.', a: [{ t: 'Das Licht in mir. Du wolltest es mir sagen.', go: 'licht', wenn: D => D.merker.enna_licht2 }, { t: 'Ich ruhe mich aus.' }] },
+      licht: { text: D => (D.merker.splitter_behalten ? 'Du trägst jetzt zwei Lichter. Ich höre beide. ' : 'Ich höre es, auch jetzt. ') + 'Als der König den Mond herunterholte, schmiedete er aus seinem Herzen die Krone. Aber ein Herz ist nie ganz aus einem Stück. Ein Rest blieb übrig. Er ist nie gefunden worden.', setze: 'enna_herz', a: [{ t: 'Bis jetzt.', go: 'bisjetzt' }] },
+      bisjetzt: { text: 'Bis jetzt. Geh nach Osten, nach Grauhall. Dort läutet die nächste Glocke. Und sei vorsichtig, wem du dein Licht zeigst. Auch mir.', a: [{ t: 'Ich ruhe mich aus.' }] }
     }
   },
+
+  /* ---------- Oswin ---------- */
+  oswin1: {
+    wer: 'oswin', setze: 'oswin1', start: 'a',
+    k: {
+      a: { text: 'Nicht … nicht näher. Ich weiß nicht, wie lange ich noch ich bin.', a: [{ t: 'Wer bist du?', go: 'wer' }, { t: 'Was ist mit dir?', go: 'was' }] },
+      wer: { text: 'Oswin. Glaube ich. Die Flut hat mich ausgespuckt, wie dich. Vor Tagen. Oder Wochen. Man verliert das Zählen, wenn man hohl wird.', a: [{ t: 'Hohl?', go: 'was' }] },
+      was: { text: 'Siehst du das nicht? Da ist nichts in mir. Kein Licht. Nur Salzwasser. Die anderen draußen zwischen den Wracks waren wie ich. Irgendwann stehen sie auf und wissen nicht mehr, wer sie waren.', a: [{ t: 'Kann ich dir helfen?', go: 'helfen' }] },
+      helfen: { text: 'Du? … Du leuchtest ja. Heilige Flut, du leuchtest. Dann hör zu. Der Vogt, der mit der Laterne. Er holt die, die leuchten. Die Leeren lässt er liegen.', a: [{ t: 'Wohin bringt er sie?', go: 'wohin' }] },
+      wohin: { text: 'Keiner kommt zurück, um es zu erzählen. Hier. Nimm das, ich hab es aus dem Kies gegraben. Mir nützt es nichts mehr.', gibt: { item: 'glockenerz' }, a: [{ t: 'Danke, Oswin.', go: 'bucht' }] },
+      bucht: { text: 'Noch etwas. Unten am Strand, wo die Klippe ins Wasser geht, klingt der Fels hohl. Dahinter ist eine Bucht. Da unten wacht einer in Rüstung. Ich hab mich nicht getraut. Vielleicht du.', setze: 'oswin_bucht', a: [{ t: 'Ich sehe nach.' }] }
+    }
+  },
+  oswin2: {
+    wer: 'oswin', start: 'a',
+    k: { a: { text: 'Geh. Bevor ich vergesse, wer du bist. … Wer du warst. Wer ich … Geh.', a: [{ t: 'Leb wohl, Oswin.' }] } }
+  },
+
+  /* ---------- Mira ---------- */
   mira1: {
     wer: 'mira', setze: 'mira1', start: 'a',
     k: {
       a: { text: 'Noch einer aus dem Wasser. Du tropfst auf meinen Steg.', a: [{ t: 'Wer bist du?', go: 'wer' }, { t: 'Was ist mit dem Dorf passiert?', go: 'dorf' }] },
       wer: { text: 'Mira. Ich tauche nach dem, was die Flut verschluckt hat, und verkaufe es an die, die noch bezahlen können. Also meistens an niemanden. Du hast Glut, oder? Die nehme ich.', a: [{ t: 'Was ist mit dem Dorf passiert?', go: 'dorf' }, { t: 'Suchst du etwas?', go: 'sucht' }] },
-      dorf: { text: 'Die Flut kam höher als sonst. Wer nicht weg ist, steht jetzt draußen auf dem Salzpfad und wartet. Du hast sie gesehen.', a: [{ t: 'Suchst du etwas?', go: 'sucht' }] },
-      sucht: { text: 'Meinen Bruder. Jonte. Er ist nach Velmora getaucht, in den Hafen, vor drei Wochen. Er wollte Glockenbronze holen, die bringt am meisten.', a: [{ t: 'Ich halte Ausschau nach ihm.', go: 'auftrag' }] },
-      auftrag: { text: 'Sein Helm hat seinen Namen eingeritzt. Wenn du ihn findest, bring ihn mir. Den Helm, meine ich. Ihn bringst du mir nicht mehr.', setze: 'mira_auftrag', a: [{ t: 'Zeig mir, was du hast.', laden: true }, { t: 'Ich mache mich auf den Weg.' }] }
+      dorf: { text: 'Die Flut kam höher als sonst. Wer nicht weg ist, steht jetzt draußen auf dem Salzpfad und wartet. Und Wenda, die Heilerin, ist in die Grube gegangen und nicht wiedergekommen. Frag Greta, wenn du mehr wissen willst. Sie redet nicht mit mir.', a: [{ t: 'Suchst du etwas?', go: 'sucht' }] },
+      sucht: { text: 'Meinen Bruder. Jonte. Er ist nach Velmora getaucht, ins Hafenbecken, vor drei Wochen. Er wollte Glockenbronze holen, die bringt am meisten. Er hat gesagt, er ist zurück, bevor das Netz fertig ist.', a: [{ t: 'Ich halte Ausschau nach ihm.', go: 'auftrag' }] },
+      auftrag: { text: 'Sein Helm hat seinen Namen eingeritzt. Wenn du ihn findest, bring ihn mir. Den Helm, meine ich. Ihn bringst du mir nicht mehr. Das weiß ich.', setze: 'mira_auftrag', a: [{ t: 'Zeig mir, was du hast.', laden: true }, { t: 'Ich mache mich auf den Weg.' }] }
     }
   },
   mira_velmora: {
     wer: 'mira', setze: 'mira_velmora', start: 'a',
     k: {
-      a: { text: 'Ich bin dir nachgekommen. Irgendwer muss ja dein Glut nehmen. Der Hafen ist dort drüben. Zwischen den Schiffen ist etwas, das ich nicht sehen will.', a: [{ t: 'Zeig mir, was du hast.', laden: true }, { t: 'Ich sehe nach.' }] }
+      a: { text: 'Ich bin dir nachgekommen. Irgendwer muss ja deine Glut nehmen. Der Hafen ist dort drüben. Zwischen den Schiffen ist etwas, das ich nicht sehen will. Und darunter, im Becken … da hat Jonte getaucht.', a: [{ t: 'Zeig mir, was du hast.', laden: true }, { t: 'Ich sehe nach.' }] }
     }
   },
   mira_handel: {
     wer: 'mira', start: 'a',
-    k: { a: { text: 'Glut gegen Ware. Das ist das einzige Gesetz, das noch gilt.', a: [{ t: 'Zeig mir, was du hast.', laden: true }, { t: 'Später.' }] } }
+    k: { a: { text: D => D.merker.mira_wahr ? 'Ich tauche nicht mehr im Hafen. Aber handeln kann ich noch.' : D.merker.mira_luege ? 'Ich träume jetzt von ihm. Er lächelt im Traum. Danke dafür. … Also. Glut gegen Ware.' : 'Glut gegen Ware. Das ist das einzige Gesetz, das noch gilt.', a: [{ t: 'Zeig mir, was du hast.', laden: true }, { t: 'Später.' }] } }
   },
   mira_helm: {
     wer: 'mira', start: 'a',
     k: {
       a: { text: 'Du hast da etwas in der Hand.', a: [{ t: 'Den Helm deines Bruders.', go: 'helm' }] },
-      helm: { text: '… Das ist er.', a: [{ t: '(Schweigen)', go: 'stein' }] },
-      stein: { text: 'Danke. Hier. Das hat er mir geschenkt, als wir Kinder waren. Er würde wollen, dass es jemand trägt, der zurückkommt.', nimmt: 'helm', gibt: { tal: 'taucherstein' }, setze: 'mira_helm', a: [{ t: 'Was wirst du jetzt tun?', go: 'jetzt' }] },
-      jetzt: { text: 'Weitertauchen. Jonte hat immer gesagt, unter Velmora gibt es noch etwas. Tiefer als der Hafen, tiefer als alles. Ich dachte, er spinnt. Vielleicht sehe ich nach.', setze: 'mira_tiefe', a: [{ t: 'Pass auf dich auf, Mira.' }] }
+      helm: { text: '… Das ist er. Das ist sein Helm. Wie … wie hast du ihn gefunden?', a: [
+        { t: 'Er lag am Grund. Er hat nicht gelitten.', go: 'luege', setze: 'mira_luege', sub: 'Lügen' },
+        { t: 'Er war einer von ihnen. Ich musste gegen ihn kämpfen.', go: 'wahr', setze: 'mira_wahr', sub: 'Die Wahrheit sagen' } ] },
+      luege: { text: 'Am Grund. … Gut. Das ist gut. Dann hat er einfach geschlafen, oder? Einfach … Danke. Hier. Das hat er mir geschenkt, als wir Kinder waren. Er würde wollen, dass es jemand trägt, der zurückkommt.', nimmt: 'helm', gibt: { tal: 'taucherstein' }, setze: 'mira_helm', a: [{ t: 'Was wirst du jetzt tun?', go: 'jetzt' }] },
+      wahr: { text: '… Einer von denen. Die draußen auf dem Salzpfad stehen und warten. Jonte. … Hat er etwas gesagt?', a: [{ t: 'Er hat nach dir gefragt.', go: 'gefragt' }] },
+      gefragt: { text: 'Natürlich hat er das. Der Idiot. Hier. Das hat er mir geschenkt, als wir Kinder waren. Und die hier hat er für mich gesammelt. Er hat nie verstanden, dass ich nur ihn wollte, nicht das Erz.', nimmt: 'helm', gibt: { tal: 'taucherstein', item: ['glockenerz', 2] }, setze: 'mira_helm', a: [{ t: 'Was wirst du jetzt tun?', go: 'jetzt' }] },
+      jetzt: { text: 'Weitertauchen. Jonte hat immer gesagt, unter Velmora gibt es noch etwas. Tiefer als der Hafen, tiefer als alles. Ich dachte, er spinnt. Vielleicht sehe ich nach. Vielleicht nicht.', setze: 'mira_tiefe', a: [{ t: 'Pass auf dich auf, Mira.' }] }
     }
   },
+
+  /* ---------- Greta ---------- */
+  greta1: {
+    wer: 'greta', setze: 'greta1', start: 'a',
+    k: {
+      a: { text: 'Du bist nicht von hier. Keiner ist mehr von hier.', a: [{ t: 'Was ist mit dem Dorf geschehen?', go: 'dorf' }, { t: 'Du flickst ein Netz. Für wen?', go: 'netz' }] },
+      dorf: { text: 'Das Wasser ist gekommen, wie jedes Jahr. Nur ist es diesmal nicht wieder gegangen. Die Glocke von Velmora bleibt aus, und das Meer merkt es.', a: [{ t: 'Du flickst ein Netz. Für wen?', go: 'netz' }] },
+      netz: { text: 'Für Hark. Meinen Mann. Er ist vor einem Monat in die Salzgrube gestiegen, um Salz zu schlagen. Wenda war schon unten. Die Heilerin. Sie hat gesagt, sie bewahrt die Toten vor dem Meer.', a: [{ t: 'Und Hark?', go: 'hark' }] },
+      hark: { text: 'Ist nicht wiedergekommen. Keiner kommt wieder aus der Grube. Aber ich flicke weiter. Wenn ich aufhöre, heißt das, ich glaube es.', a: [{ t: 'Soll ich nach ihm sehen?', go: 'auftrag' }] },
+      auftrag: { text: 'Er trägt eine Nadel aus Walknochen, mit der er Netze flickt. Die gibt er nie aus der Hand. Wenn du sie findest, bring sie mir. Dann weiß ich es. Die Grube liegt hinter den Häusern, wo das Salz aus dem Boden wächst.', setze: 'greta_auftrag', a: [{ t: 'Ich suche sie.' }] }
+    }
+  },
+  greta_warten: {
+    wer: 'greta', start: 'a',
+    k: { a: { text: 'Die Grube liegt hinter den Häusern. Hinter dem Pfahl mit dem Rad. Pass auf, wo du hintrittst. Das Salz dort unten wächst spitz.', a: [{ t: 'Ich gehe.' }] } }
+  },
+  greta_nadel: {
+    wer: 'greta', setze: 'greta_fertig', start: 'a',
+    k: {
+      a: { text: 'Du warst unten. Ich sehe es an deinen Stiefeln. Weiß vom Salz.', a: [{ t: 'Ich habe seine Nadel.', go: 'nadel' }] },
+      nadel: { text: '… Seine Nadel. Er hat sie nie aus der Hand gegeben. Nie.', nimmt: 'nadel', a: [
+        { t: 'Er hat dir etwas geschrieben.', go: 'brief', wenn: D => D.gelesen.brief_hark },
+        { t: 'Wenda hat ihn im Salz bewahrt.', go: 'wenda', wenn: D => D.gelesen.tagebuch_wenda || D.bosse.hexe },
+        { t: '(Schweigen)', go: 'dank' } ] },
+      brief: { text: '„Flick sie für dich.“ … Das sieht ihm ähnlich. Er konnte nie etwas Schönes sagen, ohne dass es wehtut.', a: [{ t: '(Schweigen)', go: 'dank' }] },
+      wenda: { text: 'Wenda. Sie hat immer gesagt, das Meer soll niemanden mehr bekommen. Ich hätte nie gedacht, dass sie es so meint. Sie hat uns alle entbunden, weißt du. Auch Hark.', a: [{ t: '(Schweigen)', go: 'dank' }] },
+      dank: { text: 'Hier. Hark hat ihn gefunden, im ersten Jahr, in der Grube. Wir wollten ihn verkaufen, wenn es schlimm wird. Es ist schlimm. Aber anders, als wir dachten.', gibt: { item: 'mondtau' }, a: [{ t: 'Danke, Greta.' }] }
+    }
+  },
+  greta_nach: {
+    wer: 'greta', start: 'a',
+    k: { a: { text: 'Ich flicke weiter. Nicht mehr für ihn. Irgendwer muss ja. Und das Netz hält noch.', a: [{ t: 'Leb wohl, Greta.' }] } }
+  },
+
+  /* ---------- Ser Kalden ---------- */
   kalden1: {
     wer: 'kalden', setze: 'kalden1', start: 'a',
     k: {
       a: { text: 'Nicht schlecht, für Strandgut. Ser Kalden. Einst von der Kronwacht. Jetzt nur noch Kalden.', a: [{ t: 'Die Kronwacht?', go: 'wacht' }, { t: 'Was ist in Velmora?', go: 'velmora' }] },
-      wacht: { text: 'Die Ritter des Königs. Wir haben geschworen, die Krone zu schützen. Die Krone ist zerbrochen, also haben wir unseren Schwur wohl gebrochen. So sehen es jedenfalls die anderen.', a: [{ t: 'Was ist in Velmora?', go: 'velmora' }] },
-      velmora: { text: 'Isolde. Die Tochter des Königs. Sie trägt einen Splitter der Krone, oben im Glockenturm, und sie lässt niemanden hinauf.', a: [{ t: 'Warum bist du hier?', go: 'warum' }] },
-      warum: { text: 'Weil jemand die Splitter zurückholen muss, bevor sie alles zerfressen, was sie tragen. Allein schaffe ich es nicht. Vielleicht schaffst du es.', a: [{ t: 'Vielleicht.', go: 'ende' }] },
-      ende: { text: 'Wir sehen uns in Velmora. Wenn du bis dahin noch stehst.', a: [{ t: 'Leb wohl, Kalden.' }] }
+      wacht: { text: 'Die Ritter des Königs. Wir haben geschworen, die Krone zu schützen. Die Krone ist zerbrochen, also haben wir unseren Schwur wohl gebrochen. So sehen es jedenfalls die, die noch leben.', a: [
+        { t: 'In der Bucht lag ein Ritter der Kronwacht.', go: 'bucht', wenn: D => D.gelesen.schild_ritter },
+        { t: 'Was ist in Velmora?', go: 'velmora' } ] },
+      bucht: { text: '„Die Krone ist es nicht wert.“ Hat er das geschrieben? … Aldric. Er hat immer zu viel gedacht. Gut, dass er Ruhe hat.', a: [{ t: 'Was ist in Velmora?', go: 'velmora' }] },
+      velmora: { text: 'Isolde. Die Jüngste der fünf. Sie trägt einen Splitter der Krone, oben im Glockenturm, und sie lässt niemanden hinauf.', a: [{ t: 'Du kennst sie?', go: 'kennt' }, { t: 'Warum bist du hier?', go: 'warum' }] },
+      kennt: { text: 'Jeder in Velmora kannte sie. Das ist lange her. … Sehr lange.', a: [{ t: 'Warum bist du hier?', go: 'warum' }] },
+      warum: { text: 'Weil jemand die Splitter zurückholen muss, bevor sie alles zerfressen, was sie tragen. Allein schaffe ich es nicht. Vielleicht schaffst du es.', a: [{ t: 'Warum schaffst du es nicht?', go: 'nicht' }] },
+      nicht: { text: 'Das geht dich nichts an. Pass auf die Brücke auf. Die Pfeiler sind älter als ich, und das will etwas heißen. Wir sehen uns in Velmora. Wenn du bis dahin noch stehst.', a: [{ t: 'Leb wohl, Kalden.' }] }
     }
   },
   kalden2: {
     wer: 'kalden', setze: 'kalden2', start: 'a',
     k: {
-      a: { text: 'Du bist also so weit gekommen. Hör zu. Wenn sie die große Glocke läutet, lauf nicht weg. Weich aus, wenn der Klang dich erreicht, nicht vorher.', a: [{ t: 'Danke für den Rat.', go: 'splitter' }] },
-      splitter: { text: 'Und wenn du den Splitter bekommst … bring ihn nicht zu Enna.', a: [{ t: 'Warum nicht?', go: 'warum' }] },
-      warum: { text: 'Weil ich nicht weiß, auf wessen Seite sie steht. Und du auch nicht.', setze: 'kalden_warnung', a: [{ t: 'Ich werde darüber nachdenken.' }] }
+      a: { text: 'Du bist also so weit gekommen. Hör zu. Wenn sie die große Glocke läutet, lauf nicht weg. Weich aus, wenn der Klang dich erreicht, nicht vorher.', a: [
+        { t: 'Ich habe das Bild in der Gruft gesehen.', go: 'bild', wenn: D => D.gelesen.portrait_gruft },
+        { t: 'Danke für den Rat.', go: 'splitter' } ] },
+      bild: { text: '… Dann weißt du es.', a: [{ t: 'Warum gehst du nicht selbst hinauf?', go: 'warum' }] },
+      warum: { text: 'Man rief die Kronwacht nach Grauhall, in der Nacht unserer Verlobung. Die Nacht, in der der König starb. Ich habe geschworen, die Splitter zu schützen, und ein Splitter ging an sie. Ich durfte nicht zu ihr. Nicht als ihr Mann. Nur als ihr Wächter.', a: [{ t: 'Und dann?', go: 'dann' }] },
+      dann: { text: 'Dann ist das Jahrhundert vergangen. Dann das nächste. Irgendwann war ich zu feige, noch zu gehen. Geh hinauf. Ich kann es nicht. Ich kann ihr nicht in die Augen sehen, wenn sie mich nicht mehr erkennt.', setze: 'kalden_erkannt', a: [{ t: 'Ich gehe.' }] },
+      splitter: { text: 'Und wenn du den Splitter bekommst … bring ihn nicht zu Enna.', a: [{ t: 'Warum nicht?', go: 'enna' }] },
+      enna: { text: 'Weil ich nicht weiß, auf wessen Seite sie steht. Sie ist älter, als sie aussieht. Viel älter. Und du weißt es auch nicht.', setze: 'kalden_warnung', a: [{ t: 'Ich werde darüber nachdenken.' }] }
     }
   },
-  kalden3: {
-    wer: 'kalden', setze: 'kalden3', start: 'a',
+  kalden_abschied: {
+    wer: 'kalden', setze: 'kalden_fort', start: 'a',
     k: {
-      a: { text: 'Der Splitter. Du hast ihn. Die Kronwacht würde viel dafür geben. Ich auch.', a: [{ t: 'Er bleibt bei mir.', go: 'nein', setze: 'kalden_nein' }, { t: 'Was würdest du damit tun?', go: 'was' }] },
-      nein: { text: 'Natürlich. Fürs Erste.', a: [{ t: 'Leb wohl, Kalden.' }] },
-      was: { text: 'Die Krone wieder zusammensetzen. Was sonst? Ohne Krone steigt das Wasser, bis es uns alle holt.', setze: 'kalden_krone', a: [{ t: 'Er bleibt trotzdem bei mir.', go: 'nein', setze: 'kalden_nein' }] }
+      a: { text: D => D.merker.splitter_kalden
+        ? 'Ich bringe ihn dorthin, wo er hingehört. Nach Grauhall. Zu dem, was von der Kronwacht übrig ist. Und dann … dann halte ich zum ersten Mal seit dreihundert Jahren ein Versprechen.'
+        : 'Du hast ihn behalten. Ich hoffe, du weißt, was du da trägst. Sie wusste es auch nicht, am Anfang.', a: [{ t: 'Was wirst du tun?', go: 'tun' }] },
+      tun: { text: 'Nach Osten gehen. Die nächste Glocke hängt in Grauhall, und sie wird von jemandem geläutet, den ich einmal meinen Herrn genannt habe. Wir sehen uns dort, Strandgut. So oder so.', a: [{ t: 'Leb wohl, Kalden.' }] }
     }
   }
 };
@@ -327,7 +237,7 @@ const GESPRAECHE = {
 /* ---------- Laden ---------- */
 const LADEN = {
   mira: [
-    { id: 'glockenerz', art: 'item', preis: 250, vorrat: 4 },
+    { id: 'glockenerz', art: 'item', preis: 250, vorrat: 5 },
     { id: 'muschel', art: 'tal', preis: 900, vorrat: 1 }
   ]
 };
@@ -336,14 +246,14 @@ const LADEN = {
 const ANFANG = {
   erwachen: [
     'Salz im Mund. Kies unter den Händen.',
-    'Das Meer hat dich ausgespuckt, zwischen die Rippen eines Schiffes, dessen Namen du nicht kennst. Deinen eigenen kennst du auch nicht mehr.',
-    'Irgendwo läutet eine Glocke. Leise und gleichmäßig, wie ein Herzschlag.'
+    'Das Meer hat dich ausgespuckt, zwischen Tang und Treibholz, an einen Strand, dessen Namen du nicht kennst. Deinen eigenen kennst du auch nicht mehr.',
+    'Irgendwo läutet eine Glocke. Leise und gleichmäßig, wie ein Herzschlag. Und in deiner Brust schlägt etwas mit.'
   ],
   herkunft: ['Neben dir im Kies liegt, was dir geblieben ist. Deine Hand greift danach, als wüsste sie besser als du, wer du warst.']
 };
 const SAETZE = {
   'feuer.tod': 'Du erwachst am Leuchtfeuer. Die Flut hat dich ein weiteres Mal ausgespuckt.',
-  'feuer.rast': 'Die Flamme brennt ruhig. Du rastest. Deine Wunden schließen sich, und die Phiolen füllen sich mit Mondtau.'
+  'feuer.rast': 'Die Flamme brennt ruhig. Du rastest. Deine Wunden schließen sich, und die Phiolen füllen sich mit Mondtau. Irgendwo stehen die Toten wieder auf.'
 };
 
 /* ---------- Stimmen (derzeit nicht im Spiel, siehe README) ---------- */
@@ -356,16 +266,11 @@ function stimmZeilen(){
   ANFANG.erwachen.forEach((t, i) => z.push({ id: 'erwachen.' + i, wer: 'erzaehler', text: t }));
   ANFANG.herkunft.forEach((t, i) => z.push({ id: 'herkunft.' + i, wer: 'erzaehler', text: t }));
   for (const k in HERK) z.push({ id: 'herk.' + k, wer: 'erzaehler', text: HERK[k].rise });
-  for (const k in ORTE){
-    const o = ORTE[k];
-    (o.text || []).forEach((t, i) => z.push({ id: k + '.' + i, wer: 'erzaehler', text: t }));
-    (o.nachBoss || []).forEach((t, i) => z.push({ id: k + '.nach' + i, wer: 'erzaehler', text: t }));
-  }
   for (const k in SAETZE) z.push({ id: k, wer: 'erzaehler', text: SAETZE[k] });
   for (const k in FEINDE){
     const d = FEINDE[k], wer = SPRECHER[k] ? k : 'erzaehler';
     if (d.intro) z.push({ id: k + '.intro', wer, text: d.intro });
-    if (d.phase2 && d.phase2.line) z.push({ id: k + '.line2', wer, text: d.phase2.line });
+    (d.phasen || []).forEach((p, i) => { if (p.line) z.push({ id: k + '.phase' + (i + 1), wer, text: p.line }); });
   }
   return z;
 }
