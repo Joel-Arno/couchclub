@@ -19,7 +19,10 @@ import shutil
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent
 
-STATIC = ["styles.css", "core.js", "g-connect4.js", "g-ultimate.js", "g-boxes.js", "g-memory.js",
+STATIC = ["styles.css", "core.js", "qrcode.js", "net.js",
+          "g-connect4.js", "g-ultimate.js", "g-boxes.js", "g-memory.js", "g-schiffe.js",
+          "g-muehle.js", "g-reversi.js", "g-dame.js", "g-quoridor.js",
+          "g-kniffel.js", "g-sudoku.js", "g-minen.js", "g-werwolf.js",
           "g-abenteuer.js", "manifest.webmanifest"]
 ICONS = ["icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png"]
 
@@ -31,7 +34,7 @@ HEAD = """<!DOCTYPE html>
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#ECE7E1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#161218" media="(prefers-color-scheme: dark)">
-<meta name="description" content="Spieleabend auf einem Handy: Spiele gegen die KI oder zu zweit, dazu Kerker-Wischer, Lichtläufer und Mondgeläut.">
+<meta name="description" content="Spieleabend auf dem Handy: Brettspiele gegen die KI oder zu zweit, Kniffel und Werwolf für die ganze Runde, auch mit mehreren Handys, dazu Kerker-Wischer, Lichtläufer und Mondgeläut.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Couchclub">

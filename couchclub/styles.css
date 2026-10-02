@@ -433,3 +433,69 @@ h1, h2, h3, p { margin: 0; }
 .frame-msg { font-weight: 650; max-width: 28ch; }
 .frame-load .btn.ghost { box-shadow: inset 0 0 0 1.5px rgba(36, 28, 39, .2); }
 @keyframes breathe { to { transform: scale(1.06); } }
+
+/* Raum beitreten (Startseite) */
+.join-btn {
+  justify-self: start;
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 4px; padding: 10px 18px 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--surface); box-shadow: var(--lift);
+  text-align: left;
+  transition: transform .12s;
+}
+.join-btn:active { transform: scale(.98); }
+.join-btn svg { width: 30px; height: 30px; fill: none; stroke: var(--velvet); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.join-btn span { display: grid; line-height: 1.2; }
+.join-btn b { font-weight: 700; }
+.join-btn small { font-size: 13px; color: var(--ink-2); }
+.code-input { font: 780 30px/1 var(--font-display); letter-spacing: .22em; text-transform: uppercase; text-align: center; }
+
+/* Viele Spieler in der Leiste */
+.scorebar.many { overflow-x: auto; scrollbar-width: none; gap: 6px; }
+.scorebar.many::-webkit-scrollbar { display: none; }
+.scorebar.many .pp { flex: 1 0 auto; min-width: 0; padding: 5px 10px 5px 5px; gap: 7px; }
+.scorebar.many .av { width: 28px; height: 28px; font-size: 13px; }
+.scorebar.many .pp-name { font-size: 13px; max-width: 9ch; }
+.scorebar.many .pp-sub { display: none; }
+.scorebar.many .pp-score { font-size: 21px; }
+.pp.away { opacity: .45; }
+.play.bare { grid-template-rows: auto minmax(0, 1fr) auto; }
+.play.bare .scorebar { display: none; }
+.play.offline .play-title small { color: var(--p-coral); }
+
+/* Rangliste nach mehreren Runden */
+.result-table { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; text-align: left; }
+.result-table li { display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 999px; background: var(--sunk); }
+.result-table li span:not(.av) { flex: 1; font-weight: 650; }
+.result-table li b { font: 780 22px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+
+/* Handy weitergeben */
+.handoff {
+  position: absolute; inset: 0; z-index: 8;
+  display: grid; place-items: center; padding: 20px;
+  background: var(--ground);
+  animation: fade .2s ease-out;
+}
+.handoff-card { width: min(100%, 380px); display: grid; justify-items: center; gap: 14px; text-align: center; }
+.handoff-card .av.lg { width: 84px; height: 84px; font-size: 40px; }
+.handoff-title { font: 800 clamp(30px, 8vw, 40px)/.95 var(--font-display); font-stretch: 78%; letter-spacing: -.015em; color: var(--pc); text-wrap: balance; }
+.handoff-text { color: var(--ink-2); max-width: 30ch; }
+
+/* Raum */
+.lobby { width: min(100%, 460px); max-height: 100%; overflow-y: auto; display: grid; gap: 12px; align-content: start; padding-bottom: 4px; }
+.lobby-card { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--lift); padding: 16px 18px; display: grid; gap: 10px; justify-items: center; text-align: center; }
+.lobby-code { font: 800 clamp(46px, 14vw, 64px)/1 var(--font-display); letter-spacing: .14em; margin-right: -.14em; font-variant-numeric: tabular-nums; }
+.lobby-qr { width: min(52vw, 190px); aspect-ratio: 1; border-radius: 14px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--line); }
+.lobby-qr svg { width: 100%; height: 100%; }
+.lobby-hint { font-size: 14px; color: var(--ink-2); max-width: 34ch; }
+.lobby-list { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; gap: 6px; text-align: left; }
+.lobby-list li { display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; border-radius: 999px; background: var(--sunk); }
+.lobby-list li > span:not(.av) { flex: 1; font-weight: 650; }
+.lobby-list li.away { opacity: .5; }
+.lobby-list small { color: var(--ink-2); font-weight: 500; }
+.tag { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+.lobby-wait { text-align: center; color: var(--ink-2); font-weight: 600; padding: 6px; }
+
+.link-btn { justify-self: center; font-size: 14px; font-weight: 650; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; padding: 6px 10px; }
+.result-back { position: absolute; z-index: 6; left: 50%; transform: translateX(-50%); bottom: max(14px, env(safe-area-inset-bottom)); box-shadow: var(--lift); }
