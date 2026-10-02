@@ -10,8 +10,14 @@
   const COLORS = ['coral', 'blue', 'saffron', 'teal', 'plum', 'rose'];
   const COLOR_NAMES = { coral: 'Koralle', blue: 'Blau', saffron: 'Safran', teal: 'Petrol', plum: 'Pflaume', rose: 'Pink' };
   const LEVELS = ['Leicht', 'Mittel', 'Schwer'];
-  const MODE_LABEL = { ai: 'Gegen KI', duo: 'Zu zweit', solo: 'Alleine' };
-  const SOON = ['Codeknacker', 'Zahlenkette', 'Reaktionsduell', 'Undercover', 'Schiffe versenken', 'Air-Hockey', 'Begriffe erklären', 'Wörter raten', 'Quiz'];
+  const MODE_LABEL = { ai: 'Gegen KI', duo: 'Zu zweit', solo: 'Alleine', group: 'Zu mehreren', lead: 'Ein Handy', online: 'Mehrere Handys' };
+  const SOON = ['Codeknacker', 'Zahlenkette', 'Reaktionsduell', 'Undercover', 'Air-Hockey', 'Begriffe erklären', 'Wörter raten', 'Quiz'];
+  const SHELVES = [
+    { id: 'duel', label: (n) => `Duelle · ${n} Spiele` },
+    { id: 'party', label: () => 'Für die ganze Runde' },
+    { id: 'puzzle', label: () => 'Knobeln' },
+  ];
+  const ACTIVE = 'couchclub.aktiv';   // sessionStorage: offener Raum als Gast, damit ein Neuladen wieder hineinführt
   const KEY = 'couchclub.v1';
   // Spielstände der Solo-Abenteuer: spiele.html (Kerker-Wischer und Lichtläufer) und mond.html (Mondgeläut)
   const saveKeysOf = (pid) => ['kerker-licht-v2@' + pid, 'mondgelaeut-v1@' + pid, 'mondgelaeut-v2@' + pid];
@@ -125,8 +131,13 @@
     if (names.length > 2) return 'Wer ist heute dabei?';
     return 'Was spielen wir?';
   }
+  function modeMeta(g, m) {
+    if (m === 'group') return `${g.group[0]}–${g.group[1]} Spieler`;
+    if (m === 'lead') return `${g.lead[0]}–${g.lead[1]} Spieler`;
+    return { ai: 'KI', duo: '2 Spieler', solo: 'Solo', online: 'Mehrere Handys' }[m];
+  }
   function tile(g) {
-    const modes = g.modes.map((m) => ({ ai: 'KI', duo: '2 Spieler', solo: 'Solo' }[m])).join(' · ');
+    const modes = g.modes.map((m) => modeMeta(g, m)).join(' · ');
     return `<button class="tile ${g.frame ? 'wide' : ''}" data-game="${g.id}" style="--gc:var(--p-${g.color})">
       <span class="thumb">${g.thumb}</span>
       <span class="tile-body">
@@ -137,7 +148,8 @@
     </button>`;
   }
   function renderGames() {
-    const duels = CC.games.filter((g) => !g.frame), solos = CC.games.filter((g) => g.frame);
+    const solos = CC.games.filter((g) => g.frame);
+    const shelves = SHELVES.map((sh) => ({ ...sh, games: CC.games.filter((g) => !g.frame && (g.shelf || 'duel') === sh.id) })).filter((sh) => sh.games.length);
     view.innerHTML = `
       <section class="intro">
         <h1 class="hello">${headline()}</h1>
@@ -148,9 +160,13 @@
           }).join('')}
           <button class="chip chip-add" data-action="add-player">+ Spieler</button>
         </div>
+        <button class="join-btn" data-action="join">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="8" height="15" rx="2"/><rect x="13" y="4" width="8" height="15" rx="2"/><path d="M6 16h2M16 16h2"/></svg>
+          <span><b>Raum beitreten</b><small>Mit eigenem Handy bei einem Spiel mitmachen</small></span>
+        </button>
       </section>
-      <div class="shelf-head"><h2 class="section-label">Im Club · ${duels.length} Spiele</h2></div>
-      <section class="shelf">${duels.map(tile).join('')}</section>
+      ${shelves.map((sh) => `<div class="shelf-head"><h2 class="section-label">${sh.label(sh.games.length)}</h2></div>
+      <section class="shelf">${sh.games.map(tile).join('')}</section>`).join('')}
       ${solos.length ? `<div class="shelf-head"><h2 class="section-label">Solo-Abenteuer</h2></div>
       <section class="shelf shelf-wide">${solos.map(tile).join('')}</section>` : ''}
       <section class="soon">
@@ -175,7 +191,8 @@
       const solo = x?.solo || 0;
       const parts = [];
       if (duels) parts.push(`${x.w} gew. · ${x.d} unent. · ${x.l} verl.`);
-      if (solo) parts.push(`${solo}× solo`);
+      if (solo) parts.push(x.sf ? `${solo - x.sf} von ${solo} geschafft` : `${solo}× solo`);
+      if (x?.best && g.bestText) { const b = g.bestText(x.best); if (b) parts.push(b); }
       const cell = parts.length ? `<td>${parts.join(' · ')}</td>` : '<td class="muted">noch nicht gespielt</td>';
       return `<tr><th scope="row">${g.name}</th>${cell}</tr>`;
     }).join('');
@@ -234,7 +251,7 @@
         <div class="group">
           <h2 class="section-label">Über Couchclub</h2>
           <div class="rows">
-            <div class="row"><span class="row-text"><b>Version 1.1</b><small>${CC.games.filter((g) => !g.frame).length} Spiele mit KI-Gegner in drei Stufen und ${CC.games.filter((g) => g.frame).length} Solo-Abenteuer. ${SOON.length} weitere Spiele sind geplant.</small></span></div>
+            <div class="row"><span class="row-text"><b>Version 1.2</b><small>${CC.games.filter((g) => !g.frame).length} Spiele, viele davon mit KI-Gegner in drei Stufen, ${CC.games.filter((g) => g.modes.includes('online')).length} auch mit mehreren Handys, dazu ${CC.games.filter((g) => g.frame).length} Solo-Abenteuer. ${SOON.length} weitere Spiele sind geplant.</small></span></div>
           </div>
         </div>
       </div>`;
@@ -250,21 +267,29 @@
     const first = panel.querySelector('input, button:not([data-action="close-sheet"])');
     if (first && kind === 'editor') setTimeout(() => first.focus(), 60);
   }
-  function hideSheet() { sheet.hidden = true; sheetKind = null; setup = null; editor = null; }
+  function hideSheet() { sheet.hidden = true; sheetKind = null; setup = null; editor = null; join = null; }
 
   /* Spiel-Setup */
   let setup = null;
-  const needed = (mode) => (mode === 'duo' ? 2 : 1);
+  /* Wie viele Profile ein Modus braucht: [mindestens, höchstens] */
+  function need(mode, g = setup?.g) {
+    if (mode === 'duo') return [2, 2];
+    if (mode === 'group') return g?.group || [2, 6];
+    if (mode === 'lead') return [0, 0];
+    return [1, 1];
+  }
   function fillPicks() {
-    const n = needed(setup.mode);
-    const pool = [...state.lineup, ...state.players.map((p) => p.id)];
+    const [min, max] = need(setup.mode);
     setup.picks = setup.picks.filter((id) => playerById(id));
+    if (max > 2) state.lineup.forEach((id) => { if (setup.picks.length < max && !setup.picks.includes(id) && playerById(id)) setup.picks.push(id); });
+    const pool = [...state.lineup, ...state.players.map((p) => p.id)];
     for (const id of pool) {
-      if (setup.picks.length >= n) break;
+      if (setup.picks.length >= min) break;
       if (!setup.picks.includes(id) && playerById(id)) setup.picks.push(id);
     }
-    setup.picks = setup.picks.slice(0, n);
+    setup.picks = setup.picks.slice(0, max);
   }
+  const enoughPicks = () => { const [min, max] = need(setup.mode); return setup.picks.length >= min && setup.picks.length <= max; };
   function openSetup(gid) {
     const g = gameById(gid);
     const last = state.last[gid] || {};
@@ -286,13 +311,17 @@
   }
   function renderSetup() {
     const { g, mode, level, picks, opts } = setup;
-    const n = needed(mode);
-    const enough = picks.length === n;
+    const [min, max] = need(mode);
+    const n = max;
+    const enough = enoughPicks();
     const who = state.players.map((p) => {
       const idx = picks.indexOf(p.id);
       const on = idx >= 0;
-      return `<button class="chip ${on ? 'is-on' : ''}" data-pick="${p.id}" aria-pressed="${on}" style="--pc:var(--p-${p.color})"><span class="dot">${esc(initial(p.name))}</span>${esc(p.name)}${on && n > 1 ? `<span class="pick-order">${idx === 0 ? 'beginnt' : ''}</span>` : ''}</button>`;
+      const order = !on || n < 2 ? '' : n === 2 ? (idx === 0 ? 'beginnt' : '') : `${idx + 1}.`;
+      return `<button class="chip ${on ? 'is-on' : ''}" data-pick="${p.id}" aria-pressed="${on}" style="--pc:var(--p-${p.color})"><span class="dot">${esc(initial(p.name))}</span>${esc(p.name)}${order ? `<span class="pick-order">${order}</span>` : ''}</button>`;
     }).join('');
+    const whoLabel = mode === 'online' ? 'Wer bist du?' : n > 2 ? `Wer spielt? ${min} bis ${max} antippen` : n > 1 ? 'Wer spielt? Zwei antippen' : 'Wer spielt?';
+    const modeHint = { online: 'Jeder spielt auf seinem eigenen Handy. Du eröffnest einen Raum, die anderen treten mit dem Code bei.', lead: g.leadHint || '' }[mode];
     panel.innerHTML = `
       <div class="sheet-head" style="--gc:var(--p-${g.color})">
         <span class="thumb">${g.thumb}</span>
@@ -300,16 +329,16 @@
         <button class="icon-btn" data-action="close-sheet" aria-label="Schließen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <ul class="rules">${g.rules.map((r) => `<li>${r}</li>`).join('')}</ul>
-      ${g.modes.length > 1 ? `<div class="field"><span class="label">Modus</span>${seg(g.modes.map((m) => ({ v: m, l: MODE_LABEL[m] })), 'mode', mode)}</div>` : ''}
-      <div class="field">
-        <span class="label">${n > 1 ? 'Wer spielt? Zwei antippen' : 'Wer spielt?'}</span>
+      ${g.modes.length > 1 ? `<div class="field"><span class="label">Modus</span>${seg(g.modes.map((m) => ({ v: m, l: MODE_LABEL[m] })), 'mode', mode)}${modeHint ? `<span class="hint">${modeHint}</span>` : ''}</div>` : ''}
+      ${n ? `<div class="field">
+        <span class="label">${whoLabel}</span>
         <div class="lineup">${who}<button class="chip chip-add" data-action="add-player">+ Spieler</button></div>
-        ${n > 1 && state.players.length < 2 ? '<span class="hint">Lege einen zweiten Spieler an, um zu zweit zu spielen.</span>' : ''}
-      </div>
+        ${min > 1 && state.players.length < min ? `<span class="hint">Lege ${min === 2 ? 'einen zweiten Spieler' : `mindestens ${min} Spieler`} an, um ${min === 2 ? 'zu zweit' : 'zusammen'} zu spielen.</span>` : ''}
+      </div>` : ''}
       ${g.frame ? `<div class="field"><span class="label">Spielstand${picks[0] ? ` von ${esc(playerById(picks[0]).name)}` : ''}</span><p class="progress">${esc(frameProgress(g, picks[0]))}</p></div>` : ''}
       ${mode === 'ai' ? `<div class="field"><span class="label">KI-Stufe</span>${seg(LEVELS.map((l, i) => ({ v: i + 1, l })), 'level', level)}<span class="hint">${['Macht Fehler, gut zum Reinkommen.', 'Denkt ein paar Züge voraus.', 'Spielt richtig stark. Viel Glück.'][level - 1]}</span></div>` : ''}
       ${g.options.map((o) => `<div class="field"><span class="label">${o.label}</span>${seg(o.choices, `opt-${o.id}`, opts[o.id])}</div>`).join('')}
-      <button class="btn primary wide" data-action="start" ${enough ? '' : 'disabled'}>Los geht’s</button>`;
+      <button class="btn primary wide" data-action="start" ${enough ? '' : 'disabled'}>${mode === 'online' ? 'Raum eröffnen' : 'Los geht’s'}</button>`;
     panel.setAttribute('aria-labelledby', 'sheet-title');
   }
 
@@ -323,9 +352,10 @@
   function openEditor(id) {
     const p = id && playerById(id);
     const used = state.players.map((x) => x.color);
+    const back = sheetKind === 'setup' ? setup : sheetKind === 'join' ? 'join' : null;
     editor = p
-      ? { id: p.id, name: p.name, color: p.color, confirm: false, wipe: null, wiped: null, back: sheetKind === 'setup' ? setup : null }
-      : { id: null, name: '', color: COLORS.find((c) => !used.includes(c)) || COLORS[state.players.length % COLORS.length], confirm: false, back: sheetKind === 'setup' ? setup : null };
+      ? { id: p.id, name: p.name, color: p.color, confirm: false, wipe: null, wiped: null, back }
+      : { id: null, name: '', color: COLORS.find((c) => !used.includes(c)) || COLORS[state.players.length % COLORS.length], confirm: false, back };
     renderEditor();
     sheetKind = 'editor';
     sheet.hidden = false;
@@ -386,9 +416,10 @@
     save();
     const back = editor.back;
     editor = null;
+    if (back === 'join') { openJoin(join?.code, id); render(); return; }
     if (back) {
       setup = back;
-      if (isNew && setup.picks.length < needed(setup.mode)) setup.picks.push(id);
+      if (isNew && setup.picks.length < need(setup.mode)[1]) setup.picks.push(id);
       renderSetup();
       sheetKind = 'setup';
     } else hideSheet();
@@ -417,13 +448,15 @@
   let inst = null;
   let timers = [];
   let live = null;
+  let roundHooks = {};
 
   function start() {
     const { g, mode, level, picks, opts } = setup;
     state.last[g.id] = { mode, level, picks: picks.slice(), opts: { ...opts } };
     save();
     if (g.frame) { hideSheet(); openFrame(g, playerById(picks[0])); return; }
-    const players = picks.map((id) => ({ ...playerById(id) }));
+    if (mode === 'online') { hideSheet(); openRoom({ host: true, g, opts, pid: picks[0] }); return; }
+    const players = picks.map((id) => ({ ...playerById(id), pid: id, local: true }));
     if (mode === 'ai') {
       const color = ['plum', 'teal', 'blue', 'coral'].find((c) => c !== players[0].color);
       players.push({ id: 'ai', name: 'KI', color, ai: true, level });
@@ -431,22 +464,40 @@
     match = { g, mode, level, opts, players, wins: {}, round: 0 };
     players.forEach((p) => (match.wins[p.id] = 0));
     hideSheet();
-    $('#play-name').textContent = g.name;
-    $('#play-mode').textContent = [mode === 'ai' ? `Gegen KI · ${LEVELS[level - 1]}` : MODE_LABEL[mode], g.optionLabel?.(opts)].filter(Boolean).join(' · ');
-    play.hidden = false;
-    document.body.classList.add('is-playing');
+    openPlay(g.name, [mode === 'ai' ? `Gegen KI · ${LEVELS[level - 1]}` : MODE_LABEL[mode], g.optionLabel?.(opts)].filter(Boolean).join(' · '));
     newRound();
   }
 
+  function openPlay(name, sub) {
+    $('#play-name').textContent = name;
+    $('#play-mode').textContent = sub;
+    play.hidden = false;
+    document.body.classList.add('is-playing');
+  }
+
   function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function clearOverlays() { play.querySelectorAll('.handoff, .result-back').forEach((el) => el.remove()); hush(); }
+  function peekBoard(on) {
+    play.querySelectorAll('.result-back').forEach((el) => el.remove());
+    resultEl.hidden = on;
+    if (on) play.insertAdjacentHTML('beforeend', '<button class="btn small primary result-back" data-action="unpeek">Ergebnis zeigen</button>');
+  }
 
   function newRound() {
     clearTimers();
+    clearOverlays();
     try { inst?.destroy?.(); } catch (e) { /* weiter */ }
     resultEl.hidden = true;
     resultEl.innerHTML = '';
-    const order = match.round % 2 && match.players.length > 1 ? [...match.players].reverse() : match.players;
+    roundHooks = {};
+    const P = match.players;
+    let order = P;
+    if (match.mode !== 'online' && P.length > 1) {
+      const k = match.round % P.length;
+      order = P.length === 2 ? (k ? [...P].reverse() : P) : [...P.slice(k), ...P.slice(0, k)];
+    }
     live = { order, turn: null, points: {}, labels: {}, done: false };
+    play.classList.toggle('bare', !!match.g.bare || !match.players.length);
     renderScorebar();
     statusEl.textContent = '';
     stageHost.replaceChildren();
@@ -454,25 +505,36 @@
     stage.className = 'stage-inner';
     stage.style.cssText = 'width:100%;height:100%;display:grid;place-items:center;min-height:0';
     stageHost.append(stage);
+    $('[data-action="restart"]').hidden = match.mode === 'online' || !!match.g.noRestart;
     const api = {
       players: order,
       mode: match.mode,
       opts: match.opts,
       motion: motionOn(),
+      round: match.round,
       turn(i) { live.turn = order[i]?.id ?? null; paintPills(); },
-      score(i, v, label) { live.points[order[i].id] = v; if (label) live.labels[order[i].id] = label; paintPills(); },
+      score(i, v, label) { if (!order[i]) return; live.points[order[i].id] = v; if (label) live.labels[order[i].id] = label; paintPills(); },
       status(t) { statusEl.textContent = t; },
       sfx,
       buzz,
       later(fn, ms) { const t = setTimeout(fn, ms); timers.push(t); return t; },
       finish,
       esc,
+      avatar,
+      handoff,
+      speak,
+      hush,
+      profiles: state.players.map((p) => ({ id: p.id, name: p.name, color: p.color })),
+      lineup: state.lineup.slice(),
+      wake: (on) => wakeLock(on),
     };
+    if (match.mode === 'online') api.online = onlineApi(order), api.me = api.online.me;
     inst = match.g.create(stage, api);
   }
 
   function renderScorebar() {
-    scorebar.innerHTML = match.players.map((p) => `
+    scorebar.classList.toggle('many', match.players.length > 2);
+    scorebar.innerHTML = live.order.map((p) => `
       <div class="pp" data-pid="${p.id}" style="--pc:var(--p-${p.color})">
         ${avatar(p)}
         <div class="pp-text"><span class="pp-name">${esc(p.ai ? 'KI' : p.name)}</span><span class="pp-sub"></span></div>
@@ -481,62 +543,90 @@
     paintPills();
   }
   function paintPills() {
+    if (!live) return;
     scorebar.querySelectorAll('.pp').forEach((el) => {
       const id = el.dataset.pid;
+      const p = live.order.find((x) => x.id === id);
       const on = !live.done && live.turn === id && match.players.length > 1;
       const hasPts = id in live.points;
-      const wins = match.wins[id];
+      const wins = match.wins[id] || 0;
+      const away = p?.c && room && !room.s.isOn(p.c);
       el.classList.toggle('on', on);
+      el.classList.toggle('away', !!away);
       el.querySelector('.pp-score').textContent = hasPts ? live.points[id] : wins;
-      el.querySelector('.pp-sub').textContent = on
-        ? (id === 'ai' ? 'denkt nach' : 'am Zug')
+      el.querySelector('.pp-sub').textContent = away ? 'nicht verbunden'
+        : on ? (id === 'ai' ? 'denkt nach' : 'am Zug')
         : hasPts ? (live.labels[id] || (wins ? `${wins} ${wins === 1 ? 'Sieg' : 'Siege'}` : 'Punkte'))
         : (wins === 1 ? 'Sieg' : 'Siege');
     });
   }
 
+  /* res: { winner: Index | null } oder { winners: [Index] }, im Solo { fail, best: { key, value, high } },
+     title und detail für die Ergebniskarte, record: { Profil-ID: 'w' | 'l' | 'd' } überschreibt die Wertung */
   function finish(res) {
     if (live.done) return;
     live.done = true;
     const g = match.g;
-    const winner = res.winner == null ? null : live.order[res.winner];
+    const solo = match.mode === 'solo';
+    const winners = res.winners || (res.winner == null ? [] : [res.winner]);
     let record = false;
-    live.order.forEach((p, i) => {
-      if (p.ai) return;
-      const s = stat(p.id, g.id);
-      if (match.mode === 'solo') {
+    if (res.record) {
+      Object.entries(res.record).forEach(([pid, r]) => { if (playerById(pid) && 'wld'.includes(r)) stat(pid, g.id)[r]++; });
+    } else live.order.forEach((p, i) => {
+      if (p.ai || !p.local) return;
+      const s = stat(p.pid || p.id, g.id);
+      if (solo) {
         s.solo = (s.solo || 0) + 1;
-        if (res.best) {
+        if (res.fail) s.sf = (s.sf || 0) + 1;
+        else if (res.best) {
           s.best ||= {};
           const prev = s.best[res.best.key];
-          if (prev == null || res.best.value < prev) { if (prev != null) record = true; s.best[res.best.key] = res.best.value; }
+          const better = prev == null || (res.best.high ? res.best.value > prev : res.best.value < prev);
+          if (better) { if (prev != null) record = true; s.best[res.best.key] = res.best.value; }
         }
-      } else if (winner == null) s.d++;
-      else if (res.winner === i) s.w++;
+      } else if (!winners.length) s.d++;
+      else if (winners.includes(i)) s.w++;
       else s.l++;
     });
     save();
-    if (winner && match.mode !== 'solo') match.wins[winner.id]++;
+    if (!solo) winners.forEach((i) => { const p = live.order[i]; if (p) match.wins[p.id] = (match.wins[p.id] || 0) + 1; });
     paintPills();
-    if (match.mode === 'solo') { sfx('win'); confetti('velvet'); buzz([30, 40, 30]); }
-    else if (!winner) sfx('draw');
-    else if (winner.ai) { sfx('lose'); buzz(80); }
-    else { sfx('win'); confetti(winner.color); buzz([30, 40, 30]); }
-    const t = setTimeout(() => showResult(res, winner, record), res.delay ?? 900);
+    const won = winners.map((i) => live.order[i]).filter(Boolean);
+    const mine = live.order.filter((p) => p.local);
+    const iWon = won.some((p) => p.local);
+    const color = (won.find((p) => p.local) || won[0])?.color;
+    if (solo) { if (res.fail) { sfx('lose'); buzz(80); } else { sfx('win'); confetti('velvet'); buzz([30, 40, 30]); } }
+    else if (!won.length) sfx('draw');
+    else if (match.mode === 'online' ? !iWon : won.every((p) => p.ai)) { sfx('lose'); buzz(80); }
+    else if (match.mode === 'online' || mine.length) { sfx('win'); confetti(color); buzz([30, 40, 30]); }
+    else sfx('win');
+    const t = setTimeout(() => showResult(res, won, record), res.delay ?? 900);
     timers.push(t);
   }
 
-  function showResult(res, winner, record) {
-    const g = match.g;
+  function showResult(res, won, record) {
+    const solo = match.mode === 'solo';
     let title, pc = '';
-    if (match.mode === 'solo') title = 'Geschafft!';
-    else if (!winner) title = 'Unentschieden';
-    else if (winner.ai) title = 'Die KI gewinnt';
-    else { title = `${esc(winner.name)} gewinnt`; pc = `style="--pc:var(--p-${winner.color})"`; }
-    const [a, b] = match.players;
-    const score = match.players.length === 2
-      ? `<div class="result-score"><span>${esc(a.ai ? 'KI' : a.name)}</span><b>${match.wins[a.id]}</b><b>:</b><b>${match.wins[b.id]}</b><span>${esc(b.ai ? 'KI' : b.name)}</span></div>`
-      : '';
+    if (res.title) title = esc(res.title);
+    else if (solo) title = res.fail ? 'Leider verloren' : 'Geschafft!';
+    else if (!won.length) title = 'Unentschieden';
+    else if (won.length > 1) title = `${won.map((p) => esc(p.ai ? 'KI' : p.name)).join(' und ')} gewinnen`;
+    else if (won[0].ai) title = 'Die KI gewinnt';
+    else title = `${esc(won[0].name)} gewinnt`;
+    if (won.length === 1 && !won[0].ai) pc = `style="--pc:var(--p-${won[0].color})"`;
+    const P = match.players;
+    let score = '';
+    if (!res.noScore && P.length === 2) {
+      const [a, b] = P;
+      score = `<div class="result-score"><span>${esc(a.ai ? 'KI' : a.name)}</span><b>${match.wins[a.id]}</b><b>:</b><b>${match.wins[b.id]}</b><span>${esc(b.ai ? 'KI' : b.name)}</span></div>`;
+    } else if (!res.noScore && P.length > 2 && match.round > 0) {
+      score = `<ol class="result-table">${[...P].sort((x, y) => match.wins[y.id] - match.wins[x.id]).map((p) => `<li style="--pc:var(--p-${p.color})">${avatar(p)}<span>${esc(p.ai ? 'KI' : p.name)}</span><b>${match.wins[p.id]}</b></li>`).join('')}</ol>`;
+    }
+    const online = match.mode === 'online';
+    const hostName = online ? room.s.lobby.players.find((p) => p.c === room.s.lobby.host)?.name || 'Gastgeber' : '';
+    const again = online && !room.s.host
+      ? `<button class="btn primary" disabled>Warte auf ${esc(hostName)} …</button>`
+      : `<button class="btn primary" data-action="rematch">${solo ? 'Nochmal' : online ? 'Nächste Runde' : 'Revanche'}</button>`;
     resultEl.innerHTML = `
       <div class="result-card" role="dialog" aria-labelledby="result-title">
         ${record ? '<span class="record">Neuer Rekord</span>' : ''}
@@ -544,23 +634,260 @@
         ${res.detail ? `<p class="result-detail">${res.detail}</p>` : ''}
         ${score}
         <div class="result-actions">
-          <button class="btn primary" data-action="rematch">${match.mode === 'solo' ? 'Nochmal' : 'Revanche'}</button>
-          <button class="btn ghost" data-action="leave">Andere Spiele</button>
+          ${again}
+          <button class="btn ghost" data-action="leave">${online ? 'Raum verlassen' : 'Andere Spiele'}</button>
+          <button class="link-btn" data-action="peek">Spielfeld ansehen</button>
         </div>
       </div>`;
     resultEl.hidden = false;
-    resultEl.querySelector('[data-action="rematch"]').focus({ preventScroll: true });
+    resultEl.querySelector('.btn').focus({ preventScroll: true });
+  }
+
+  function rematch() {
+    if (!match) return;
+    if (match.mode === 'online') {
+      if (!room?.s.host) return;
+      const L = room.s.lobby;
+      const ps = L.players.filter((p) => !p.gone).map((p) => p.c);
+      const k = L.round % ps.length;
+      room.s.start([...ps.slice(k), ...ps.slice(0, k)]);
+      return;
+    }
+    match.round++;
+    newRound();
   }
 
   function leave() {
     clearTimers();
+    clearOverlays();
     try { inst?.destroy?.(); } catch (e) { /* weiter */ }
     inst = null;
     match = null;
+    live = null;
+    if (room) closeRoom();
     play.hidden = true;
+    play.classList.remove('bare');
     document.body.classList.remove('is-playing');
     stageHost.replaceChildren();
+    resultEl.hidden = true;
     render();
+  }
+
+  /* Handy weitergeben: Bildschirm verdecken, bis die richtige Person tippt */
+  function handoff(p, text, button) {
+    return new Promise((done) => {
+      const el = document.createElement('div');
+      el.className = 'handoff';
+      el.innerHTML = `<div class="handoff-card" style="--pc:var(--p-${p.color || 'blue'})">
+        ${avatar(p, 'lg')}
+        <h2 class="handoff-title">Gib das Handy an ${esc(p.name)}</h2>
+        <p class="handoff-text">${text || 'Die anderen schauen bitte weg.'}</p>
+        <button class="btn primary wide">${button || `Ich bin ${esc(p.name)}`}</button>
+      </div>`;
+      play.append(el);
+      sfx('tap');
+      el.querySelector('button').addEventListener('click', () => { el.remove(); done(); });
+    });
+  }
+
+  /* Vorlesen (Werwolf-Erzähler) */
+  let voice = null;
+  function pickVoice() {
+    try {
+      const vs = speechSynthesis.getVoices().filter((v) => /^de/i.test(v.lang));
+      voice = vs.find((v) => /premium|enhanced|natural|google/i.test(v.name)) || vs.find((v) => v.localService) || vs[0] || null;
+    } catch (e) { voice = null; }
+  }
+  if ('speechSynthesis' in window) { pickVoice(); try { speechSynthesis.addEventListener('voiceschanged', pickVoice); } catch (e) { /* alt */ } }
+  function speak(text) {
+    if (!('speechSynthesis' in window) || !text) return;
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'de-DE';
+      if (voice) u.voice = voice;
+      u.rate = 0.92;
+      u.pitch = 0.95;
+      speechSynthesis.speak(u);
+    } catch (e) { /* stumm */ }
+  }
+  function hush() { try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch (e) { /* stumm */ } }
+
+  /* Bildschirm wach halten, solange mehrere Handys verbunden sind */
+  let screenLock = null, lockWanted = false;
+  async function wakeLock(on) {
+    lockWanted = on;
+    try {
+      if (on && !screenLock && navigator.wakeLock && document.visibilityState === 'visible') {
+        screenLock = await navigator.wakeLock.request('screen');
+        screenLock.addEventListener('release', () => { screenLock = null; });
+      } else if (!on && screenLock) { const l = screenLock; screenLock = null; await l.release(); }
+    } catch (e) { screenLock = null; }
+  }
+  document.addEventListener('visibilitychange', () => { if (lockWanted && document.visibilityState === 'visible') wakeLock(true); });
+
+  /* ---------- Mehrere Handys: Raum ---------- */
+  let room = null;
+  let join = null;
+
+  function openJoin(code = '', pid = null) {
+    join = { code: CC.net.cleanCode(code), pid: pid && playerById(pid) ? pid : (join?.pid && playerById(join.pid) ? join.pid : state.lineup.find(playerById) || state.players[0]?.id) };
+    renderJoin();
+    showSheet('join');
+    setTimeout(() => { const i = $('#join-code'); if (i && join && !join.code) i.focus(); }, 80);
+  }
+  function renderJoin() {
+    const ok = join.code.length === CC.net.CODE_LEN && join.pid;
+    panel.innerHTML = `
+      <div class="sheet-head">
+        <div><h2 class="sheet-title" id="sheet-title">Raum beitreten</h2><p class="sheet-sub">Gib den Code vom Gastgeber-Handy ein.</p></div>
+        <button class="icon-btn" data-action="close-sheet" aria-label="Schließen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <div class="field"><label class="label" for="join-code">Raumcode</label><input class="form-input code-input" id="join-code" maxlength="${CC.net.CODE_LEN + 2}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="z. B. K7Q2X" value="${esc(join.code)}"></div>
+      <div class="field"><span class="label">Wer bist du?</span>
+        <div class="lineup">${state.players.map((p) => `<button class="chip ${p.id === join.pid ? 'is-on' : ''}" data-joinpick="${p.id}" aria-pressed="${p.id === join.pid}" style="--pc:var(--p-${p.color})"><span class="dot">${esc(initial(p.name))}</span>${esc(p.name)}</button>`).join('')}<button class="chip chip-add" data-action="add-player">+ Spieler</button></div>
+        <span class="hint">Deine Siege landen in deinem Profil auf diesem Handy.</span>
+      </div>
+      <button class="btn primary wide" data-action="join-go" ${ok ? '' : 'disabled'}>Beitreten</button>`;
+    panel.setAttribute('aria-labelledby', 'sheet-title');
+  }
+
+  function openRoom({ host, g, opts, pid, code }) {
+    const p = playerById(pid) || state.players[0];
+    const s = CC.net.session({
+      host, code, opts,
+      game: g?.id,
+      me: { name: p.name, color: p.color, pid: p.id },
+      min: g?.online?.[0] || 2, max: g?.online?.[1] || 8,
+    });
+    room = { s, pid: p.id, round: 0, cache: {}, since: Date.now() };
+    if (!host) { try { sessionStorage.setItem(ACTIVE, JSON.stringify({ code: s.code, pid: p.id })); } catch (e) { /* egal */ } }
+    match = null;
+    openPlay(g?.name || 'Raum', `Raum ${s.code} · verbindet …`);
+    $('[data-action="restart"]').hidden = true;
+    play.classList.add('bare');
+    resultEl.hidden = true;
+    wakeLock(true);
+    renderLobby();
+    s.on('lobby', onLobby);
+    s.on('status', () => { paintRoomStatus(); if (!room.round) renderLobby(); });
+    s.on('presence', () => { paintRoomStatus(); paintPills(); roundHooks.presence?.(); });
+    s.on('act', (c, a) => { const i = live?.order.findIndex((x) => x.c === c); if (i >= 0) roundHooks.act?.(i, a); });
+    s.on('state', (st) => { room.cache.state = st; roundHooks.state?.(st); });
+    s.on('private', (d) => { room.cache.priv = d; roundHooks.priv?.(d); });
+    s.on('left', (c) => {
+      const i = live?.order.findIndex((x) => x.c === c);
+      if (i >= 0 && !live.done) { statusEl.textContent = `${live.order[i].name} hat den Raum verlassen.`; roundHooks.left?.(i); }
+      paintPills();
+    });
+    s.on('closed', (why) => roomClosed(why));
+    const tick = setInterval(() => { if (!room || room.s !== s) { clearInterval(tick); return; } paintRoomStatus(); }, 2000);
+  }
+  function closeRoom() {
+    if (!room) return;
+    room.s.leave();
+    room = null;
+    wakeLock(false);
+    try { sessionStorage.removeItem(ACTIVE); } catch (e) { /* egal */ }
+  }
+  function paintRoomStatus() {
+    if (!room) return;
+    const s = room.s;
+    let t;
+    if (!s.connected) t = Date.now() - room.since > 12000 ? 'keine Verbindung' : 'verbindet …';
+    else if (!s.host && !s.lobby) t = 'sucht den Gastgeber …';
+    else if (!s.host && !s.hostOn) t = 'Gastgeber nicht erreichbar';
+    else t = s.host ? 'du bist Gastgeber' : 'verbunden';
+    $('#play-mode').textContent = `Raum ${s.code} · ${t}`;
+    play.classList.toggle('offline', !s.connected || (!s.host && s.lobby && !s.hostOn));
+  }
+  function roomClosed(why) {
+    if (!room) return;
+    clearTimers(); clearOverlays();
+    try { inst?.destroy?.(); } catch (e) { /* weiter */ }
+    inst = null;
+    resultEl.innerHTML = `<div class="result-card" role="dialog"><h2 class="result-title">Raum geschlossen</h2><p class="result-detail">${esc(why || 'Die Verbindung zum Raum ist weg.')}</p><div class="result-actions"><button class="btn primary" data-action="leave">Zurück</button></div></div>`;
+    resultEl.hidden = false;
+    room.s.leave();
+    room = null;
+    wakeLock(false);
+    try { sessionStorage.removeItem(ACTIVE); } catch (e) { /* egal */ }
+  }
+
+  function onLobby(L) {
+    if (!room) return;
+    const g = gameById(L.game);
+    if (!g || !g.modes.includes('online')) { roomClosed('Dieses Spiel kennt dein Couchclub noch nicht. Lade die App neu und versuch es noch einmal.'); return; }
+    $('#play-name').textContent = g.name;
+    if (L.round > room.round) {
+      room.round = L.round;
+      room.cache = {};
+      startOnline(L, g);
+      return;
+    }
+    if (!room.round) renderLobby();
+    else { paintPills(); roundHooks.presence?.(); }
+    paintRoomStatus();
+  }
+
+  function startOnline(L, g) {
+    if (!L.order.includes(room.s.me)) { roomClosed('Die Runde hat ohne dich begonnen.'); return; }
+    const players = L.order.map((c) => {
+      const p = L.players.find((x) => x.c === c) || { name: '?', color: 'blue' };
+      const mine = c === room.s.me;
+      return { id: 'c:' + c, c, name: p.name, color: p.color, local: mine, remote: !mine, pid: mine ? room.pid : null };
+    });
+    const wins = match?.online === room ? match.wins : {};
+    players.forEach((p) => (wins[p.id] ||= 0));
+    match = { g, mode: 'online', level: 2, opts: L.opts || {}, players, wins, round: L.round - 1, online: room };
+    room.started = true;
+    newRound();
+    paintRoomStatus();
+  }
+
+  function onlineApi(order) {
+    const s = room.s;
+    const me = order.findIndex((p) => p.c === s.me);
+    const cached = room.cache;
+    return {
+      host: s.host,
+      me,
+      send: (a) => s.act(a),
+      onAction: (fn) => { roundHooks.act = fn; },
+      publish: (st) => s.publish(st),
+      tell: (i, d) => { if (order[i]) s.tell(order[i].c, d); },
+      onState: (fn) => { roundHooks.state = fn; if (cached.state !== undefined) queueMicrotask(() => fn(cached.state)); },
+      onPrivate: (fn) => { roundHooks.priv = fn; if (cached.priv !== undefined) queueMicrotask(() => fn(cached.priv)); },
+      onPresence: (fn) => { roundHooks.presence = fn; },
+      onLeft: (fn) => { roundHooks.left = fn; },
+      isOn: (i) => !!order[i] && s.isOn(order[i].c),
+      gone: (i) => !!order[i] && !!s.lobby?.players.find((p) => p.c === order[i].c)?.gone,
+    };
+  }
+
+  function renderLobby() {
+    if (!room || room.round) return;
+    const s = room.s, L = s.lobby;
+    const g = gameById(L?.game);
+    const url = location.origin + location.pathname + '#raum=' + s.code;
+    const ps = L ? L.players : [];
+    const enough = L && ps.length >= L.min;
+    stageHost.innerHTML = `<div class="lobby">
+      <div class="lobby-card">
+        <span class="label">Raumcode</span>
+        <b class="lobby-code">${s.code}</b>
+        ${s.host ? `<div class="lobby-qr">${CC.net.qr(url)}</div>
+        <p class="lobby-hint">Die anderen öffnen den Couchclub und tippen auf „Raum beitreten“. Oder sie scannen den QR-Code mit der Kamera.</p>
+        ${navigator.share ? '<button class="btn small ghost" data-action="share-room">Link teilen</button>' : ''}` : ''}
+      </div>
+      <div class="lobby-card">
+        <span class="label">${L ? `Im Raum · ${ps.length}${L.max ? ` von ${L.max}` : ''}` : 'Im Raum'}</span>
+        <ul class="lobby-list">${ps.map((p) => `<li class="${p.on ? '' : 'away'}" style="--pc:var(--p-${p.color})">${avatar(p)}<span>${esc(p.name)}${p.c === s.me ? ' <small>(du)</small>' : ''}</span>${p.c === L.host ? '<small class="tag">Gastgeber</small>' : ''}${p.on ? '' : '<small class="tag">weg</small>'}</li>`).join('')}</ul>
+        ${!L ? `<p class="lobby-hint">${s.connected ? 'Suche den Raum … Ist der Code richtig?' : 'Verbinde …'}</p>` : ''}
+      </div>
+      ${s.host
+        ? `<button class="btn primary wide" data-action="room-start" ${enough ? '' : 'disabled'}>${enough ? `${g ? g.name : 'Spiel'} starten` : `Warte auf Mitspieler (mindestens ${L?.min || 2})`}</button>`
+        : L ? `<p class="lobby-wait">Warte, bis ${esc(ps.find((p) => p.c === L.host)?.name || 'der Gastgeber')} das Spiel startet …</p>` : ''}
+    </div>`;
   }
 
   /* ---------- Solo-Abenteuer im Vollbild ---------- */
@@ -676,9 +1003,10 @@
       if (d.mode) { setup.mode = d.mode; fillPicks(); renderSetup(); return; }
       if (d.level) { setup.level = +d.level; renderSetup(); return; }
       if (d.pick) {
-        const n = needed(setup.mode);
+        const n = need(setup.mode)[1];
         const id = d.pick;
         if (setup.picks.includes(id)) setup.picks = setup.picks.filter((x) => x !== id);
+        else if (n > 2 && setup.picks.length >= n) { sfx('miss'); return; }
         else { setup.picks.push(id); if (setup.picks.length > n) setup.picks.shift(); }
         sfx('tap'); renderSetup(); return;
       }
@@ -691,6 +1019,7 @@
         return;
       }
     }
+    if (d.joinpick && join) { join.pid = d.joinpick; join.code = CC.net.cleanCode($('#join-code')?.value ?? join.code); sfx('tap'); renderJoin(); return; }
     if (d.edit) { openEditor(d.edit); return; }
     if (d.color && editor) {
       editor.name = $('#player-name')?.value ?? editor.name;
@@ -707,14 +1036,27 @@
     switch (d.action) {
       case 'add-player': openEditor(null); break;
       case 'close-sheet':
-        if (sheetKind === 'editor' && editor?.back) { setup = editor.back; editor = null; sheetKind = 'setup'; renderSetup(); }
+        if (sheetKind === 'editor' && editor?.back === 'join') { editor = null; openJoin(join?.code); }
+        else if (sheetKind === 'editor' && editor?.back) { setup = editor.back; editor = null; sheetKind = 'setup'; renderSetup(); }
         else hideSheet();
         break;
-      case 'start': if (setup && setup.picks.length === needed(setup.mode)) start(); break;
+      case 'start': if (setup && enoughPicks()) start(); break;
+      case 'join': sfx('tap'); openJoin(); break;
+      case 'join-go':
+        if (join && join.code.length === CC.net.CODE_LEN && playerById(join.pid)) { const j = join; hideSheet(); openRoom({ host: false, code: j.code, pid: j.pid }); }
+        break;
+      case 'room-start':
+        if (room?.s.host && room.s.lobby && room.s.lobby.players.length >= room.s.lobby.min) { sfx('tap'); room.s.start(); }
+        break;
+      case 'share-room':
+        if (room && navigator.share) navigator.share({ title: 'Couchclub', text: `Komm in meinen Couchclub-Raum: ${room.s.code}`, url: location.origin + location.pathname + '#raum=' + room.s.code }).catch(() => {});
+        break;
       case 'save-player': saveEditor(); break;
       case 'delete-player': deleteEditor(); break;
-      case 'rematch': match.round++; newRound(); break;
-      case 'restart': if (match) newRound(); break;
+      case 'rematch': rematch(); break;
+      case 'peek': peekBoard(true); break;
+      case 'unpeek': peekBoard(false); break;
+      case 'restart': if (match && match.mode !== 'online') newRound(); break;
       case 'leave': leave(); break;
       case 'close-frame': closeFrame(); break;
       case 'reset-stats':
@@ -750,7 +1092,29 @@
   document.addEventListener('submit', (e) => e.preventDefault());
   panel.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.target.id === 'player-name') { e.preventDefault(); saveEditor(); }
+    if (e.key === 'Enter' && e.target.id === 'join-code') { e.preventDefault(); panel.querySelector('[data-action="join-go"]')?.click(); }
   });
+  panel.addEventListener('input', (e) => {
+    if (e.target.id !== 'join-code' || !join) return;
+    join.code = CC.net.cleanCode(e.target.value);
+    const btn = panel.querySelector('[data-action="join-go"]');
+    if (btn) btn.disabled = !(join.code.length === CC.net.CODE_LEN && join.pid);
+  });
+
+  function invite() {
+    const m = /raum=([A-Za-z0-9]+)/.exec(location.hash);
+    if (!m) return false;
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ }
+    const code = CC.net.cleanCode(m[1]);
+    if (room && room.s.code === code) return true;
+    let active = null;
+    try { active = JSON.parse(sessionStorage.getItem(ACTIVE)); } catch (e) { /* keiner */ }
+    if (!play.hidden || !frameEl.hidden) leave();
+    if (frame) closeFrame();
+    if (active && active.code === code && playerById(active.pid)) openRoom({ host: false, code, pid: active.pid });
+    else openJoin(code);
+    return true;
+  }
 
   /* ---------- Start ---------- */
   CC.register = (g) => {
@@ -766,6 +1130,13 @@
       if (data && ['games', 'players', 'settings'].includes(data.tab)) tab = data.tab;
       applyMotion();
       render();
+      // Einladungslink (#raum=CODE) oder ein offener Raum, den ein Neuladen unterbrochen hat
+      if (!invite()) {
+        let active = null;
+        try { active = JSON.parse(sessionStorage.getItem(ACTIVE)); } catch (e) { /* keiner */ }
+        if (active && active.code && playerById(active.pid)) openRoom({ host: false, code: active.code, pid: active.pid });
+      }
+      window.addEventListener('hashchange', invite);
       try { window.claude?.hot?.snapshot?.(() => ({ tab })); } catch (e) { /* optional */ }
     };
     if (window.claude?.hot?.ready) window.claude.hot.ready(run);

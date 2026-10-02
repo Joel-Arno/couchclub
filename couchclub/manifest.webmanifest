@@ -1,7 +1,7 @@
 {
   "name": "Couchclub",
   "short_name": "Couchclub",
-  "description": "Spieleabend auf einem Handy: Vier gewinnt, Mega Tic Tac Toe, Punkteboxen und Memory, dazu Kerker-Wischer und Lichtläufer.",
+  "description": "Spieleabend auf dem Handy: Brettspiele, Kniffel, Werwolf, Sudoku und Minensuche, auch mit mehreren Handys, dazu Kerker-Wischer, Lichtläufer und Mondgeläut.",
   "lang": "de",
   "id": "./",
   "start_url": "./",
