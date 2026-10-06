@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="800" viewBox="0 0 60 160">
+  <!-- Ein einzelner Ohrring, oben ist die Stelle am Ohrlaeppchen -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff3c4"/><stop offset=".5" stop-color="#ddb04a"/><stop offset="1" stop-color="#8d6219"/>
+    </linearGradient>
+    <radialGradient id="perle" cx=".38" cy=".3" r=".8">
+      <stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#f6efe6"/>
+      <stop offset=".85" stop-color="#d9cbbb"/><stop offset="1" stop-color="#b9a792"/>
+    </radialGradient>
+  </defs>
+  <circle cx="30" cy="7" r="6.5" fill="url(#g)"/>
+  <path d="M30 13 L30 70" stroke="#b8892f" stroke-width="3.6"/>
+  <path d="M30 70 L30 82" stroke="#b98a2c" stroke-width="2"/>
+  <path d="M22 84 Q30 78 38 84 L36 88 L24 88 Z" fill="url(#g)"/>
+  <path d="M30 86 C 46 100, 50 120, 48 134 C 46 150, 38 158, 30 158 C 22 158, 14 150, 12 134 C 10 120, 14 100, 30 86 Z" fill="url(#perle)"/>
+  <ellipse cx="23" cy="118" rx="4" ry="9" fill="#fff" opacity=".7"/>
+</svg>

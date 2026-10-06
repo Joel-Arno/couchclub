@@ -1,0 +1,34 @@
+{%- comment -%}
+  Anprobe-Knopf für Schmuck.
+
+  Einbau: Im Theme-Editor auf der Produktseite einen Block
+  "Benutzerdefiniertes Liquid" hinzufügen und diesen ganzen Text
+  hineinkopieren. Vorher anprobe.js unter "Code bearbeiten" → Assets
+  hochladen. Schritt für Schritt steht es in der README.
+
+  Woher die Anprobe-Bilder kommen, in dieser Reihenfolge:
+  1. Metafeld anprobe.bilder (Datei, Liste): erscheint nicht in der Galerie
+  2. Produktbilder, deren Alt-Text mit "anprobe" beginnt, z. B. "anprobe: Gold"
+  3. Sonst das Hauptbild des Produkts, automatisch freigestellt
+{%- endcomment -%}
+<div data-anprobe
+  data-titel="{{ product.title | escape }}"
+  data-typ="{{ product.type | escape }}"
+  data-tags="{{ product.tags | join: ',' | escape }}"
+  {%- if product.metafields.anprobe.art.value != blank %} data-art="{{ product.metafields.anprobe.art.value | escape }}"{% endif %}
+  {%- if product.metafields.anprobe.mm.value != blank %} data-mm="{{ product.metafields.anprobe.mm.value }}"{% endif %}>
+  {%- for datei in product.metafields.anprobe.bilder.value -%}
+    <span hidden data-anprobe-bild data-url="{{ datei | image_url: width: 1200 }}" data-name="{{ datei.alt | escape }}"></span>
+  {%- endfor -%}
+  {%- for media in product.media -%}
+    {%- assign anfang = media.alt | downcase | strip | slice: 0, 7 -%}
+    {%- if media.media_type == 'image' and anfang == 'anprobe' -%}
+      {%- assign name = media.alt | strip | slice: 7, 100 | remove_first: ':' | strip -%}
+      <span hidden data-anprobe-bild data-url="{{ media | image_url: width: 1200 }}" data-name="{{ name | escape }}"></span>
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if product.featured_image -%}
+    <span hidden data-anprobe-bild data-ersatz data-url="{{ product.featured_image | image_url: width: 1200 }}"></span>
+  {%- endif -%}
+</div>
+<script type="module" src="{{ 'anprobe.js' | asset_url }}"></script>

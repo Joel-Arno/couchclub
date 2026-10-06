@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 300 150">
+  <!-- Ring von oben, so wie man ihn am Finger sieht: Schiene quer, Stein in der Mitte -->
+  <defs>
+    <linearGradient id="schiene" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff4c9"/><stop offset=".3" stop-color="#ecc35c"/>
+      <stop offset=".7" stop-color="#b98a2c"/><stop offset="1" stop-color="#7a5514"/>
+    </linearGradient>
+    <linearGradient id="enden" x1="0" x2="1">
+      <stop offset="0" stop-color="#2a1a00" stop-opacity=".75"/><stop offset=".22" stop-color="#2a1a00" stop-opacity="0"/>
+      <stop offset=".78" stop-color="#2a1a00" stop-opacity="0"/><stop offset="1" stop-color="#2a1a00" stop-opacity=".75"/>
+    </linearGradient>
+    <radialGradient id="stein" cx=".38" cy=".32" r=".75">
+      <stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#e3f2ff"/>
+      <stop offset=".8" stop-color="#9cc4e4"/><stop offset="1" stop-color="#6f9bc2"/>
+    </radialGradient>
+    <linearGradient id="fassung" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff1bd"/><stop offset=".5" stop-color="#d9a940"/><stop offset="1" stop-color="#8a6018"/>
+    </linearGradient>
+  </defs>
+  <path d="M4 62 Q150 46 296 62 L296 96 Q150 80 4 96 Z" fill="url(#schiene)"/>
+  <path d="M4 62 Q150 46 296 62 L296 96 Q150 80 4 96 Z" fill="url(#enden)"/>
+  <circle cx="150" cy="73" r="56" fill="url(#fassung)"/>
+  <circle cx="150" cy="73" r="46" fill="url(#stein)"/>
+  <g stroke="#ffffff" stroke-opacity=".75" stroke-width="1.2" fill="none">
+    <polygon points="150,40 173,50 183,73 173,96 150,106 127,96 117,73 127,50"/>
+    <path d="M150 40 L150 106 M117 73 L183 73 M127 50 L173 96 M173 50 L127 96"/>
+  </g>
+  <path d="M129 52 Q139 44 152 46" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".9"/>
+  <g fill="url(#fassung)">
+    <ellipse cx="114" cy="38" rx="9" ry="10"/><ellipse cx="186" cy="38" rx="9" ry="10"/>
+    <ellipse cx="114" cy="108" rx="9" ry="10"/><ellipse cx="186" cy="108" rx="9" ry="10"/>
+  </g>
+</svg>

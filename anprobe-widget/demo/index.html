@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anprobe-Widget – Demo</title>
+<style>
+  :root { --text: #1b1b1f; --leise: #6b6b73; --linie: #e6e6ea; --flaeche: #f6f4f1; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Helvetica Neue", Arial, sans-serif; color: var(--text); background: #fff; }
+  header { padding: 18px 24px; border-bottom: 1px solid var(--linie); display: flex; align-items: baseline; gap: 16px; }
+  header b { font-size: 20px; letter-spacing: .12em; text-transform: uppercase; }
+  header span { color: var(--leise); font-size: 14px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
+  .hinweis { background: var(--flaeche); padding: 14px 18px; font-size: 14px; line-height: 1.5; margin-bottom: 28px; }
+  .raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 28px; }
+  .produkt img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 18%; background: var(--flaeche); display: block; }
+  .produkt img.foto { padding: 0; }
+  .produkt h2 { font-size: 16px; font-weight: 500; margin: 12px 0 4px; }
+  .produkt .preis { color: var(--leise); font-size: 14px; }
+  .produkt small { display: block; color: var(--leise); font-size: 12px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<header><b>Demo-Schmuck</b><span>Testseite für das Anprobe-Widget</span></header>
+<main>
+  <p class="hinweis">
+    So sieht der Knopf auf einer Produktseite aus. Die Kamera wird nur in deinem
+    Browser ausgewertet. Auf dem Handy nimmt die Anprobe für Ringe und Armbänder die
+    hintere Kamera, für Ketten und Ohrringe die vordere.
+  </p>
+  <div class="raster">
+
+    <article class="produkt">
+      <img src="schmuck/ring-gold.svg" alt="">
+      <h2>Solitärring Aurora</h2>
+      <div class="preis">189,00 €</div>
+      <div data-anprobe data-titel="Solitärring Aurora" data-typ="Ringe">
+        <span hidden data-anprobe-bild data-url="schmuck/ring-gold.svg" data-name="Gold"></span>
+        <span hidden data-anprobe-bild data-url="schmuck/ring-silber.svg" data-name="Silber"></span>
+      </div>
+    </article>
+
+    <article class="produkt">
+      <img src="schmuck/armband.svg" alt="">
+      <h2>Tennisarmband Lumi</h2>
+      <div class="preis">249,00 €</div>
+      <div data-anprobe data-titel="Tennisarmband Lumi" data-typ="Armbänder" data-voll data-farbe="#7a5a2b">
+        <span hidden data-anprobe-bild data-url="schmuck/armband.svg"></span>
+      </div>
+    </article>
+
+    <article class="produkt">
+      <img src="schmuck/kette.svg" alt="">
+      <h2>Herzkette Mira</h2>
+      <div class="preis">129,00 €</div>
+      <div data-anprobe data-titel="Herzkette Mira" data-typ="Ketten">
+        <span hidden data-anprobe-bild data-url="schmuck/kette.svg"></span>
+      </div>
+    </article>
+
+    <article class="produkt">
+      <img src="schmuck/ohrring.svg" alt="">
+      <h2>Perlenhänger Sola</h2>
+      <div class="preis">79,00 €</div>
+      <div data-anprobe data-titel="Perlenhänger Sola" data-typ="Ohrringe" data-mm="38">
+        <span hidden data-anprobe-bild data-url="schmuck/ohrring.svg"></span>
+      </div>
+    </article>
+
+    <article class="produkt">
+      <img class="foto" src="schmuck/produktfoto-ring.svg" alt="">
+      <h2>Smaragdring Vera</h2>
+      <div class="preis">159,00 €</div>
+      <div data-anprobe data-titel="Smaragdring Vera" data-typ="Ringe">
+        <span hidden data-anprobe-bild data-ersatz data-url="schmuck/produktfoto-ring.svg"></span>
+      </div>
+      <small>Ohne eigenes Anprobe-Bild: Das Produktfoto wird automatisch freigestellt.</small>
+    </article>
+
+  </div>
+</main>
+<script type="module" src="../anprobe.js"></script>
+</body>
+</html>
