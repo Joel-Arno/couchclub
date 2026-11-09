@@ -7,6 +7,7 @@
 - mond.html (Mondgeläut) wird frisch aus mond/src gebaut
 - index.html bekommt das volle Grundgerüst mit Manifest, App-Symbolen und Service Worker
 - sw.js bekommt eine Version aus dem Inhalt aller Dateien, damit Handys Änderungen erkennen
+- eier/ (Eier-Timer, eigenständige Web-App ohne Build-Schritt) wird unverändert nach eier/ kopiert
 
 Keine Abhängigkeiten außer Python 3.
 """
@@ -94,6 +95,10 @@ def main():
     sw = (HERE / "sw.js").read_text(encoding="utf-8")
     sw = sw.replace("'@VERSION@'", repr(version)).replace("['@FILES@']", repr(files))
     (out / "sw.js").write_text(sw, encoding="utf-8")
+
+    # Eier-Timer: eigene App mit eigenem Service Worker, erst nach der Couchclub-Version kopiert,
+    # damit Änderungen am Timer den Couchclub nicht neu laden lassen
+    shutil.copytree(ROOT / "eier", out / "eier", ignore=shutil.ignore_patterns("README.md", "test"))
 
     total = sum(p.stat().st_size for p in out.rglob("*") if p.is_file())
     print(f"{out}  {total // 1024} KB  Version {version}")
