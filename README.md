@@ -11,6 +11,8 @@ Schiffe versenken, Kniffel und Werwolf gehen auch mit mehreren Handys: Einer er�
 
 **Spielen:** https://joel-arno.github.io/couchclub/
 
+**Eier-Timer:** https://joel-arno.github.io/couchclub/eier/ (eigene App, rechnet die Kochzeit aus Luftdruck, Eiergröße, Garstufe und mehr)
+
 Aufs Handy: Seite öffnen und „Zum Home-Bildschirm“ wählen (iPhone: Teilen-Menü in Safari, Android: „App installieren“). Die App läuft danach auch ohne Internet und holt sich Neuerungen beim nächsten Öffnen von selbst.
 
 ## Aufbau
@@ -18,6 +20,7 @@ Aufs Handy: Seite öffnen und „Zum Home-Bildschirm“ wählen (iPhone: Teilen-
 - `couchclub/`: die App (Profile, Spielauswahl, Spiele, Räume für mehrere Handys, Manifest, Service Worker, Symbole), Details in `couchclub/README.md`
 - `spiel/`: Quellcode von Kerker-Wischer und Lichtläufer, Details in `spiel/README.md`
 - `mond/`: Quellcode von Mondgeläut, einem düsteren Abenteuer mit Bossen und Reaktionskampf (Akt I fertig, weitere Akte folgen), Details in `mond/README.md`
+- `eier/`: der Eier-Timer, eine eigenständige Web-App aus reinem HTML, CSS und JavaScript, Details in `eier/README.md`
 - `.github/workflows/pages.yml`: baut bei jeder Änderung auf `main` die App und veröffentlicht sie auf GitHub Pages
 
 Selbst bauen: `python3 couchclub/build.py --out _site`

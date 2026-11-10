@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eier-Timer</title>
+<meta name="description" content="Präziser Eier-Timer: berechnet die Kochzeit aus Luftdruck, Eiergröße, Starttemperatur, Garstufe, Eieranzahl und Topf.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#FFF6E9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16120E" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Eier-Timer">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="glanz" cx="38%" cy="32%" r="70%">
+      <stop offset="0" stop-color="#FFD27A"/>
+      <stop offset=".55" stop-color="#FF9F0A"/>
+      <stop offset="1" stop-color="#F08400"/>
+    </radialGradient>
+    <symbol id="ei-schale" viewBox="0 0 48 60">
+      <path d="M24 2C36 2 46 22 46 37C46 50 36 58 24 58C12 58 2 50 2 37C2 22 12 2 24 2Z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<main class="app">
+  <header class="kopf">
+    <svg class="logo" viewBox="0 0 48 60" aria-hidden="true">
+      <use href="#ei-schale" class="ei-weiss"/>
+      <circle cx="24" cy="37" r="12" fill="url(#glanz)"/>
+      <path d="M24 37V30M24 37l5 3" stroke="#fff" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+    </svg>
+    <h1>Eier-Timer</h1>
+  </header>
+
+  <!-- Ergebnis -->
+  <section class="karte ergebnis" aria-labelledby="erg-titel">
+    <p class="erg-label" id="erg-titel">Kochzeit</p>
+    <p class="erg-zeit" id="erg-zeit">–:––</p>
+    <p class="erg-unter" id="erg-unter"></p>
+    <p class="erg-warnung" id="erg-warnung" hidden></p>
+    <button class="knopf haupt" id="start" type="button">Start</button>
+    <ul class="werte" id="werte" aria-label="Berechnete Werte"></ul>
+  </section>
+
+  <!-- Einstellungen -->
+  <section class="karte">
+    <fieldset class="gruppe">
+      <legend>Garpunkt</legend>
+      <div class="kacheln" id="garstufen"></div>
+    </fieldset>
+  </section>
+
+  <section class="karte">
+    <fieldset class="gruppe">
+      <legend>Eiergröße</legend>
+      <div class="segment" id="groessen"></div>
+    </fieldset>
+    <fieldset class="gruppe">
+      <legend>Die Eier kommen aus dem …</legend>
+      <div class="segment" id="starttemp"></div>
+    </fieldset>
+  </section>
+
+  <section class="karte">
+    <div class="gruppe zeile">
+      <span class="legende" id="anzahl-label">Anzahl Eier</span>
+      <div class="zaehler" role="group" aria-labelledby="anzahl-label">
+        <button type="button" class="rund" id="weniger" aria-label="Ein Ei weniger">−</button>
+        <output id="anzahl" aria-live="polite">2</output>
+        <button type="button" class="rund" id="mehr" aria-label="Ein Ei mehr">+</button>
+      </div>
+    </div>
+    <fieldset class="gruppe">
+      <legend>Topf</legend>
+      <div class="segment" id="toepfe"></div>
+      <p class="hinweis warn" id="topf-hinweis" hidden></p>
+    </fieldset>
+  </section>
+
+  <section class="karte">
+    <fieldset class="gruppe">
+      <legend>Methode</legend>
+      <div class="segment" id="methode"></div>
+      <p class="hinweis" id="methode-hinweis"></p>
+    </fieldset>
+    <fieldset class="gruppe">
+      <legend>Abschrecken</legend>
+      <div class="segment" id="abschrecken"></div>
+      <p class="hinweis" id="abschreck-hinweis"></p>
+    </fieldset>
+  </section>
+
+  <section class="karte">
+    <fieldset class="gruppe">
+      <legend>Luftdruck</legend>
+      <div class="segment" id="druckquelle"></div>
+      <div class="druck-panel" id="panel-standort">
+        <p class="hinweis" id="standort-status"></p>
+        <button type="button" class="knopf zweit" id="standort-holen">Luftdruck am Standort abrufen</button>
+      </div>
+      <div class="druck-panel" id="panel-hoehe" hidden>
+        <label class="eingabe">
+          <span>Höhe über dem Meer</span>
+          <span class="feld"><input type="number" id="hoehe" inputmode="numeric" min="-400" max="6000" step="10" value="0"><span>m</span></span>
+        </label>
+        <p class="hinweis" id="hoehe-status"></p>
+      </div>
+      <div class="druck-panel" id="panel-normal" hidden>
+        <p class="hinweis">Gerechnet wird mit 1013 hPa, dem Normaldruck auf Meereshöhe.</p>
+      </div>
+    </fieldset>
+  </section>
+
+  <details class="karte details">
+    <summary>So rechnet die App</summary>
+    <dl class="tabelle" id="details"></dl>
+    <div class="text">
+      <p>Das Ei wird als Kugel aus Eimasse gerechnet, in die Wärme von außen nach innen wandert. Das ist das Modell von Charles Williams. Seine bekannte Formel ist der Sonderfall für Wasser mit gleichbleibender Temperatur.</p>
+      <p>Die App rechnet die vollständige Lösung Sekunde für Sekunde und koppelt sie an die Wassertemperatur. Deshalb kann sie berücksichtigen, dass viele kalte Eier das Wasser kurz abkühlen und dass beim kalten Aufsetzen schon während des Aufheizens Wärme ins Ei geht. Fertig ist das Ei, wenn der Rand des Eigelbs die Zieltemperatur der Garstufe erreicht, einschließlich der Wärme, die nach dem Herausnehmen noch nach innen wandert.</p>
+      <p>Der Siedepunkt folgt aus dem Luftdruck: Bei niedrigerem Druck kocht Wasser früher, aber kühler, und die Eier brauchen länger.</p>
+    </div>
+    <button type="button" class="knopf zweit klein" id="ton-test">Ton testen</button>
+  </details>
+
+  <p class="fuss">Alle Einstellungen bleiben auf diesem Gerät gespeichert.</p>
+</main>
+
+<!-- Timer -->
+<div class="timer" id="timer" hidden role="dialog" aria-modal="true" aria-labelledby="t-phase">
+  <div class="timer-inhalt">
+    <p class="t-phase" id="t-phase">Eier kochen</p>
+    <p class="t-info" id="t-info"></p>
+    <div class="ring-box">
+      <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+        <circle class="ring-bahn" cx="60" cy="60" r="54"/>
+        <circle class="ring-fort" id="ring" cx="60" cy="60" r="54"/>
+      </svg>
+      <div class="ring-mitte">
+        <p class="t-zeit" id="t-zeit" role="timer">0:00</p>
+        <p class="t-unter" id="t-unter"></p>
+      </div>
+    </div>
+    <p class="t-hinweis" id="t-hinweis"></p>
+    <div class="t-knoepfe">
+      <button type="button" class="knopf haupt gross" id="t-kocht" hidden>Wasser kocht jetzt</button>
+      <button type="button" class="knopf haupt gross" id="t-aus" hidden>Alarm aus</button>
+      <button type="button" class="knopf zweit" id="t-pause" hidden>Pause</button>
+      <button type="button" class="knopf leise" id="t-abbruch">Abbrechen</button>
+    </div>
+    <p class="t-wach" id="t-wach"></p>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="physik.js"></script>
+<script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+</body>
+</html>

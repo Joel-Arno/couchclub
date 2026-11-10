@@ -1,4 +1,4 @@
-# Baut den Couchclub bei jeder Änderung auf main und veröffentlicht ihn auf GitHub Pages.
+# Baut den Couchclub (mit dem Eier-Timer unter /eier/) bei jeder Änderung auf main und veröffentlicht ihn auf GitHub Pages.
 # Einmalig nötig: Settings → Pages → Build and deployment → Source: "GitHub Actions".
 name: Couchclub veröffentlichen
 
